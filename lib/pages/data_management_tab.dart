@@ -2,11 +2,11 @@
 import 'dart:io';
 import 'package:flutter/material.dart';
 import 'package:hive_flutter/hive_flutter.dart';
-import 'package:csv/csv.dart';
 import 'package:flutter_file_dialog/flutter_file_dialog.dart';
 import 'package:file_picker/file_picker.dart';
 import 'package:google_sign_in/google_sign_in.dart';
 import '../models/inventory_entry.dart';
+import '../models/i_am_definition.dart';
 import '../localizations.dart';
 import '../google_drive_client.dart';
 import '../services/drive_service.dart';
@@ -258,60 +258,51 @@ class _DataManagementTabState extends State<DataManagementTab> {
       if (content == null) return;
 
       final entriesBox = Hive.box<InventoryEntry>('entries');
+      final iAmBox = Hive.box<IAmDefinition>('i_am_definitions');
 
-      // Try JSON first (new format)
       try {
         final decoded = json.decode(content) as Map<String, dynamic>;
+
+        // Import I Am definitions if present
+        if (decoded.containsKey('iAmDefinitions')) {
+          final iAmDefs = decoded['iAmDefinitions'] as List<dynamic>?;
+          if (iAmDefs != null) {
+            // Clear existing I Am definitions
+            final existingDefs = iAmBox.values.toList();
+            for (int i = existingDefs.length - 1; i >= 0; i--) {
+              await iAmBox.deleteAt(i);
+            }
+            
+            // Add imported I Am definitions
+            for (final defJson in iAmDefs) {
+              final def = IAmDefinition(
+                id: defJson['id'] as String,
+                name: defJson['name'] as String,
+                reasonToExist: defJson['reasonToExist'] as String?,
+              );
+              await iAmBox.add(def);
+            }
+          }
+        }
+
+        // Import entries
         final entries = decoded['entries'] as List<dynamic>?;
         if (entries == null) return;
 
         await entriesBox.clear();
         for (final item in entries) {
           if (item is Map<String, dynamic>) {
-            final entry = InventoryEntry(
-              item['resentment']?.toString() ?? '',
-              item['reason']?.toString() ?? '',
-              item['affect']?.toString() ?? '',
-              item['part']?.toString() ?? '',
-              item['defect']?.toString() ?? '',
-            );
-            entriesBox.add(entry);
+            final entry = InventoryEntry.fromJson(item);
+            await entriesBox.add(entry);
           }
         }
 
         ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(content: Text('Fetched ${entries.length} entries from Google (JSON)')),
-        );
-        return;
-      } catch (_) {
-        // Not JSON — fall through to CSV fallback
-      }
-
-      // CSV fallback for older uploads
-      try {
-        final rows = const CsvToListConverter().convert(content, eol: '\n');
-        if (rows.length <= 1) return;
-
-        await entriesBox.clear();
-        for (var i = 1; i < rows.length; i++) {
-          final row = rows[i];
-          if (row.length < 5) continue;
-          final entry = InventoryEntry(
-            row[0].toString(),
-            row[1].toString(),
-            row[2].toString(),
-            row[3].toString(),
-            row[4].toString(),
-          );
-          entriesBox.add(entry);
-        }
-
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(content: Text('Fetched ${rows.length - 1} entries from Google (CSV fallback)')),
+          SnackBar(content: Text('Fetched ${entries.length} entries from Google Drive')),
         );
       } catch (e) {
         ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(content: Text('Fetch failed (unrecognized format): $e')),
+          SnackBar(content: Text('Fetch failed: $e')),
         );
       }
     } catch (e) {
@@ -321,27 +312,41 @@ class _DataManagementTabState extends State<DataManagementTab> {
     }
   }
 
-  Future<void> _exportCsv() async {
+  Future<void> _exportJson() async {
     final messenger = ScaffoldMessenger.of(context);
     if (widget.box.isEmpty) {
       messenger.showSnackBar(SnackBar(content: Text('${t(context, 'entries_title')}: 0')));
       return;
     }
 
-    final rows = [
-      [t(context, 'resentment'), t(context, 'reason'), t(context, 'affect'), t(context, 'part'), t(context, 'defect')],
-      ...widget.box.values.map((e) => [e.resentment, e.reason, e.affect, e.part, e.defect])
-    ];
-
-    final csvString = const ListToCsvConverter(eol: '\r\n').convert(rows);
-    final bytes = Uint8List.fromList([0xEF, 0xBB, 0xBF, ...utf8.encode(csvString)]);
-
     try {
-      final params = SaveFileDialogParams(data: bytes, fileName: 'inventory_export.csv');
+      // Export both entries and I Am definitions
+      final entries = widget.box.values.map((e) => e.toJson()).toList();
+      final iAmBox = Hive.box<IAmDefinition>('i_am_definitions');
+      final iAmDefinitions = iAmBox.values.map((def) => {
+        'id': def.id,
+        'name': def.name,
+        'reasonToExist': def.reasonToExist,
+      }).toList();
+
+      final exportData = {
+        'version': '2.0',
+        'exportDate': DateTime.now().toIso8601String(),
+        'iAmDefinitions': iAmDefinitions,
+        'entries': entries,
+      };
+
+      final jsonString = const JsonEncoder.withIndent('  ').convert(exportData);
+      final bytes = Uint8List.fromList(utf8.encode(jsonString));
+
+      final params = SaveFileDialogParams(
+        data: bytes,
+        fileName: 'inventory_export_${DateTime.now().millisecondsSinceEpoch}.json',
+      );
       final savedPath = await FlutterFileDialog.saveFile(params: params);
 
       if (savedPath != null) {
-        messenger.showSnackBar(SnackBar(content: Text('CSV saved to: $savedPath')));
+        messenger.showSnackBar(SnackBar(content: Text('JSON saved to: $savedPath')));
       } else {
         messenger.showSnackBar(SnackBar(content: Text(t(context, 'cancel'))));
       }
@@ -352,10 +357,42 @@ class _DataManagementTabState extends State<DataManagementTab> {
     }
   }
 
-  Future<void> _importCsv() async {
+  Future<void> _importJson() async {
     final messenger = ScaffoldMessenger.of(context);
     try {
-      final result = await FilePicker.platform.pickFiles(type: FileType.custom, allowedExtensions: ['csv']);
+      // Warning dialog before importing
+      final confirmImport = await showDialog<bool>(
+        context: context,
+        builder: (context) => AlertDialog(
+          title: Text(t(context, 'import_json')),
+          content: const Text(
+            'This will REPLACE all current data (entries and I Am definitions) with the imported data.\n\n'
+            'Make sure you have exported your current data first!\n\n'
+            'Continue with import?',
+          ),
+          actions: [
+            TextButton(
+              onPressed: () => Navigator.of(context).pop(false),
+              child: Text(t(context, 'cancel')),
+            ),
+            ElevatedButton(
+              onPressed: () => Navigator.of(context).pop(true),
+              style: ElevatedButton.styleFrom(
+                backgroundColor: Colors.orange,
+                foregroundColor: Colors.white,
+              ),
+              child: const Text('Import'),
+            ),
+          ],
+        ),
+      );
+
+      if (confirmImport != true) return;
+
+      final result = await FilePicker.platform.pickFiles(
+        type: FileType.custom,
+        allowedExtensions: ['json'],
+      );
       if (result == null || result.files.isEmpty) {
         messenger.showSnackBar(SnackBar(content: Text(t(context, 'cancel'))));
         return;
@@ -363,30 +400,46 @@ class _DataManagementTabState extends State<DataManagementTab> {
 
       final path = result.files.single.path!;
       final file = File(path);
-      final csvString = await file.readAsString();
-
-      final rows = const CsvToListConverter().convert(csvString, eol: '\n');
-      if (rows.length <= 1) {
-        messenger.showSnackBar(SnackBar(content: Text(t(context, 'cancel'))));
-        return;
-      }
+      final jsonString = await file.readAsString();
+      final data = jsonDecode(jsonString) as Map<String, dynamic>;
 
       final entriesBox = Hive.box<InventoryEntry>('entries');
-      await entriesBox.clear();
-      for (var i = 1; i < rows.length; i++) {
-        final row = rows[i];
-        if (row.length < 5) continue;
-        final entry = InventoryEntry(
-          row[0].toString(),
-          row[1].toString(),
-          row[2].toString(),
-          row[3].toString(),
-          row[4].toString(),
-        );
-        entriesBox.add(entry);
+      final iAmBox = Hive.box<IAmDefinition>('i_am_definitions');
+
+      // Import I Am definitions first
+      if (data.containsKey('iAmDefinitions')) {
+        final iAmDefs = data['iAmDefinitions'] as List;
+        // Clear existing I Am definitions
+        final existingDefs = iAmBox.values.toList();
+        for (int i = existingDefs.length - 1; i >= 0; i--) {
+          await iAmBox.deleteAt(i);
+        }
+        
+        // Add imported I Am definitions
+        for (final defJson in iAmDefs) {
+          final def = IAmDefinition(
+            id: defJson['id'] as String,
+            name: defJson['name'] as String,
+            reasonToExist: defJson['reasonToExist'] as String?,
+          );
+          await iAmBox.add(def);
+        }
       }
 
-      messenger.showSnackBar(SnackBar(content: Text('Imported ${rows.length - 1} entries.')));
+      // Import entries
+      final entries = data['entries'] as List;
+      await entriesBox.clear();
+      for (final entryJson in entries) {
+        final entry = InventoryEntry.fromJson(entryJson as Map<String, dynamic>);
+        await entriesBox.add(entry);
+      }
+
+      messenger.showSnackBar(
+        SnackBar(
+          content: Text('Imported ${entries.length} entries and ${data.containsKey('iAmDefinitions') ? (data['iAmDefinitions'] as List).length : 0} I Am definitions'),
+          duration: const Duration(seconds: 4),
+        ),
+      );
 
       if (_syncEnabled && _driveClient != null) _uploadToDrive();
     } catch (e) {
@@ -445,9 +498,9 @@ class _DataManagementTabState extends State<DataManagementTab> {
             ],
           ),
           const SizedBox(height: 16),
-          ElevatedButton(onPressed: _exportCsv, child: Text(t(context, 'export_csv'))),
+          ElevatedButton(onPressed: _exportJson, child: Text(t(context, 'export_json'))),
           const SizedBox(height: 16),
-          ElevatedButton(onPressed: _importCsv, child: Text(t(context, 'import_csv'))),
+          ElevatedButton(onPressed: _importJson, child: Text(t(context, 'import_json'))),
           const SizedBox(height: 16),
           if (isSignedIn)
             ElevatedButton(

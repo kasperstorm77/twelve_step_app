@@ -35,6 +35,7 @@ class _ModularInventoryHomeState extends State<ModularInventoryHome>
   final _defectController = TextEditingController();
 
   int? editingIndex;
+  String? selectedIAmId;  // Selected I Am definition ID
   bool get isEditing => editingIndex != null;
 
   @override
@@ -70,6 +71,7 @@ class _ModularInventoryHomeState extends State<ModularInventoryHome>
     if (entry != null) {
       setState(() {
         editingIndex = index;
+        selectedIAmId = entry.iAmId;
         _resentmentController.text = entry.safeResentment;
         _reasonController.text = entry.safeReason;
         _affectController.text = entry.safeAffect;
@@ -83,6 +85,7 @@ class _ModularInventoryHomeState extends State<ModularInventoryHome>
   void _resetForm() {
     setState(() {
       editingIndex = null;
+      selectedIAmId = null;
       _resentmentController.clear();
       _reasonController.clear();
       _affectController.clear();
@@ -99,6 +102,7 @@ class _ModularInventoryHomeState extends State<ModularInventoryHome>
       _affectController.text,
       _partController.text,
       _defectController.text,
+      iAmId: selectedIAmId,
     );
     
     if (isEditing && editingIndex != null) {
@@ -188,6 +192,12 @@ class _ModularInventoryHomeState extends State<ModularInventoryHome>
             partController: _partController,
             defectController: _defectController,
             editingIndex: editingIndex,
+            selectedIAmId: selectedIAmId,
+            onIAmChanged: (String? id) {
+              setState(() {
+                selectedIAmId = id;
+              });
+            },
             onSave: _saveEntry,
             onCancel: _resetForm,
           ),

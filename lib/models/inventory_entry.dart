@@ -44,4 +44,25 @@ class InventoryEntry extends HiveObject {
   
   String? get shortcomings => defect;
   set shortcomings(String? value) => defect = value;
+
+  // JSON serialization
+  Map<String, dynamic> toJson() => {
+    'resentment': resentment,
+    'reason': reason,
+    'affect': affect,
+    'part': part,
+    'defect': defect,
+    'iAmId': iAmId,
+  };
+
+  factory InventoryEntry.fromJson(Map<String, dynamic> json) {
+    return InventoryEntry(
+      json['resentment'] as String?,
+      json['reason'] as String?,
+      json['affect'] as String?,
+      json['part'] as String?,
+      json['defect'] as String?,
+      iAmId: json['iAmId'] as String?,
+    );
+  }
 }

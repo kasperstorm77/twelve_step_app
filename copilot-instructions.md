@@ -2,7 +2,7 @@
 
 ### Project Overview
 
-This is a Flutter application for managing AA 4th step inventory entries with local Hive storage, optional Google Drive sync, and CSV import/export. The app uses **Flutter Modular** architecture for routing and dependency injection.
+This is a Flutter application for managing AA 4th step inventory entries with local Hive storage, optional Google Drive sync, and JSON import/export. The app uses **Flutter Modular** architecture and includes a unique "I Am" feature for contextualizing resentments from different role perspectives.
 
 ---
 
@@ -32,40 +32,61 @@ ModularInventoryHome
 │   └── Language Globe (PopupMenuButton) → English/Danish
 │
 └── TabBarView (3 bottom tabs)
-    ├── FormTab (create/edit entries)
-    ├── ListTab (table view of all entries)
-    └── SettingsTab (empty placeholder - DO NOT add data management here!)
+    ├── FormTab (create/edit entries with I Am selector)
+    ├── ListTab (table/card view with I Am display)
+    └── SettingsTab (I Am definitions CRUD - NOT data management!)
 ```
 
 **IMPORTANT SEPARATION OF CONCERNS:**
-- **Gear Icon → Data Management Page**: Contains ALL CSV export/import, Google Drive sync, sign-in/out, clear data
-- **Settings Tab (bottom)**: EMPTY placeholder for future unrelated settings
-- **DO NOT** add data management functionality to the settings tab - it belongs ONLY in the data management page
+- **Gear Icon → Data Management Page**: Contains ALL JSON export/import, Google Drive sync, sign-in/out, clear data
+- **Settings Tab (bottom)**: I Am definitions management (add/edit/delete roles)
+- **FormTab**: I Am selector integrated with Reason field (person icon prefix)
 
 ### 3. Data Model
+
+**IAmDefinition** (Hive model, typeId: 1):
+```dart
+@HiveType(typeId: 1)
+class IAmDefinition {
+  @HiveField(0) String id;           // UUID
+  @HiveField(1) String name;         // e.g., "the son", "the banker"
+  @HiveField(2) String? reasonToExist; // Optional explanation
+}
+```
 
 **InventoryEntry** (Hive model, typeId: 0):
 ```dart
 @HiveType(typeId: 0)
 class InventoryEntry extends HiveObject {
-  @HiveField(0) String? resentment;  // Who/what
-  @HiveField(1) String? reason;      // Why
-  @HiveField(2) String? affect;      // Which part of self
-  @HiveField(3) String? part;        // Specific aspect (self-esteem, etc.)
-  @HiveField(4) String? defect;      // Character defect revealed
+  @HiveField(0) String? resentment;   // Who/what
+  @HiveField(1) String? reason;       // Why (the cause)
+  @HiveField(2) String? affect;       // Which part of self
+  @HiveField(3) String? part;         // "My Take" (old field, new meaning)
+  @HiveField(4) String? defect;       // "Shortcomings" (old field, new meaning)
+  @HiveField(5) String? iAmId;        // Links to IAmDefinition
+  
+  // Convenience getters
+  String? get myTake => part;
+  String? get shortcomings => defect;
+  
+  // JSON serialization
+  Map<String, dynamic> toJson();
+  factory InventoryEntry.fromJson(Map<String, dynamic> json);
 }
 ```
 
 **CRITICAL RULES:**
-- NEVER change `typeId` (breaks existing data)
-- NEVER remove or reorder `@HiveField` indices
+- NEVER change `typeId` values (0 for Entry, 1 for IAmDefinition)
+- NEVER remove or reorder `@HiveField` indices (breaks existing data)
 - After schema changes, ALWAYS run: `flutter pub run build_runner build --delete-conflicting-outputs`
-- Keep `registerAdapter(InventoryEntryAdapter())` in `main.dart`
+- Keep both adapter registrations in `main.dart`:
+  - `Hive.registerAdapter(InventoryEntryAdapter())`
+  - `Hive.registerAdapter(IAmDefinitionAdapter())`
+- I Am IDs are UUIDs, NOT auto-incremented integers
 
-### 4. CRUD Operations (ALWAYS Use InventoryService)
+### 4. CRUD Operations
 
-**DO NOT** directly call `box.add()`, `box.putAt()`, etc. **ALWAYS** use `InventoryService`:
-
+**For Entries** - ALWAYS Use InventoryService:
 ```dart
 // Correct:
 await _inventoryService.addEntry(box, entry);
@@ -76,16 +97,65 @@ await _inventoryService.deleteEntry(box, index);
 await box.add(entry); // Missing Drive sync trigger!
 ```
 
-**Why?** `InventoryService` automatically:
-1. Performs the Hive operation
-2. Triggers Drive sync if enabled
-3. Handles error cases consistently
+**For I Am Definitions** - ALWAYS Use IAmService:
+```dart
+await IAmService().addDefinition(box, definition);
+await IAmService().updateDefinition(box, index, definition);
+await IAmService().deleteDefinition(box, index);
+final definitions = IAmService().getAllDefinitions(box);
+final iAm = IAmService().findById(box, id);
+```
+
+**Why?** Services automatically:
+1. Perform the Hive operation
+2. Trigger Drive sync if enabled (for entries)
+3. Handle error cases consistently
 
 **Direct box operations are ONLY acceptable for:**
 - Read operations: `box.getAt(index)`, `box.values.toList()`
 - `box.clear()` when immediately followed by `DriveService.instance.scheduleUploadFromBox(box)`
 
-### 5. Google Drive Sync Architecture
+### 5. I Am Feature Architecture
+
+**Concept**: One resentment can be viewed from different role perspectives.
+
+**Example:**
+```dart
+Resentment: "Mom"
+I Am: "the son" → Reason: "she doesn't love me" → Affects: self-reliance
+I Am: "the banker" → Reason: "she spends my money" → Affects: economic safety
+```
+
+**UI Integration:**
+- **FormTab**: Person icon (prefix) in Reason field opens I Am selector dialog
+- **FormTab**: Selected I Am shown above Reason field in subtle container
+- **ListTab**: I Am name displayed in table column and card view
+- **SettingsTab**: Full CRUD for I Am definitions with search dialog
+
+**Data Safety Rules:**
+```dart
+// ✅ MUST check usage before deleting I Am
+final usageCount = entriesBox.values
+  .where((entry) => entry.iAmId == definition.id)
+  .length;
+if (usageCount > 0) {
+  // Show error dialog with count
+  return;
+}
+
+// ✅ MUST import I Am definitions BEFORE entries
+await _importIAmDefinitions(json['iAmDefinitions']);
+await _importEntries(json['entries']);
+
+// ✅ MUST handle missing I Am gracefully
+final iAmName = _getIAmName(entry.iAmId) ?? '-';
+```
+
+**Default I Am:**
+- "Sober member of AA" created automatically on first launch
+- Created by `IAmService().initializeDefaults()` in `main.dart`
+
+### 6. Google Drive Sync Architecture
 
 **Service Hierarchy:**
 ```
@@ -102,13 +172,35 @@ DriveService (Singleton)
 4. CRUD operation → `InventoryService` → Auto-triggers `scheduleUploadFromBox()`
 5. Debounced upload (700ms) → Background serialization → Drive API upload
 
+**JSON Format (Drive & Export):**
+```json
+{
+  "version": "2.0",
+  "exportDate": "2025-11-13T...",
+  "iAmDefinitions": [
+    {"id": "uuid", "name": "the son", "reasonToExist": "..."}
+  ],
+  "entries": [
+    {
+      "resentment": "Mom",
+      "reason": "she doesn't love me",
+      "affect": "self reliance",
+      "part": "maybe i haven't been the best son",
+      "defect": "Self will run riot",
+      "iAmId": "uuid"
+    }
+  ]
+}
+```
+
 **Key Rules:**
+- **Order matters**: I Am definitions MUST be in JSON before entries
 - **Debouncing**: Uploads are debounced to coalesce rapid edits (700ms delay)
 - **Background work**: Serialization uses `compute()` to avoid blocking UI
 - **Early returns**: All Drive methods check `syncEnabled` and `_client != null`
 - **Silent sign-in**: Attempted at app startup in `main.dart`
 - **Storage location**: Drive AppData folder (hidden from user)
-- **File format**: `inventory_entries.json` (JSON array)
+- **File name**: `aa4step_inventory_data.json` (NOT inventory_entries.json)
 
 **When to call sync:**
 ```dart
@@ -123,26 +215,61 @@ DriveService.instance.scheduleUploadFromBox(box);
 await DriveService.instance.uploadFile(jsonData);
 ```
 
-### 6. CSV Import/Export
+### 7. JSON Import/Export (Replaced CSV)
 
 **Export Flow:**
 ```dart
-1. Serialize entries to CSV (headers: Resentment,Reason,Affect,Part,Defect)
-2. Use ListToCsvConverter with CRLF line endings
-3. FlutterFileDialog.saveFile() for Android
-4. File picker for other platforms
+1. Read entries box and i_am_definitions box
+2. Serialize I Am definitions (with UUIDs)
+3. Serialize entries (with iAmId references)
+4. Build JSON: {version, exportDate, iAmDefinitions, entries}
+5. JsonEncoder.withIndent('  ').convert() for readability
+6. FlutterFileDialog.saveFile() with timestamp in filename
+7. Trigger Drive sync if enabled
 ```
 
 **Import Flow:**
 ```dart
-1. FilePicker.platform.pickFiles()
-2. CsvToListConverter.convert()
-3. Skip header row, parse entries
-4. APPEND to existing data (don't replace)
-5. Trigger Drive sync if enabled
+1. Show WARNING dialog (data will be REPLACED)
+2. User selects JSON file
+3. Parse JSON
+4. Clear i_am_definitions box
+5. Import I Am definitions (restore UUIDs exactly)
+6. Clear entries box
+7. Import entries (with iAmId references)
+8. Show success message with counts
+9. Trigger Drive sync if enabled
 ```
 
-**IMPORTANT**: CSV operations are in `data_management_tab.dart` ONLY (not settings_tab.dart)
+**Data Safety Features:**
+```dart
+// ✅ Cannot delete I Am if used by entries
+final usageCount = entriesBox.values
+  .where((entry) => entry.iAmId == definition.id)
+  .length;
+if (usageCount > 0) throw CannotDeleteException();
+
+// ✅ Warning dialog before import
+showDialog(
+  content: Text('This will REPLACE all current data...'),
+);
+
+// ✅ Backward compatibility
+factory InventoryEntry.fromJson(Map<String, dynamic> json) {
+  return InventoryEntry(
+    json['resentment'],
+    json['reason'],
+    json['affect'],
+    json['part'],
+    json['defect'],
+    iAmId: json['iAmId'] as String?, // Optional - old JSON works
+  );
+}
+```
+
+**CRITICAL**: JSON operations are in `data_management_tab.dart` ONLY (not settings_tab.dart)
+
+See `DATA_SAFETY.md` for complete testing checklist.
 
 ### 7. Localization System
 

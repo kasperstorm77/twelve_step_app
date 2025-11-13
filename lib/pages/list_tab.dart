@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:hive_flutter/hive_flutter.dart';
 import '../models/inventory_entry.dart';
+import '../models/i_am_definition.dart';
 import '../localizations.dart';
 
 class ListTab extends StatefulWidget {
@@ -23,6 +24,16 @@ class ListTab extends StatefulWidget {
 
 class _ListTabState extends State<ListTab> {
   bool showTable = false;
+
+  String? _getIAmName(String? iAmId) {
+    if (iAmId == null || iAmId.isEmpty) return null;
+    final iAmBox = Hive.box<IAmDefinition>('i_am_definitions');
+    final iAm = iAmBox.values.firstWhere(
+      (def) => def.id == iAmId,
+      orElse: () => IAmDefinition(id: '', name: ''),
+    );
+    return iAm.name.isNotEmpty ? iAm.name : null;
+  }
 
   @override
   Widget build(BuildContext context) {
@@ -62,7 +73,7 @@ class _ListTabState extends State<ListTab> {
 
                   return LayoutBuilder(
                     builder: (context, constraints) {
-                      final columnWidth = constraints.maxWidth / 5;
+                      final columnWidth = constraints.maxWidth / 6;
 
                       return Column(
                         children: [
@@ -72,10 +83,11 @@ class _ListTabState extends State<ListTab> {
                               children: [
                                 for (final header in [
                                   t(context, 'resentment'),
+                                  t(context, 'i_am'),
                                   t(context, 'reason'),
-                                  t(context, 'affect'),
-                                  t(context, 'part'),
-                                  t(context, 'defect'),
+                                  t(context, 'affect_my'),
+                                  t(context, 'my_take'),
+                                  t(context, 'shortcomings'),
                                 ])
                                   Container(
                                     width: columnWidth,
@@ -98,6 +110,7 @@ class _ListTabState extends State<ListTab> {
                                   final rowColor = (i % 2 == 0)
                                       ? rowBaseColor.withOpacity(0.7)
                                       : rowBaseColor.withOpacity(0.4);
+                                  final iAmName = _getIAmName(e.iAmId) ?? '-';
 
                                   return Container(
                                     color: rowColor,
@@ -105,10 +118,11 @@ class _ListTabState extends State<ListTab> {
                                       children: [
                                         for (final text in [
                                           e.safeResentment,
+                                          iAmName,
                                           e.safeReason,
                                           e.safeAffect,
-                                          e.safePart,
-                                          e.safeDefect
+                                          e.myTake ?? '',
+                                          e.shortcomings ?? ''
                                         ])
                                           Container(
                                             width: columnWidth,
@@ -133,6 +147,7 @@ class _ListTabState extends State<ListTab> {
                   itemBuilder: (context, index) {
                     final e = entries[index];
                     final reversedIndex = box.length - 1 - index;
+                    final iAmName = _getIAmName(e.iAmId);
 
                     return Card(
                       margin: const EdgeInsets.symmetric(vertical: 6),
@@ -142,10 +157,17 @@ class _ListTabState extends State<ListTab> {
                           crossAxisAlignment: CrossAxisAlignment.start,
                           children: [
                             Text("${t(context, 'resentment')}: ${e.safeResentment}"),
+                            if (iAmName != null)
+                              Text("${t(context, 'i_am')}: $iAmName",
+                                style: TextStyle(
+                                  color: Theme.of(context).colorScheme.primary,
+                                  fontWeight: FontWeight.w600,
+                                ),
+                              ),
                             Text("${t(context, 'reason')}: ${e.safeReason}"),
-                            Text("${t(context, 'affect')}: ${e.safeAffect}"),
-                            Text("${t(context, 'part')}: ${e.safePart}"),
-                            Text("${t(context, 'defect')}: ${e.safeDefect}"),
+                            Text("${t(context, 'affect_my')}: ${e.safeAffect}"),
+                            Text("${t(context, 'my_take')}: ${e.myTake ?? ''}"),
+                            Text("${t(context, 'shortcomings')}: ${e.shortcomings ?? ''}"),
                             Row(
                               mainAxisAlignment: MainAxisAlignment.end,
                               children: [

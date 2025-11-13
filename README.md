@@ -1,15 +1,24 @@
 # AA 4Step Inventory
 
-A Flutter application for managing 4th step inventory entries with local storage, Google Drive sync, and CSV import/export capabilities.
+A Flutter application for managing 4th step inventory entries with local storage, Google Drive sync, and JSON import/export capabilities.
 
 ## Overview
 
 This app helps users create and manage inventory entries following the AA 4-step process. Each entry contains:
 - **Resentment**: Who or what you're resentful towards
-- **Reason**: Why you're resentful
-- **Affect**: Which part of self was affected
-- **Part**: Specific aspect affected (self-esteem, security, etc.)
-- **Defect**: Character defect revealed
+- **I Am**: Your role/perspective (e.g., "the son", "the banker") - optional, contextualizes the resentment
+- **Reason (Cause)**: Why you're resentful from that role's perspective
+- **Affects my**: Which part of self was affected
+- **My Take**: Your part in the situation (self-analysis)
+- **Shortcomings**: Character defects revealed
+
+### Key Concept: "I Am" Definitions
+
+The "I Am" feature allows viewing the same resentment from different perspectives:
+- Example 1: "Mom" as **the son** → affects self-reliance
+- Example 2: "Mom" as **the banker** → affects economic safety
+
+Users can define multiple "I Am" identities in Settings with optional reasons. One default exists: **"Sober member of AA"**.
 
 ## Architecture
 
@@ -26,20 +35,30 @@ ModularInventoryHome (Main Container)
 │       └── Language Selector (Globe Icon) → English/Danish toggle
 │
 └── TabBarView (3 tabs)
-    ├── FormTab: Create/Edit entries
-    ├── ListTab: View all entries in table format
-    └── SettingsTab: Empty placeholder for future settings
+    ├── FormTab: Create/Edit entries with I Am selection
+    ├── ListTab: View all entries in table/card format
+    └── SettingsTab: Manage I Am definitions (CRUD)
 ```
 
 **Data Management Page** (accessed via gear icon):
 - Google Sign In/Out
 - Sync toggle (enable/disable Google Drive sync)
-- Export to CSV
-- Import from CSV
+- Export to JSON (includes I Am definitions)
+- Import from JSON (with data loss warning)
 - Fetch from Google Drive
 - Clear all entries
 
 ### Data Model
+
+**IAmDefinition** (Hive model, typeId: 1)
+```dart
+@HiveType(typeId: 1)
+class IAmDefinition {
+  @HiveField(0) String id;           // UUID
+  @HiveField(1) String name;         // e.g., "the son", "the banker"
+  @HiveField(2) String? reasonToExist; // Optional explanation
+}
+```
 
 **InventoryEntry** (Hive model, typeId: 0)
 ```dart
@@ -48,12 +67,24 @@ class InventoryEntry extends HiveObject {
   @HiveField(0) String? resentment;
   @HiveField(1) String? reason;
   @HiveField(2) String? affect;
-  @HiveField(3) String? part;
-  @HiveField(4) String? defect;
+  @HiveField(3) String? part;      // "My Take"
+  @HiveField(4) String? defect;    // "Shortcomings"
+  @HiveField(5) String? iAmId;     // Links to IAmDefinition
+  
+  // Convenience getters
+  String? get myTake => part;
+  String? get shortcomings => defect;
+  
+  // JSON serialization
+  Map<String, dynamic> toJson();
+  factory InventoryEntry.fromJson(Map<String, dynamic> json);
 }
 ```
 
-**Storage**: Local Hive database (`entries` box)
+**Storage**: Local Hive database
+- `entries` box: Box<InventoryEntry>
+- `i_am_definitions` box: Box<IAmDefinition>
+- `settings` box: Untyped box for preferences
 
 ### CRUD Operations
 
@@ -103,30 +134,66 @@ DriveService.instance.scheduleUploadFromBox(box); // Sync empty state
 2. App creates `GoogleDriveClient` with auth tokens
 3. Sync toggle enables/disables automatic uploads
 4. CRUD operations trigger debounced uploads (700ms)
-5. Data stored in Drive AppData folder as `inventory_entries.json`
+5. Data stored in Drive AppData folder as `aa4step_inventory_data.json`
+
+**JSON Format:**
+```json
+{
+  "version": "2.0",
+  "exportDate": "2025-11-13T...",
+  "iAmDefinitions": [
+    {"id": "uuid", "name": "the son", "reasonToExist": "..."}
+  ],
+  "entries": [
+    {
+      "resentment": "Mom",
+      "reason": "she doesn't love me",
+      "affect": "self reliance",
+      "part": "maybe i haven't been the best son",
+      "defect": "Self will run riot",
+      "iAmId": "uuid"
+    }
+  ]
+}
+```
 
 **Key Features:**
 - Silent sign-in at app startup
 - Debounced uploads to coalesce rapid changes
 - Background serialization using `compute()` isolates
 - Conflict resolution: Drive data overwrites local on fetch
+- **Data Safety**: I Am definitions synced before entries
 
-### CSV Import/Export
+### JSON Import/Export
 
 **Export:**
 ```dart
-await _exportCsv();
-// Creates CSV with headers: Resentment,Reason,Affect,Part,Defect
-// Uses platform file picker to save
+await _exportJson();
+// Creates JSON with:
+// - Version number (2.0)
+// - Export timestamp
+// - I Am definitions (with IDs)
+// - Entries (with iAmId references)
+// Filename: inventory_export_<timestamp>.json
 ```
 
 **Import:**
 ```dart
-await _importCsv();
-// Reads CSV file
-// Appends entries to existing data
-// Triggers Drive sync if enabled
+await _importJson();
+// Shows WARNING dialog (data will be replaced)
+// Imports I Am definitions first
+// Then imports entries with preserved iAmId links
+// Backward compatible with old format (no iAmId)
 ```
+
+**Data Safety Features:**
+- ✅ Cannot delete I Am if used by entries
+- ✅ Warning dialog before import (data replacement)
+- ✅ I Am definitions imported before entries
+- ✅ Backward compatible with old JSON format
+- ✅ NULL safety for missing I Am references
+
+See `DATA_SAFETY.md` for complete testing checklist.
 
 ### Localization
 
@@ -139,8 +206,9 @@ t(context, 'key') // Translation helper function
 **Key translations:**
 - `app_title`: "AA 4Step Inventory" / "AA 4 trins opgørelse"
 - `data_management`: "Data Management" / "Data Håndtering"
-- `form_title`, `entries_title`, `settings_title`
-- `export_csv`, `import_csv`, `sync_google_drive`
+- `i_am`, `my_take`, `shortcomings`, `affect_my`
+- `add_i_am`, `edit_i_am`, `delete_i_am`, `i_am_definitions`
+- `export_json`, `import_json`, `sync_google_drive`
 - Form field labels and validation messages
 
 **Language toggle:** Globe icon in AppBar switches locale, persisted across sessions.
@@ -183,23 +251,28 @@ flutter analyze
 ## Key Files
 
 - `lib/main.dart`: App initialization, Hive setup, silent sign-in
-- `lib/pages/modular_inventory_home.dart`: Main UI container
-- `lib/pages/form_tab.dart`: Entry creation/editing form
-- `lib/pages/list_tab.dart`: Table view of entries
-- `lib/pages/data_management_tab.dart`: CSV/Drive functionality
-- `lib/models/inventory_entry.dart`: Data model
+- `lib/pages/modular_inventory_home.dart`: Main UI container with I Am state
+- `lib/pages/form_tab.dart`: Entry creation/editing with I Am selector
+- `lib/pages/list_tab.dart`: Table/card view with I Am display
+- `lib/pages/settings_tab.dart`: I Am definitions CRUD interface
+- `lib/pages/data_management_tab.dart`: JSON/Drive functionality
+- `lib/models/inventory_entry.dart`: Entry data model with JSON serialization
+- `lib/models/i_am_definition.dart`: I Am data model
 - `lib/services/drive_service.dart`: Google Drive sync logic
-- `lib/services/inventory_service.dart`: CRUD operations
+- `lib/services/inventory_service.dart`: Entry CRUD operations
+- `lib/services/i_am_service.dart`: I Am CRUD operations
 - `lib/localizations.dart`: Translation system
+- `DATA_SAFETY.md`: Data integrity testing checklist
 
 ## Dependencies
 
 - **flutter_modular**: Routing and dependency injection
 - **hive/hive_flutter**: Local NoSQL database
 - **google_sign_in**: Google authentication
-- **http**: Drive API communication
-- **csv**: CSV parsing
-- **file_picker**: File selection
+- **googleapis**: Drive API v3
+- **http**: HTTP client for API calls
+- **uuid**: UUID generation for I Am definitions
+- **file_picker**: File selection dialogs
 - **flutter_file_dialog**: Save file dialogs
 
 ## Platform Support
