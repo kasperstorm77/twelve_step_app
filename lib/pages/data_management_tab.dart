@@ -20,16 +20,16 @@ const List<String> _scopes = <String>[
   driveAppdataScope,
 ];
 
-class SettingsTab extends StatefulWidget {
+class DataManagementTab extends StatefulWidget {
   final Box<InventoryEntry> box;
 
-  const SettingsTab({super.key, required this.box});
+  const DataManagementTab({super.key, required this.box});
 
   @override
-  State<SettingsTab> createState() => _SettingsTabState();
+  State<DataManagementTab> createState() => _DataManagementTabState();
 }
 
-class _SettingsTabState extends State<SettingsTab> {
+class _DataManagementTabState extends State<DataManagementTab> {
   final GoogleSignIn _googleSignIn = GoogleSignIn(scopes: _scopes);
   GoogleSignInAccount? _currentUser;
   GoogleDriveClient? _driveClient;
@@ -416,26 +416,49 @@ class _SettingsTabState extends State<SettingsTab> {
 
   @override
   Widget build(BuildContext context) {
-    return Center(
+    final bool isSignedIn = _currentUser != null;
+    final String buttonText = isSignedIn ? 'Sign Out Google (${_currentUser!.displayName ?? 'User'})' : 'Sign In with Google';
+    final VoidCallback onPressed = isSignedIn ? _handleSignOut : _handleSignIn;
+
+    return SingleChildScrollView(
+      padding: const EdgeInsets.all(16),
       child: Column(
-        mainAxisAlignment: MainAxisAlignment.center,
+        crossAxisAlignment: CrossAxisAlignment.stretch,
         children: [
-          Icon(
-            Icons.settings_outlined,
-            size: 64,
-            color: Colors.grey,
+          ElevatedButton.icon(
+            onPressed: onPressed,
+            icon: isSignedIn ? const Icon(Icons.logout) : const Icon(Icons.login),
+            label: Text(buttonText),
           ),
           const SizedBox(height: 16),
-          Text(
-            'Settings',
-            style: Theme.of(context).textTheme.headlineSmall?.copyWith(
-              color: Colors.grey,
-            ),
+          Row(
+            mainAxisAlignment: MainAxisAlignment.spaceBetween,
+            children: [
+              Text(t(context, 'sync_google_drive')),
+              Tooltip(
+                message: isSignedIn ? '' : 'Sign in with Google to enable sync',
+                child: Switch(
+                  value: _syncEnabled,
+                  onChanged: isSignedIn ? _toggleSync : null,
+                ),
+              ),
+            ],
           ),
-          const SizedBox(height: 8),
-          Text(
-            'This tab is available for future settings',
-            style: TextStyle(color: Colors.grey),
+          const SizedBox(height: 16),
+          ElevatedButton(onPressed: _exportCsv, child: Text(t(context, 'export_csv'))),
+          const SizedBox(height: 16),
+          ElevatedButton(onPressed: _importCsv, child: Text(t(context, 'import_csv'))),
+          const SizedBox(height: 16),
+          if (isSignedIn)
+            ElevatedButton(
+              onPressed: _fetchFromGoogle,
+              child: Text(t(context, 'googlefetch')),
+            ),
+          const SizedBox(height: 16),
+          ElevatedButton(
+            style: ElevatedButton.styleFrom(backgroundColor: Colors.red),
+            onPressed: _clearAllEntries,
+            child: Text(t(context, 'clear_all')),
           ),
         ],
       ),

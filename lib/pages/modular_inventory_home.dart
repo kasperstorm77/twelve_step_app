@@ -9,6 +9,7 @@ import '../localizations.dart';
 import '../services/drive_service.dart';
 import '../services/inventory_service.dart';
 import '../services/app_version_service.dart';
+import 'data_management_page.dart';
 
 class ModularInventoryHome extends StatefulWidget {
   final Locale? currentLocale;
@@ -137,12 +138,27 @@ class _ModularInventoryHomeState extends State<ModularInventoryHome>
     widget.setLocale?.call(Locale(langCode));
   }
 
+  void _openDataManagement() {
+    Navigator.push(
+      context,
+      MaterialPageRoute(
+        builder: (context) => const DataManagementPage(),
+      ),
+    );
+  }
+
   @override
   Widget build(BuildContext context) {
     return Scaffold(
       appBar: AppBar(
         title: Text(t(context, 'app_title')),
         actions: [
+          IconButton(
+            icon: const Icon(Icons.settings),
+            onPressed: () {
+              _openDataManagement();
+            },
+          ),
           PopupMenuButton<String>(
             onSelected: _changeLanguage,
             itemBuilder: (context) => const [
