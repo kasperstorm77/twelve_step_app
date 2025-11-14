@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_modular/flutter_modular.dart';
 import 'package:hive_flutter/hive_flutter.dart';
 import '../models/inventory_entry.dart';
+import '../models/app_entry.dart';
 import '../pages/form_tab.dart';
 import '../pages/list_tab.dart';
 import '../pages/settings_tab.dart';
@@ -9,6 +10,7 @@ import '../localizations.dart';
 import '../services/drive_service.dart';
 import '../services/inventory_service.dart';
 import '../services/app_version_service.dart';
+import '../services/app_switcher_service.dart';
 import '../utils/platform_helper.dart';
 import 'data_management_page.dart';
 
@@ -156,18 +158,81 @@ class _ModularInventoryHomeState extends State<ModularInventoryHome>
     );
   }
 
+  Future<void> _showAppSwitcher() async {
+    final apps = AvailableApps.getAll();
+    final currentAppId = AppSwitcherService.getSelectedAppId();
+
+    await showDialog(
+      context: context,
+      builder: (context) => AlertDialog(
+        title: const Text('Select App'),
+        content: Column(
+          mainAxisSize: MainAxisSize.min,
+          children: apps.map((app) {
+            final isSelected = app.id == currentAppId;
+            return ListTile(
+              leading: Icon(
+                isSelected ? Icons.radio_button_checked : Icons.radio_button_unchecked,
+                color: isSelected ? Theme.of(context).colorScheme.primary : null,
+              ),
+              title: Text(app.name),
+              subtitle: Text(app.description),
+              selected: isSelected,
+              onTap: () async {
+                if (app.id != currentAppId) {
+                  await AppSwitcherService.setSelectedAppId(app.id);
+                  if (!mounted) return;
+                  
+                  // Show snackbar
+                  ScaffoldMessenger.of(context).showSnackBar(
+                    SnackBar(
+                      content: Text('Switched to ${app.name}'),
+                      duration: const Duration(seconds: 2),
+                    ),
+                  );
+                  
+                  // Refresh the UI
+                  setState(() {});
+                }
+                Navigator.of(context).pop();
+              },
+            );
+          }).toList(),
+        ),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.of(context).pop(),
+            child: const Text('Cancel'),
+          ),
+        ],
+      ),
+    );
+  }
+
   @override
   Widget build(BuildContext context) {
+    // Check if current app is 4th Step Inventory
+    final is4thStepApp = AppSwitcherService.is4thStepInventorySelected();
+    final currentApp = AppSwitcherService.getSelectedApp();
+
     return Scaffold(
       appBar: AppBar(
-        title: Text(t(context, 'app_title')),
+        title: Text(is4thStepApp ? t(context, 'app_title') : currentApp.name),
         actions: [
+          // App Switcher Icon
+          IconButton(
+            icon: const Icon(Icons.apps),
+            tooltip: 'Switch App',
+            onPressed: _showAppSwitcher,
+          ),
+          // Settings Icon
           IconButton(
             icon: const Icon(Icons.settings),
             onPressed: () {
               _openDataManagement();
             },
           ),
+          // Language Selector
           PopupMenuButton<String>(
             onSelected: _changeLanguage,
             itemBuilder: (context) => const [
@@ -177,16 +242,16 @@ class _ModularInventoryHomeState extends State<ModularInventoryHome>
             icon: const Icon(Icons.language),
           ),
         ],
-        bottom: TabBar(
+        bottom: is4thStepApp ? TabBar(
           controller: _tabController,
           tabs: [
             Tab(text: t(context, 'form_title')),
             Tab(text: t(context, 'entries_title')),
             Tab(text: t(context, 'settings_title')),
           ],
-        ),
+        ) : null,
       ),
-      body: TabBarView(
+      body: is4thStepApp ? TabBarView(
         controller: _tabController,
         children: [
           FormTab(
@@ -213,6 +278,28 @@ class _ModularInventoryHomeState extends State<ModularInventoryHome>
           ),
           SettingsTab(box: Hive.box<InventoryEntry>('entries')),
         ],
+      ) : Center(
+        child: Column(
+          mainAxisAlignment: MainAxisAlignment.center,
+          children: [
+            const Icon(Icons.construction, size: 64, color: Colors.grey),
+            const SizedBox(height: 16),
+            Text(
+              currentApp.name,
+              style: const TextStyle(fontSize: 24, fontWeight: FontWeight.bold),
+            ),
+            const SizedBox(height: 8),
+            Text(
+              currentApp.description,
+              style: const TextStyle(fontSize: 16, color: Colors.grey),
+            ),
+            const SizedBox(height: 8),
+            const Text(
+              'Coming Soon',
+              style: TextStyle(fontSize: 18, fontStyle: FontStyle.italic),
+            ),
+          ],
+        ),
       ),
     );
   }

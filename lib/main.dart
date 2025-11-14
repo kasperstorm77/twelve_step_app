@@ -6,6 +6,7 @@ import 'package:hive_flutter/hive_flutter.dart';
 // Import existing files for initialization
 import 'models/inventory_entry.dart';
 import 'models/i_am_definition.dart';
+import 'models/app_entry.dart';
 import 'services/drive_service.dart';
 import 'services/inventory_drive_service.dart';
 import 'services/i_am_service.dart';
@@ -27,6 +28,7 @@ void main() async {
 
   Hive.registerAdapter(InventoryEntryAdapter());
   Hive.registerAdapter(IAmDefinitionAdapter());
+  Hive.registerAdapter(AppEntryAdapter());
 
   try {
     await Hive.openBox<InventoryEntry>('entries');

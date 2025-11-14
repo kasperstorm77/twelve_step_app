@@ -56,6 +56,7 @@ class _DataManagementTabState extends State<DataManagementTab> {
   bool _syncEnabled = false;
   bool _interactiveSignIn = false;
   bool _interactiveSignInRequested = false;
+  bool _signingInProgress = false;
   String? _lastPromptedAccountId;
   bool _promptScheduled = false;
 
@@ -69,6 +70,10 @@ class _DataManagementTabState extends State<DataManagementTab> {
       _googleSignIn = GoogleSignIn(scopes: _scopes);
       
       _googleSignIn!.onCurrentUserChanged.listen((account) {
+        // Don't update state during an active sign-in to avoid
+        // interrupting the sign-in dialog/WebView
+        if (!mounted || _signingInProgress) return;
+        
         setState(() {
           _currentUser = account;
           if (_currentUser == null) {
@@ -79,11 +84,11 @@ class _DataManagementTabState extends State<DataManagementTab> {
         });
         if (account != null) {
           _initializeDriveClient(account);
-          // Schedule the prompt rather than showing immediately. Scheduling
-          // ensures the widget tree is ready to present a dialog and avoids
-          // timing issues where onCurrentUserChanged fires before the UI is
-          // prepared to show a modal.
-          _schedulePromptForAccount(account);
+          // Only schedule the prompt for automatic/silent sign-ins.
+          // Interactive sign-ins handle the prompt themselves in _handleSignIn.
+          if (!_interactiveSignIn && !_interactiveSignInRequested) {
+            _schedulePromptForAccount(account);
+          }
         }
       });
 
@@ -171,8 +176,17 @@ class _DataManagementTabState extends State<DataManagementTab> {
       // `onCurrentUserChanged` may fire before/after this method resumes.
       _interactiveSignInRequested = true;
       _interactiveSignIn = true;
+      _signingInProgress = true; // Prevent state updates during sign-in
+      
       final account = await _googleSignIn!.signIn();
+      
+      _signingInProgress = false; // Sign-in complete, allow state updates
+      
       if (account != null) {
+        // Manually update the current user since we blocked the listener
+        setState(() {
+          _currentUser = account;
+        });
         await _initializeDriveClient(account);
         // Schedule the prompt; this is resilient to the ordering of
         // onCurrentUserChanged vs this handler resuming.
@@ -187,6 +201,7 @@ class _DataManagementTabState extends State<DataManagementTab> {
         _interactiveSignInRequested = false;
       }
     } catch (e) {
+      _signingInProgress = false; // Clear flag on error
       messenger.showSnackBar(SnackBar(content: Text('Sign In failed: ${e.toString().split(',').first}')));
       _interactiveSignIn = false;
       _interactiveSignInRequested = false;
@@ -197,7 +212,7 @@ class _DataManagementTabState extends State<DataManagementTab> {
   // Only prompt when this sign-in was interactive/requested and we haven't
   // already prompted for this account id.
   if (!(_interactiveSignIn || _interactiveSignInRequested)) return;
-    if (_lastPromptedAccountId == account.id) return;
+  if (_lastPromptedAccountId == account.id) return;
 
     // Attempt to show the dialog. Only mark this account as 'prompted' after
     // the dialog successfully completes so that failures (for example if the
@@ -205,16 +220,21 @@ class _DataManagementTabState extends State<DataManagementTab> {
     try {
       final shouldFetch = await showDialog<bool>(
         context: context,
-        builder: (_) => AlertDialog(
+        barrierDismissible: false,
+        builder: (dialogContext) => AlertDialog(
           title: Text(t(context, 'googlefetch')),
           content: Text(t(context, 'confirm_google_fetch')),
           actions: [
             TextButton(
-              onPressed: () => Navigator.pop(context, false),
+              onPressed: () {
+                Navigator.of(dialogContext).pop(false);
+              },
               child: Text(t(context, 'cancel')),
             ),
             TextButton(
-              onPressed: () => Navigator.pop(context, true),
+              onPressed: () {
+                Navigator.of(dialogContext).pop(true);
+              },
               child: Text(t(context, 'fetch')),
             ),
           ],
@@ -227,12 +247,34 @@ class _DataManagementTabState extends State<DataManagementTab> {
       _lastPromptedAccountId = account.id;
 
       if (shouldFetch ?? false) {
-        await _fetchFromGoogle();
-        final settingsBox = Hive.box('settings');
-        settingsBox.put('syncEnabled', true);
-        if (mounted) setState(() => _syncEnabled = true);
-        await DriveService.instance.setSyncEnabled(true);
-        ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text(t(context, 'drive_upload_success').replaceFirst('%s', widget.box.length.toString()))));
+        // Show loading indicator
+        if (mounted) {
+          ScaffoldMessenger.of(context).showSnackBar(
+            SnackBar(
+              content: Text(t(context, 'fetching_data')),
+              duration: const Duration(seconds: 2),
+            ),
+          );
+        }
+        
+        try {
+          await _fetchFromGoogle();
+          final settingsBox = Hive.box('settings');
+          settingsBox.put('syncEnabled', true);
+          if (mounted) setState(() => _syncEnabled = true);
+          await DriveService.instance.setSyncEnabled(true);
+          if (mounted) {
+            ScaffoldMessenger.of(context).showSnackBar(
+              SnackBar(content: Text(t(context, 'drive_upload_success').replaceFirst('%s', widget.box.length.toString()))),
+            );
+          }
+        } catch (e) {
+          if (mounted) {
+            ScaffoldMessenger.of(context).showSnackBar(
+              SnackBar(content: Text('Fetch failed: $e')),
+            );
+          }
+        }
       }
 
       // Clear the interactive/requested flags now we've completed the flow.
@@ -258,7 +300,7 @@ class _DataManagementTabState extends State<DataManagementTab> {
       if (!mounted) return;
       try {
         await _maybePromptFetchAfterInteractiveSignIn(account);
-      } catch (_) {
+      } catch (e) {
         // Swallow scheduling errors silently.
       }
     });

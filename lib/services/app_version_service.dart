@@ -103,7 +103,7 @@ class AppVersionService {
     final shouldFetch = await showDialog<bool>(
       context: context,
       barrierDismissible: false, // Make it modal for new installs
-      builder: (context) => AlertDialog(
+      builder: (dialogContext) => AlertDialog(
         title: Text(t(context, 'googlefetch')),
         content: Column(
           mainAxisSize: MainAxisSize.min,
@@ -124,11 +124,15 @@ class AppVersionService {
         ),
         actions: [
           TextButton(
-            onPressed: () => Navigator.pop(context, false),
+            onPressed: () {
+              Navigator.of(dialogContext).pop(false);
+            },
             child: Text(t(context, 'cancel')),
           ),
           ElevatedButton(
-            onPressed: () => Navigator.pop(context, true),
+            onPressed: () {
+              Navigator.of(dialogContext).pop(true);
+            },
             child: Text(t(context, 'fetch')),
           ),
         ],
