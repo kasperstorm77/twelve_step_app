@@ -77,21 +77,21 @@ FILES_COPIED=0
 if [ -f "$SOURCE_DIR/lib/services/locale_provider.dart" ]; then
     cp "$SOURCE_DIR/lib/services/locale_provider.dart" "$DEST_DIR/lib/services/"
     print_success "Copied: lib/services/locale_provider.dart"
-    ((FILES_COPIED++))
+    FILES_COPIED=$((FILES_COPIED + 1))
 fi
 
 # AppSwitcherService
 if [ -f "$SOURCE_DIR/lib/services/app_switcher_service.dart" ]; then
     cp "$SOURCE_DIR/lib/services/app_switcher_service.dart" "$DEST_DIR/lib/services/"
     print_success "Copied: lib/services/app_switcher_service.dart"
-    ((FILES_COPIED++))
+    FILES_COPIED=$((FILES_COPIED + 1))
 fi
 
 # Localizations
 if [ -f "$SOURCE_DIR/lib/localizations.dart" ]; then
     cp "$SOURCE_DIR/lib/localizations.dart" "$DEST_DIR/lib/"
     print_success "Copied: lib/localizations.dart"
-    ((FILES_COPIED++))
+    FILES_COPIED=$((FILES_COPIED + 1))
 fi
 
 # Copy models
@@ -101,14 +101,14 @@ print_info "Copying models..."
 if [ -f "$SOURCE_DIR/lib/models/app_entry.dart" ]; then
     cp "$SOURCE_DIR/lib/models/app_entry.dart" "$DEST_DIR/lib/models/"
     print_success "Copied: lib/models/app_entry.dart"
-    ((FILES_COPIED++))
+    FILES_COPIED=$((FILES_COPIED + 1))
 fi
 
 # Copy I Am Definition if needed (optional - comment out if not needed)
 if [ -f "$SOURCE_DIR/lib/models/i_am_definition.dart" ]; then
     cp "$SOURCE_DIR/lib/models/i_am_definition.dart" "$DEST_DIR/lib/models/"
     print_success "Copied: lib/models/i_am_definition.dart (optional - only needed for AA apps)"
-    ((FILES_COPIED++))
+    FILES_COPIED=$((FILES_COPIED + 1))
 fi
 
 # Copy documentation
@@ -117,7 +117,7 @@ print_info "Copying documentation..."
 if [ -f "$SOURCE_DIR/docs/REUSABLE_COMPONENTS.md" ]; then
     cp "$SOURCE_DIR/docs/REUSABLE_COMPONENTS.md" "$DEST_DIR/docs/"
     print_success "Copied: docs/REUSABLE_COMPONENTS.md"
-    ((FILES_COPIED++))
+    FILES_COPIED=$((FILES_COPIED + 1))
 fi
 
 # Create a README in the destination
@@ -254,7 +254,7 @@ If you don't need localization:
 EOF
 
 print_success "Created: docs/SETUP_REUSABLE_COMPONENTS.md"
-((FILES_COPIED++))
+FILES_COPIED=$((FILES_COPIED + 1))
 
 # Summary
 echo ""
