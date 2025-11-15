@@ -2,6 +2,8 @@
 
 A Flutter application for managing 4th step inventory entries with local storage, Google Drive sync, and JSON import/export capabilities.
 
+**Repository**: [https://github.com/kasperstorm77/twelve_step_app](https://github.com/kasperstorm77/twelve_step_app)
+
 ![Main Screen](img/mainScreen.png)
 ![Settings](img/settings.png)
 ![Feature](img/feature.png)
@@ -276,7 +278,10 @@ See the `docs/` folder for detailed documentation:
 - `GOOGLE_OAUTH_SETUP.md`: Google OAuth configuration guide
 - `VS_CODE_DEBUG.md`: VS Code debugging setup
 - `PLAY_STORE_DESCRIPTIONS.md`: App store listing content
-- `PRIVACY_POLICY.md`: Privacy policy for app stores
+- `PROJECT_STRUCTURE.md`: Project organization and file structure
+
+See also:
+- `PRIVACY_POLICY.md`: Privacy policy for app stores (root directory)
 
 ## Dependencies
 

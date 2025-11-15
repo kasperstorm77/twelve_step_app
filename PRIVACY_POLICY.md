@@ -123,7 +123,7 @@ For questions about this Privacy Policy or your data, please contact:
 
 **Developer**: Kasper Storm  
 **Email**: kasper@stormstyrken.dk  
-**GitHub**: https://github.com/kasperstorm77/aa_4step_inventory
+**GitHub**: https://github.com/kasperstorm77/twelve_step_app
 
 ## Your Consent
 

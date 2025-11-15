@@ -231,7 +231,7 @@ The build system automatically copies the correct one to `android/app/google-ser
 
 ### Clone and Setup
 ```bash
-git clone <repo>
+git clone https://github.com/kasperstorm77/twelve_step_app.git
 cd twelve_step_app
 flutter create --platforms=android,ios,windows,linux,macos,web .
 cp android_manifest_template.xml android/app/src/main/AndroidManifest.xml
