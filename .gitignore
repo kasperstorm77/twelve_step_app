@@ -13,8 +13,9 @@ migrate_working_dir/
 # OAuth Credentials - DO NOT COMMIT
 lib/services/google_drive/desktop_oauth_config.dart
 
-# Local setup instructions with secrets
+# Local setup instructions with secrets and keystores - DO NOT COMMIT
 LOCAL_SETUP.md
+no_sync/
 
 # Android signing - DO NOT COMMIT
 android/key.properties

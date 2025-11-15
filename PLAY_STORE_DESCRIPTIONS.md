@@ -1,29 +1,28 @@
 # Play Store Descriptions for AA 4Step Inventory
 
 ## Short Description (80 characters max)
-Personal 4th Step inventory tool - unofficial, free, made by someone in recovery
+Personal 12 Step app - unofficial, free, made by a sober member of AA
 
 ## Full Description
 
-**Personal 4th Step Inventory - Made by Someone in Recovery, for Recovery**
+**Personal 12 step app - made by a sober member of AA**
 
-I created this app for myself to work through AA's 4th Step. This is NOT official AA - just my personal approach to doing a fearless moral inventory. Sharing it freely in case others find it helpful.
+I created this app for myself to work through AA's 4th Step. This is NOT official AA - just my personal approach to doing a fearless moral inventory. Sharing it freely in case others find it helpful, it has a theatre of the lies flavour, that i personally find valuable, it's optional to use.
 
 **Features:**
-✓ Track resentments, fears, and character defects
-✓ Organize: What happened, why it bothered me, my part, character defects  
+✓ Track 4th step inventory
 ✓ Completely FREE - No ads, subscriptions, or hidden costs
-✓ Privacy-first - Data stays on your device unless you choose Google Drive backup
+✓ Privacy-first - Data stays on your device unless you choose Google Drive backup to your personal drive.
 ✓ Simple form-based entry for Step 4 work
-✓ Export/import CSV files
+✓ Export/import JSON files
 ✓ English and Danish language support
-✓ Cross-device sync via optional Google Drive
+✓ Cross-device sync via optional Google Drive (windows application also created)
 
 **Important:**
-• UNOFFICIAL tool - not endorsed by AA World Services
-• Created by individual in recovery as personal project  
-• Always follow your sponsor's guidance for Step 4
-• Supplements but doesn't replace traditional methods
+• UNOFFICIAL tool - not affiliated with AA Worldwide, but hopefully accepted 
+• Created by me as a sober member of AA for myself as a personal project  
+• Always follow your sponsor's guidance for Step 4, this is but a supplement
+• Supplements but doesn't replace traditional methods, follow the guideline of your sponsor and you higher power - and read the manual :) - hint, it's a blue book :)
 
 **Privacy:**
 • Local storage by default
@@ -31,8 +30,8 @@ I created this app for myself to work through AA's 4th Step. This is NOT officia
 • No tracking, analytics, or data sharing
 • Full control - export, backup, or delete anytime
 
-I made this because pen-and-paper didn't work for me. If you prefer digital tools, this might help your Step 4 process. Will always be free - recovery tools should be accessible to all.
+I made this because pen-and-paper didn't work well for me. If you prefer digital tools, this might help your Step 4 process. Will always be free - in my opinion, recovery tools should be accessible to all.
 
 Your sponsor is your best guide. This is just a tool - the real work happens between you, your higher power, and your sponsor.
 
-*Made with ❤️ by someone in recovery, for the recovery community*
+*Made with ❤️ by a sober member of AA*

@@ -354,6 +354,7 @@ List<InventoryEntry> _parseInventoryJson(String content) {
               item['affect']?.toString() ?? '',
               item['part']?.toString() ?? '',
               item['defect']?.toString() ?? '',
+              iAmId: item['iAmId']?.toString(),
             ))
         .toList();
   } catch (e) {
