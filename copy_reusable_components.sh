@@ -65,6 +65,7 @@ echo ""
 # Create destination directories
 print_info "Creating directory structure..."
 mkdir -p "$DEST_DIR/lib/services"
+mkdir -p "$DEST_DIR/lib/services/google_drive"
 mkdir -p "$DEST_DIR/lib/models"
 mkdir -p "$DEST_DIR/docs"
 print_success "Directories created"
@@ -108,6 +109,55 @@ fi
 if [ -f "$SOURCE_DIR/lib/models/i_am_definition.dart" ]; then
     cp "$SOURCE_DIR/lib/models/i_am_definition.dart" "$DEST_DIR/lib/models/"
     print_success "Copied: lib/models/i_am_definition.dart (optional - only needed for AA apps)"
+    FILES_COPIED=$((FILES_COPIED + 1))
+fi
+
+# Copy Google Drive Sync Components
+print_info "Copying Google Drive sync components..."
+
+# Core components (always needed)
+if [ -f "$SOURCE_DIR/lib/services/google_drive/drive_config.dart" ]; then
+    cp "$SOURCE_DIR/lib/services/google_drive/drive_config.dart" "$DEST_DIR/lib/services/google_drive/"
+    print_success "Copied: lib/services/google_drive/drive_config.dart"
+    FILES_COPIED=$((FILES_COPIED + 1))
+fi
+
+if [ -f "$SOURCE_DIR/lib/services/google_drive/drive_crud_client.dart" ]; then
+    cp "$SOURCE_DIR/lib/services/google_drive/drive_crud_client.dart" "$DEST_DIR/lib/services/google_drive/"
+    print_success "Copied: lib/services/google_drive/drive_crud_client.dart"
+    FILES_COPIED=$((FILES_COPIED + 1))
+fi
+
+if [ -f "$SOURCE_DIR/lib/services/google_drive/enhanced_google_drive_service.dart" ]; then
+    cp "$SOURCE_DIR/lib/services/google_drive/enhanced_google_drive_service.dart" "$DEST_DIR/lib/services/google_drive/"
+    print_success "Copied: lib/services/google_drive/enhanced_google_drive_service.dart"
+    FILES_COPIED=$((FILES_COPIED + 1))
+fi
+
+# Mobile auth (comment out if desktop-only app)
+if [ -f "$SOURCE_DIR/lib/services/google_drive/mobile_google_auth_service.dart" ]; then
+    cp "$SOURCE_DIR/lib/services/google_drive/mobile_google_auth_service.dart" "$DEST_DIR/lib/services/google_drive/"
+    print_success "Copied: lib/services/google_drive/mobile_google_auth_service.dart (Android/iOS)"
+    FILES_COPIED=$((FILES_COPIED + 1))
+fi
+
+# Desktop auth (comment out if mobile-only app)
+if [ -f "$SOURCE_DIR/lib/services/google_drive/desktop_drive_auth.dart" ]; then
+    cp "$SOURCE_DIR/lib/services/google_drive/desktop_drive_auth.dart" "$DEST_DIR/lib/services/google_drive/"
+    print_success "Copied: lib/services/google_drive/desktop_drive_auth.dart (Desktop)"
+    FILES_COPIED=$((FILES_COPIED + 1))
+fi
+
+if [ -f "$SOURCE_DIR/lib/services/google_drive/desktop_drive_client.dart" ]; then
+    cp "$SOURCE_DIR/lib/services/google_drive/desktop_drive_client.dart" "$DEST_DIR/lib/services/google_drive/"
+    print_success "Copied: lib/services/google_drive/desktop_drive_client.dart (Desktop)"
+    FILES_COPIED=$((FILES_COPIED + 1))
+fi
+
+# App-specific example (reference only)
+if [ -f "$SOURCE_DIR/lib/services/inventory_drive_service.dart" ]; then
+    cp "$SOURCE_DIR/lib/services/inventory_drive_service.dart" "$DEST_DIR/lib/services/"
+    print_success "Copied: lib/services/inventory_drive_service.dart (REFERENCE - adapt for your app)"
     FILES_COPIED=$((FILES_COPIED + 1))
 fi
 
@@ -597,8 +647,14 @@ echo "  3. STEP 1: Identify and REMOVE conflicting old code"
 echo "  4. Read: docs/REUSABLE_COMPONENTS.md"
 echo "  5. Update lib/models/app_entry.dart (change typeId!)"
 echo "  6. Update lib/localizations.dart (your translations)"
-echo "  7. Run: flutter pub get"
-echo "  8. Run: flutter pub run build_runner build"
+echo "  7. Add dependencies to pubspec.yaml:"
+echo "     - google_sign_in: ^6.1.5 (mobile)"
+echo "     - googleapis: ^11.4.0"
+echo "     - googleapis_auth: ^1.4.1"
+echo "     - http: ^1.1.0"
+echo "  8. Run: flutter pub get"
+echo "  9. Run: flutter pub run build_runner build"
+echo "  10. Create your app-specific drive service (see inventory_drive_service.dart)"
 echo ""
 print_warning "These components are PRODUCTION-TESTED. Replace inferior existing code!"
 echo ""

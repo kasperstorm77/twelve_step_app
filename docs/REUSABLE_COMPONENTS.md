@@ -662,5 +662,401 @@ When modifying these components, maintain these principles:
 
 ---
 
+## 🔄 Google Drive Sync Components (NEW)
+
+### Overview
+
+Best-of-breed Google Drive sync architecture combining clean separation of concerns with robust timestamp-based conflict detection for data loss prevention.
+
+### Architecture Layers
+
+```
+┌─────────────────────────────────────────────────────────┐
+│ App-Specific Layer (Your Business Logic)                │
+│ - InventoryDriveService / ReflectionDriveService       │
+│ - Model serialization & deserialization                 │
+│ - App-specific sync triggers                            │
+└─────────────────────────────────────────────────────────┘
+                           ↓
+┌─────────────────────────────────────────────────────────┐
+│ Enhanced Service Layer (Reusable)                       │
+│ - EnhancedGoogleDriveService                            │
+│ - Timestamp-based conflict detection                    │
+│ - Debounced uploads, auto-sync                          │
+└─────────────────────────────────────────────────────────┘
+                           ↓
+┌─────────────────────────────────────────────────────────┐
+│ Platform Auth Layer                                      │
+│ - MobileGoogleAuthService (Android/iOS)                 │
+│ - DesktopDriveAuth (Windows/macOS/Linux)                │
+└─────────────────────────────────────────────────────────┘
+                           ↓
+┌─────────────────────────────────────────────────────────┐
+│ Core CRUD Layer                                          │
+│ - GoogleDriveCrudClient (Pure Drive API operations)     │
+│ - GoogleDriveConfig (Configuration)                     │
+└─────────────────────────────────────────────────────────┘
+```
+
+### Components
+
+#### 1. Core Configuration (`drive_config.dart`)
+
+```dart
+class GoogleDriveConfig {
+  final String fileName;
+  final String mimeType;
+  final String scope;
+  final String? parentFolder;
+
+  const GoogleDriveConfig({
+    required this.fileName,
+    required this.mimeType,
+    this.scope = 'https://www.googleapis.com/auth/drive.appdata',
+    this.parentFolder = 'appDataFolder',
+  });
+}
+```
+
+**What Makes It Modular:**
+- ✅ Simple configuration data class
+- ✅ No logic, just data
+- ✅ Supports both appDataFolder and regular Drive
+
+#### 2. CRUD Client (`drive_crud_client.dart`)
+
+```dart
+class GoogleDriveCrudClient {
+  // Create or update file
+  Future<String> upsertFile(String content);
+  
+  // Read file content
+  Future<String?> readFileContent();
+  
+  // Delete file
+  Future<bool> deleteFileByName();
+  
+  // Check if file exists
+  Future<bool> fileExists();
+  
+  // Get file metadata
+  Future<File?> getFileMetadata();
+}
+```
+
+**What Makes It Modular:**
+- ✅ Pure CRUD operations
+- ✅ No business logic
+- ✅ Uses googleapis and googleapis_auth
+- ✅ Works with any file type/content
+
+#### 3. Mobile Authentication (`mobile_google_auth_service.dart`)
+
+```dart
+class MobileGoogleAuthService {
+  bool get isSignedIn;
+  GoogleSignInAccount? get currentUser;
+  
+  Future<bool> initializeAuth();
+  Future<bool> signIn();
+  Future<void> signOut();
+  Future<GoogleDriveCrudClient?> createDriveClient();
+  void listenToAuthChanges(callback);
+}
+```
+
+**Platform:** Android/iOS only (uses google_sign_in)
+
+**What Makes It Modular:**
+- ✅ Encapsulates Google Sign-In complexity
+- ✅ Silent sign-in support
+- ✅ Token refresh handling
+- ✅ Auth state listeners
+
+#### 4. Enhanced Drive Service (`enhanced_google_drive_service.dart`)
+
+**Core Features:**
+- Timestamp-based conflict detection
+- Debounced uploads (700ms default)
+- Auto-sync on sign-in
+- Event streams for UI updates
+- Data loss prevention
+
+```dart
+class EnhancedGoogleDriveService {
+  // State
+  bool get syncEnabled;
+  bool get isAuthenticated;
+  DateTime? get localLastModified;
+  
+  // Streams
+  Stream<bool> get onSyncStateChanged;
+  Stream<String> get onUpload;
+  Stream<String> get onDownload;
+  Stream<String> get onError;
+  
+  // Methods
+  Future<void> initialize();
+  Future<bool> signIn();
+  Future<void> signOut();
+  void setSyncEnabled(bool enabled);
+  
+  // Upload/Download
+  Future<void> uploadContent(String content, {DateTime? timestamp});
+  Future<DownloadResult?> downloadContent();
+  void scheduleUpload(String content, {DateTime? timestamp});
+  
+  // Utilities
+  Future<bool> fileExists();
+  void updateLocalTimestamp(DateTime timestamp);
+}
+```
+
+**What Makes It Modular:**
+- ✅ Generic - works with any data type
+- ✅ No app-specific logic
+- ✅ Callback hooks for timestamp persistence
+- ✅ Event-driven architecture
+
+#### 5. App-Specific Service Pattern
+
+Example from `inventory_drive_service.dart`:
+
+```dart
+class InventoryDriveService {
+  late final EnhancedGoogleDriveService _driveService;
+  
+  InventoryDriveService._() {
+    const config = GoogleDriveConfig(
+      fileName: 'aa4step_inventory_data.json',
+      mimeType: 'application/json',
+      scope: 'https://www.googleapis.com/auth/drive.appdata',
+      parentFolder: 'appDataFolder',
+    );
+    
+    _driveService = EnhancedGoogleDriveService(
+      config: config,
+      onSaveTimestamp: _saveLastModified,
+      onLoadTimestamp: _getLocalLastModified,
+    );
+  }
+  
+  // App-specific methods
+  Future<void> uploadFromBox(Box<InventoryEntry> box);
+  Future<List<InventoryEntry>?> downloadEntries();
+  Future<bool> checkAndSyncIfNeeded();
+  void scheduleUploadFromBox(Box<InventoryEntry> box);
+}
+```
+
+### Data Format Pattern
+
+**Critical:** Always include version and lastModified:
+
+```json
+{
+  "version": "2.0",
+  "exportDate": "2025-11-15T10:30:00.000Z",
+  "lastModified": "2025-11-15T10:30:00.000Z",
+  "yourDataKey": [
+    {
+      "id": "...",
+      "data": "...",
+      "lastModified": "2025-11-15T10:30:00.000Z"
+    }
+  ]
+}
+```
+
+### Timestamp-Based Conflict Detection
+
+```dart
+// On app start or sign-in:
+Future<bool> checkAndSyncIfNeeded() async {
+  // Download remote file
+  final result = await _driveService.downloadContent();
+  if (result == null) return false;
+
+  // Parse remote timestamp
+  final decoded = json.decode(result.content);
+  final remoteTimestamp = DateTime.parse(decoded['lastModified']);
+  final localTimestamp = await _getLocalLastModified();
+
+  // Compare
+  if (localTimestamp == null || remoteTimestamp.isAfter(localTimestamp)) {
+    // Remote is newer - sync down
+    await _restoreFromRemote(result.content);
+    return true;
+  }
+  
+  return false; // Local is up to date
+}
+```
+
+### Integration Example
+
+```dart
+// 1. Create app-specific service
+class MyAppDriveService {
+  static MyAppDriveService? _instance;
+  static MyAppDriveService get instance => _instance ??= MyAppDriveService._();
+  
+  late final EnhancedGoogleDriveService _driveService;
+  
+  MyAppDriveService._() {
+    _driveService = EnhancedGoogleDriveService(
+      config: GoogleDriveConfig(
+        fileName: 'my_app_data.json',
+        mimeType: 'application/json',
+      ),
+      onSaveTimestamp: _saveTimestamp,
+      onLoadTimestamp: _loadTimestamp,
+    );
+  }
+  
+  Future<void> _saveTimestamp(DateTime ts) async {
+    final prefs = await SharedPreferences.getInstance();
+    await prefs.setString('lastModified', ts.toIso8601String());
+  }
+  
+  Future<DateTime?> _loadTimestamp() async {
+    final prefs = await SharedPreferences.getInstance();
+    final str = prefs.getString('lastModified');
+    return str != null ? DateTime.parse(str) : null;
+  }
+}
+
+// 2. Initialize in main.dart
+void main() async {
+  WidgetsFlutterBinding.ensureInitialized();
+  
+  final driveService = MyAppDriveService.instance;
+  await driveService.initialize();
+  
+  // Check for remote updates
+  await driveService.checkAndSyncIfNeeded();
+  
+  runApp(MyApp());
+}
+
+// 3. Upload on data change
+Future<void> saveData(MyData data) async {
+  // Save locally
+  await database.save(data);
+  
+  // Schedule upload (debounced)
+  MyAppDriveService.instance.scheduleUpload();
+}
+```
+
+### Benefits
+
+**Data Loss Prevention:**
+- ✅ Timestamp comparison prevents overwriting newer data
+- ✅ Auto-sync on sign-in detects remote changes
+- ✅ Debounced uploads reduce API calls
+- ✅ Event streams allow UI feedback
+
+**Code Reusability:**
+- ✅ Core CRUD layer works with any Drive app
+- ✅ Enhanced service works with any data format
+- ✅ Auth services handle platform differences
+- ✅ App-specific layer only contains business logic
+
+**Ease of Use:**
+- ✅ Singleton pattern for app-specific service
+- ✅ Event streams for reactive UI
+- ✅ Automatic conflict detection
+- ✅ No manual merge logic needed
+
+### Files to Copy
+
+**Core (Required):**
+- `lib/services/google_drive/drive_config.dart`
+- `lib/services/google_drive/drive_crud_client.dart`
+- `lib/services/google_drive/enhanced_google_drive_service.dart`
+
+**Mobile Platform (Android/iOS):**
+- `lib/services/google_drive/mobile_google_auth_service.dart`
+
+**Desktop Platform (Windows/macOS/Linux):**
+- `lib/services/google_drive/desktop_drive_auth.dart`
+- `lib/services/google_drive/desktop_drive_client.dart`
+
+**App-Specific Example:**
+- `lib/services/inventory_drive_service.dart` (as reference pattern)
+
+### Dependencies
+
+```yaml
+dependencies:
+  google_sign_in: ^6.1.5  # Mobile only
+  googleapis: ^11.4.0
+  googleapis_auth: ^1.4.1
+  http: ^1.1.0
+  # For timestamp storage:
+  shared_preferences: ^2.2.0  # or hive_flutter
+```
+
+### What Makes It Modular
+
+- ✅ **Layered Architecture**: Each layer has single responsibility
+- ✅ **Platform Abstraction**: Mobile and desktop auth separated
+- ✅ **No Tight Coupling**: Uses callbacks for timestamp persistence
+- ✅ **Event-Driven**: Streams for UI reactivity
+- ✅ **Dependency Injection**: Config passed to constructors
+- ✅ **Generic Content**: Works with any JSON-serializable data
+- ✅ **Stateless CRUD**: Core operations have no side effects
+
+### How to Reuse
+
+1. Copy core files (config, CRUD client, enhanced service)
+2. Copy auth service for your platform (mobile or desktop)
+3. Create app-specific service extending the pattern
+4. Implement timestamp persistence (SharedPreferences or Hive)
+5. Add JSON serialization to your models
+6. Call initialize() and checkAndSyncIfNeeded() on app start
+7. Schedule uploads after data changes
+
+### Important Notes
+
+**Timestamp Storage:**
+```dart
+// Option 1: SharedPreferences (simple)
+final prefs = await SharedPreferences.getInstance();
+await prefs.setString('lastModified', timestamp.toIso8601String());
+
+// Option 2: Hive (if already using it)
+final box = Hive.box('settings');
+await box.put('lastModified', timestamp.toIso8601String());
+```
+
+**Auto-Sync Pattern:**
+```dart
+// In your main.dart or app initialization:
+if (driveService.isAuthenticated) {
+  final synced = await MyAppDriveService.instance.checkAndSyncIfNeeded();
+  if (synced) {
+    print('✓ Auto-synced from Google Drive');
+  }
+}
+```
+
+**UI Integration:**
+```dart
+// Listen to sync events
+StreamBuilder<String>(
+  stream: driveService.onUpload,
+  builder: (context, snapshot) {
+    if (snapshot.hasData) {
+      return Text('Uploaded: ${snapshot.data}');
+    }
+    return Container();
+  },
+)
+```
+
+---
+
 **Last Updated:** November 15, 2025
-**Version:** 1.0.0
+**Version:** 2.0.0
