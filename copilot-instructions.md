@@ -400,6 +400,19 @@ adb -s emulator-5554 install -r build\app\outputs\flutter-apk\app-debug.apk
 
 # Version increment (before release)
 dart scripts/increment_version.dart
+
+# Release build (ALWAYS increment version first!)
+# 1. Increment version
+dart scripts/increment_version.dart
+# OR manually edit pubspec.yaml: version: 1.0.1+32 → version: 1.0.1+33
+
+# 2. Build release bundle for Play Store
+flutter build appbundle --release
+
+# 3. Output will be at: build/app/outputs/bundle/release/app-release.aab
+
+# Note: After flutter create, copy the AndroidManifest template:
+cp android_manifest_template.xml android/app/src/main/AndroidManifest.xml
 ```
 
 **Tasks Available:**
