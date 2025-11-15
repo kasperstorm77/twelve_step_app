@@ -120,15 +120,180 @@ if [ -f "$SOURCE_DIR/docs/REUSABLE_COMPONENTS.md" ]; then
     FILES_COPIED=$((FILES_COPIED + 1))
 fi
 
-# Create a README in the destination
+# Create setup guide
 cat > "$DEST_DIR/docs/SETUP_REUSABLE_COMPONENTS.md" << 'EOF'
 # Reusable Components Setup Guide
 
-This folder contains reusable components copied from the Twelve Step App project.
+**IMPORTANT FOR AI ASSISTANTS**: This guide is optimized for AI code assistants. Follow instructions precisely in the order given. Check for conflicts before implementing.
 
-Repository: https://github.com/kasperstorm77/twelve_step_app
+Source Repository: https://github.com/kasperstorm77/twelve_step_app
 
-## Files Copied
+---
+
+## ⚠️ CRITICAL: Conflict Resolution Rules
+
+**BEFORE implementing these components, check if the target project already has:**
+
+1. **Existing Sync Functionality** - If Google Drive sync or similar cloud sync already exists:
+   - ✅ KEEP the existing sync implementation  
+   - ✅ DO NOT copy Drive-related services from this project
+   - ✅ Study the existing sync architecture before adding new data models
+   - ⚠️ Sync conflicts are the #1 cause of data loss - never mix sync approaches
+
+2. **Existing Localization** - If locale/translation system exists:
+   - ✅ KEEP the existing localization system
+   - ✅ DO NOT overwrite with LocaleProvider  
+   - ✅ Adapt new features to existing locale management
+
+3. **Existing Settings UI** - If settings/data management UI exists:
+   - ✅ KEEP the existing UI structure
+   - ✅ INTEGRATE new features into existing settings
+   - ✅ DO NOT create duplicate settings pages
+
+4. **Existing App Switcher** - If multi-app or multi-mode functionality exists:
+   - ✅ KEEP the existing implementation
+   - ✅ DO NOT copy AppSwitcherService
+   - ✅ Review existing approach before adding app switching
+
+**RULE**: Existing functionality ALWAYS takes precedence. Clean up conflicting copied files after reviewing them.
+
+---
+
+## �� Understanding the Sync Architecture (CRITICAL)
+
+**This section is MANDATORY reading before modifying any data models or services.**
+
+### The Sync Pattern Used in Source Project
+
+The source project uses **Google Drive AppData sync** with a conflict-avoidance design:
+
+```
+Local Storage (Hive) ←→ Sync Service ←→ Google Drive (AppData folder)
+```
+
+**Key Principles:**
+
+1. **Single Source of Truth**: Google Drive is the authoritative source
+   - On startup: Download from Drive → Overwrite local
+   - On changes: Upload to Drive → Confirm success  
+   - Never merge - always replace
+
+2. **Timestamp-Based Conflict Resolution**:
+   ```dart
+   // Each synced model includes:
+   DateTime lastModified;  // Set on every change
+   
+   // Sync logic:
+   if (driveData.lastModified > localData.lastModified) {
+     // Drive is newer - download and replace local
+   } else {
+     // Local is newer - upload to Drive
+   }
+   ```
+
+3. **Atomic Operations**:
+   - Download entire dataset
+   - Parse and validate
+   - Replace local storage in single transaction
+   - Upload happens immediately after local save
+
+4. **No Partial Syncs**:
+   - Always sync complete datasets
+   - No field-level merging
+   - No conflict markers or resolution dialogs
+   - Last-write-wins on full object basis
+
+### Why This Design Avoids Conflicts
+
+✅ **No Concurrent Edits**: Single user per account  
+✅ **Immediate Upload**: Changes sync instantly (when online)  
+✅ **Download on Startup**: Always gets latest on launch  
+✅ **Full Replacement**: No merge logic = no merge conflicts  
+✅ **Validation**: Parse errors prevent corrupt data from saving
+
+### Implementing Sync in New Models
+
+If adding sync to a new model in the target project:
+
+```dart
+@HiveType(typeId: X)  // Use unique typeId
+class YourModel extends HiveObject {
+  @HiveField(0)
+  final String id;
+  
+  @HiveField(1)
+  final DateTime lastModified;  // REQUIRED for sync
+  
+  @HiveField(2)
+  // ... your fields
+  
+  YourModel({
+    required this.id,
+    required this.lastModified,
+    // ... your fields
+  });
+  
+  // REQUIRED: toJson for upload
+  Map<String, dynamic> toJson() => {
+    'id': id,
+    'lastModified': lastModified.toIso8601String(),
+    // ... your fields
+  };
+  
+  // REQUIRED: fromJson for download
+  factory YourModel.fromJson(Map<String, dynamic> json) {
+    return YourModel(
+      id: json['id'] as String,
+      lastModified: DateTime.parse(json['lastModified'] as String),
+      // ... your fields
+    );
+  }
+}
+```
+
+### Critical Sync Service Pattern
+
+```dart
+class YourSyncService {
+  // Upload: Called immediately after local save
+  static Future<void> uploadToCloud(List<YourModel> items) async {
+    final jsonList = items.map((item) => item.toJson()).toList();
+    final jsonString = jsonEncode(jsonList);
+    
+    // Upload entire dataset as single file
+    await cloudService.uploadFile(
+      fileName: 'your_data.json',
+      content: jsonString,
+    );
+  }
+  
+  // Download: Called on app startup
+  static Future<void> downloadFromCloud() async {
+    final jsonString = await cloudService.downloadFile('your_data.json');
+    final List<dynamic> jsonList = jsonDecode(jsonString);
+    
+    // Parse all items
+    final items = jsonList.map((json) => YourModel.fromJson(json)).toList();
+    
+    // Replace local storage atomically
+    final box = Hive.box<YourModel>('your_box');
+    await box.clear();  // Delete all local data
+    await box.addAll(items);  // Add downloaded data
+  }
+}
+```
+
+### When NOT to Use This Sync Pattern
+
+❌ **Multi-user collaboration** - Use operational transform or CRDTs  
+❌ **Offline-first with long offline periods** - Use vector clocks  
+❌ **Large binary files** - Use delta sync or chunking  
+❌ **Real-time collaboration** - Use WebSockets + OT/CRDT  
+✅ **Single-user personal data** - This pattern is perfect
+
+---
+
+## 📦 Files Copied
 
 ### Services
 - `lib/services/locale_provider.dart` - Locale state management
@@ -140,7 +305,17 @@ Repository: https://github.com/kasperstorm77/twelve_step_app
 ### Localization
 - `lib/localizations.dart` - Translation system
 
+---
+
 ## Quick Setup Checklist
+
+**STEP 0: Conflict Check (DO THIS FIRST)**
+
+- [ ] Check if sync functionality already exists → If YES, DO NOT copy Drive services
+- [ ] Check if localization exists → If YES, DO NOT copy LocaleProvider/localizations.dart
+- [ ] Check if settings UI exists → If YES, integrate into existing UI
+- [ ] Check if app switching exists → If YES, DO NOT copy AppSwitcherService
+- [ ] Document existing patterns before proceeding
 
 ### 1. Update Dependencies
 
@@ -161,15 +336,23 @@ flutter pub get
 
 ### 2. Change Hive TypeId
 
-**IMPORTANT:** Open `lib/models/app_entry.dart` and change the typeId to avoid conflicts:
+**CRITICAL - DO NOT SKIP**: Open `lib/models/app_entry.dart` and change the typeId to avoid conflicts:
 
 ```dart
-// Change this:
+// BEFORE (from source project):
 @HiveType(typeId: 2)
 
-// To an unused number in your project:
-@HiveType(typeId: 10)  // Or any number not used elsewhere
+// AFTER (in target project - use unique unused number):
+@HiveType(typeId: 10)  // Or 15, 20, 100 - any number not used elsewhere
 ```
+
+**How to check for conflicts:**
+```bash
+# Search all Hive models for typeId usage
+grep -r "@HiveType(typeId:" lib/models/
+```
+
+Each model MUST have a unique typeId within the same project.
 
 ### 3. Generate Hive Adapters
 
@@ -177,7 +360,7 @@ flutter pub get
 flutter pub run build_runner build --delete-conflicting-outputs
 ```
 
-This will create `lib/models/app_entry.g.dart`
+Expected output: `lib/models/app_entry.g.dart` created
 
 ### 4. Register Adapters in main.dart
 
@@ -191,7 +374,7 @@ void main() async {
   // Initialize Hive
   await Hive.initFlutter();
   
-  // Register adapters
+  // Register adapters (use same typeId as in app_entry.dart)
   Hive.registerAdapter(AppEntryAdapter());
   
   // Open settings box (used by AppSwitcherService)
@@ -201,7 +384,9 @@ void main() async {
 }
 ```
 
-### 5. Setup LocaleProvider
+### 5. Setup LocaleProvider (If No Existing Localization)
+
+**Only if conflict check passed - no existing locale system.**
 
 With flutter_modular:
 ```dart
@@ -221,13 +406,43 @@ ChangeNotifierProvider(
 )
 ```
 
-### 6. Update Translations
+### 6. Update Translations (If Using Copied Localization)
+
+**Only if using the copied localization.dart file.**
 
 Open `lib/localizations.dart` and replace the `localizedValues` map with your app's translations.
 
-### 7. Update Available Apps
+### 7. Update Available Apps (If Using AppSwitcher)
 
-Open `lib/models/app_entry.dart` and modify `AvailableApps.getAll()` to return your apps.
+**Only if using AppSwitcherService.**
+
+Open `lib/models/app_entry.dart` and modify `AvailableApps.getAll()` with your app definitions.
+
+### 8. Clean Up Unused Components (IMPORTANT)
+
+**If existing functionality was found in conflict check:**
+
+If NOT using app switching:
+```bash
+rm lib/services/app_switcher_service.dart
+rm lib/models/app_entry.dart
+rm lib/models/app_entry.g.dart
+```
+
+If NOT using localization:
+```bash
+rm lib/localizations.dart
+rm lib/services/locale_provider.dart
+```
+
+If existing sync exists:
+```bash
+# DO NOT copy or keep any Drive-related files
+# Review docs/REUSABLE_COMPONENTS.md for sync patterns only
+# Implement sync in existing service architecture
+```
+
+---
 
 ## Next Steps
 
@@ -236,20 +451,9 @@ See `REUSABLE_COMPONENTS.md` for:
 - UI component patterns
 - Complete usage guide
 
-## Removing Unused Components
-
-If you don't need app switching:
-- Delete `lib/services/app_switcher_service.dart`
-- Delete `lib/models/app_entry.dart`
-- Delete `lib/models/app_entry.g.dart` (after generation)
-
-If you don't need localization:
-- Delete `lib/localizations.dart`
-- Delete `lib/services/locale_provider.dart`
-
 ---
 
-**Generated by:** copy_reusable_components.sh
+**Generated by:** copy_reusable_components.sh  
 **Source:** Twelve Step App (https://github.com/kasperstorm77/twelve_step_app)
 EOF
 
@@ -264,12 +468,13 @@ echo "━━━━━━━━━━━━━━━━━━━━━━━━�
 echo ""
 print_info "Next steps:"
 echo "  1. cd $DEST_DIR"
-echo "  2. Read: docs/SETUP_REUSABLE_COMPONENTS.md"
-echo "  3. Read: docs/REUSABLE_COMPONENTS.md"
-echo "  4. Update lib/models/app_entry.dart (change typeId!)"
-echo "  5. Update lib/localizations.dart (your translations)"
-echo "  6. Run: flutter pub get"
-echo "  7. Run: flutter pub run build_runner build"
+echo "  2. Read: docs/SETUP_REUSABLE_COMPONENTS.md (AI-optimized)"
+echo "  3. STEP 0: Check for existing functionality conflicts"
+echo "  4. Read: docs/REUSABLE_COMPONENTS.md"
+echo "  5. Update lib/models/app_entry.dart (change typeId!)"
+echo "  6. Update lib/localizations.dart (your translations)"
+echo "  7. Run: flutter pub get"
+echo "  8. Run: flutter pub run build_runner build"
 echo ""
-print_warning "IMPORTANT: Change the Hive typeId in app_entry.dart to avoid conflicts!"
+print_warning "CRITICAL: Read sync architecture section before modifying data models!"
 echo ""
