@@ -2,6 +2,10 @@
 
 A Flutter application for managing 4th step inventory entries with local storage, Google Drive sync, and JSON import/export capabilities.
 
+![Main Screen](img/mainScreen.png)
+![Settings](img/settings.png)
+![Feature](img/feature.png)
+
 ## Overview
 
 This app helps users create and manage inventory entries following the AA 4-step process. Each entry contains:
@@ -262,7 +266,17 @@ flutter analyze
 - `lib/services/inventory_service.dart`: Entry CRUD operations
 - `lib/services/i_am_service.dart`: I Am CRUD operations
 - `lib/localizations.dart`: Translation system
+
+## Documentation
+
+See the `docs/` folder for detailed documentation:
 - `DATA_SAFETY.md`: Data integrity testing checklist
+- `REUSABLE_COMPONENTS.md`: Modular components for reuse in other projects
+- `BUILD_SCRIPTS.md`: Build automation and version management
+- `GOOGLE_OAUTH_SETUP.md`: Google OAuth configuration guide
+- `VS_CODE_DEBUG.md`: VS Code debugging setup
+- `PLAY_STORE_DESCRIPTIONS.md`: App store listing content
+- `PRIVACY_POLICY.md`: Privacy policy for app stores
 
 ## Dependencies
 

@@ -114,8 +114,8 @@ fi
 # Copy documentation
 print_info "Copying documentation..."
 
-if [ -f "$SOURCE_DIR/REUSABLE_COMPONENTS.md" ]; then
-    cp "$SOURCE_DIR/REUSABLE_COMPONENTS.md" "$DEST_DIR/docs/"
+if [ -f "$SOURCE_DIR/docs/REUSABLE_COMPONENTS.md" ]; then
+    cp "$SOURCE_DIR/docs/REUSABLE_COMPONENTS.md" "$DEST_DIR/docs/"
     print_success "Copied: docs/REUSABLE_COMPONENTS.md"
     ((FILES_COPIED++))
 fi
