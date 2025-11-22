@@ -232,7 +232,7 @@ class _EveningRitualFormTabState extends State<EveningRitualFormTab> {
                             children: [
                               if (_selectedType == null)
                                 DropdownButtonFormField<ReflectionType>(
-                                  value: _selectedType,
+                                  initialValue: _selectedType,
                                   decoration: InputDecoration(
                                     labelText: t(context, 'select_reflection_type'),
                                     border: const OutlineInputBorder(),

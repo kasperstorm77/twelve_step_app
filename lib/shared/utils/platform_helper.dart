@@ -4,7 +4,7 @@ import 'package:flutter/foundation.dart' show kIsWeb;
 /// Simple platform detection helper for conditional code execution.
 /// Import this anywhere you need platform-specific code:
 /// ```dart
-/// import 'package:aa_4step_inventory/utils/platform_helper.dart';
+/// import 'package:twelvestepsapp/shared/utils/platform_helper.dart';
 /// 
 /// if (PlatformHelper.isAndroid) {
 ///   // Android-specific code
