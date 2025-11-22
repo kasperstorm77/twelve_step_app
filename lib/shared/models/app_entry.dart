@@ -45,6 +45,7 @@ class AvailableApps {
   static const String fourthStepInventory = 'fourth_step_inventory';
   static const String eighthStepAmends = 'eighth_step_amends';
   static const String eveningRitual = 'evening_ritual';
+  static const String gratitude = 'gratitude';
 
   static List<AppEntry> getAll() {
     return [
@@ -64,6 +65,12 @@ class AvailableApps {
         id: eveningRitual,
         name: 'Evening Ritual',
         description: 'Daily evening reflection and inventory',
+        isActive: true,
+      ),
+      AppEntry(
+        id: gratitude,
+        name: 'Gratitude',
+        description: 'Daily gratitude journal',
         isActive: true,
       ),
     ];

@@ -9,6 +9,7 @@ import 'list_tab.dart';
 import 'settings_tab.dart';
 import '../../eighth_step/pages/eighth_step_home.dart';
 import '../../evening_ritual/pages/evening_ritual_home.dart';
+import '../../gratitude/pages/gratitude_home.dart';
 import '../../shared/localizations.dart';
 import '../services/drive_service.dart';
 import '../services/inventory_service.dart';
@@ -233,6 +234,16 @@ class _ModularInventoryHomeState extends State<ModularInventoryHome>
     // If Evening Ritual app is selected, show dedicated page
     if (currentAppId == AvailableApps.eveningRitual) {
       return EveningRitualHome(
+        key: ValueKey(currentAppId), // Force rebuild when switching
+        onAppSwitched: () {
+          setState(() {}); // Trigger rebuild when app is switched
+        },
+      );
+    }
+
+    // If Gratitude app is selected, show dedicated page
+    if (currentAppId == AvailableApps.gratitude) {
+      return GratitudeHome(
         key: ValueKey(currentAppId), // Force rebuild when switching
         onAppSwitched: () {
           setState(() {}); // Trigger rebuild when app is switched

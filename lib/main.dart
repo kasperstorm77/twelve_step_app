@@ -11,6 +11,7 @@ import 'fourth_step/models/i_am_definition.dart';
 import 'shared/models/app_entry.dart';
 import 'eighth_step/models/person.dart';
 import 'evening_ritual/models/reflection_entry.dart';
+import 'gratitude/models/gratitude_entry.dart';
 import 'fourth_step/services/drive_service.dart';
 import 'fourth_step/services/inventory_drive_service.dart';
 import 'fourth_step/services/i_am_service.dart';
@@ -37,6 +38,7 @@ void main() async {
   Hive.registerAdapter(ColumnTypeAdapter());
   Hive.registerAdapter(ReflectionEntryAdapter());
   Hive.registerAdapter(ReflectionTypeAdapter());
+  Hive.registerAdapter(GratitudeEntryAdapter());
 
   try {
     await Hive.openBox<InventoryEntry>('entries');
@@ -85,6 +87,16 @@ void main() async {
     }
     await Hive.openBox<ReflectionEntry>('reflections_box');
     if (kDebugMode) print('Cleared corrupted reflections_box and created new one');
+  }
+
+  // Open gratitude box
+  try {
+    await Hive.openBox<GratitudeEntry>('gratitude_box');
+  } catch (e) {
+    if (kDebugMode) print('Error opening gratitude_box: $e');
+    await Hive.deleteBoxFromDisk('gratitude_box');
+    await Hive.openBox<GratitudeEntry>('gratitude_box');
+    if (kDebugMode) print('Cleared corrupted gratitude_box and created new one');
   }
 
   // Open a separate settings box for sync preferences

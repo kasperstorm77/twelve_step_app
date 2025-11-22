@@ -6,6 +6,7 @@ import '../../fourth_step/models/inventory_entry.dart';
 import '../../fourth_step/models/i_am_definition.dart';
 import '../../eighth_step/models/person.dart';
 import '../../evening_ritual/models/reflection_entry.dart';
+import '../../gratitude/models/gratitude_entry.dart';
 import '../../shared/services/google_drive/drive_config.dart';
 import '../../shared/services/google_drive/mobile_drive_service.dart';
 
@@ -96,18 +97,23 @@ class InventoryDriveService {
       final reflectionsBox = Hive.box<ReflectionEntry>('reflections_box');
       final reflections = reflectionsBox.values.map((r) => r.toJson()).toList();
 
+      // Get gratitude entries
+      final gratitudeBox = Hive.box<GratitudeEntry>('gratitude_box');
+      final gratitudeEntries = gratitudeBox.values.map((g) => g.toJson()).toList();
+
       // Prepare complete export data with I Am definitions and people
       final entries = box.values.map((e) => e.toJson()).toList();
       
       final now = DateTime.now().toUtc();
       final exportData = {
-        'version': '4.0', // Increment version to include reflections
+        'version': '5.0', // Increment version to include gratitude
         'exportDate': now.toIso8601String(),
         'lastModified': now.toIso8601String(), // For sync conflict detection
         'iAmDefinitions': iAmDefinitions,
         'entries': entries,
         'people': people, // Add 8th step people
         'reflections': reflections, // Add evening reflections
+        'gratitude': gratitudeEntries, // Add gratitude entries
       };
 
       // Serialize to JSON string
@@ -148,18 +154,23 @@ class InventoryDriveService {
       final reflectionsBox = Hive.box<ReflectionEntry>('reflections_box');
       final reflections = reflectionsBox.values.map((r) => r.toJson()).toList();
 
+      // Get gratitude entries
+      final gratitudeBox = Hive.box<GratitudeEntry>('gratitude_box');
+      final gratitudeEntries = gratitudeBox.values.map((g) => g.toJson()).toList();
+
       // Prepare complete export data with I Am definitions and people
       final entries = box.values.map((e) => e.toJson()).toList();
       
       final now = DateTime.now().toUtc();
       final exportData = {
-        'version': '4.0', // Increment version to include reflections
+        'version': '5.0', // Increment version to include gratitude
         'exportDate': now.toIso8601String(),
         'lastModified': now.toIso8601String(), // For sync conflict detection
         'iAmDefinitions': iAmDefinitions,
         'entries': entries,
         'people': people, // Add 8th step people
         'reflections': reflections, // Add evening reflections
+        'gratitude': gratitudeEntries, // Add gratitude entries
       };
 
       // Serialize to JSON string
@@ -302,6 +313,7 @@ class InventoryDriveService {
         final iAmDefinitions = decoded['iAmDefinitions'] as List<dynamic>?;
         final people = decoded['people'] as List<dynamic>?; // Get people data
         final reflections = decoded['reflections'] as List<dynamic>?; // Get reflections data
+        final gratitudeData = decoded['gratitude'] as List<dynamic>?; // Get gratitude data
 
         // Update I Am definitions first
         if (iAmDefinitions != null) {
@@ -340,10 +352,20 @@ class InventoryDriveService {
           }
         }
 
+        // Update gratitude entries (if present in remote data)
+        if (gratitudeData != null) {
+          final gratitudeBox = Hive.box<GratitudeEntry>('gratitude_box');
+          await gratitudeBox.clear();
+          for (final gratitudeJson in gratitudeData) {
+            final gratitude = GratitudeEntry.fromJson(gratitudeJson as Map<String, dynamic>);
+            await gratitudeBox.add(gratitude);
+          }
+        }
+
         // Save the remote timestamp as our new local timestamp
         await _saveLastModified(remoteTimestamp);
 
-        if (kDebugMode) print('InventoryDriveService: ✓ Auto-sync complete (${entries.length} entries, ${iAmDefinitions?.length ?? 0} I Ams, ${people?.length ?? 0} people, ${reflections?.length ?? 0} reflections)');
+        if (kDebugMode) print('InventoryDriveService: ✓ Auto-sync complete (${entries.length} entries, ${iAmDefinitions?.length ?? 0} I Ams, ${people?.length ?? 0} people, ${reflections?.length ?? 0} reflections, ${gratitudeData?.length ?? 0} gratitude)');
         return true;
       } else {
         if (kDebugMode) {
