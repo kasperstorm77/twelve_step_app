@@ -5,7 +5,7 @@ import 'package:flutter/foundation.dart';
 import 'package:csv/csv.dart';
 import 'package:package_info_plus/package_info_plus.dart';
 import '../localizations.dart';
-import '../../fourth_step/services/drive_service.dart';
+import 'legacy_drive_service.dart';
 import '../../fourth_step/models/inventory_entry.dart';
 
 class AppVersionService {

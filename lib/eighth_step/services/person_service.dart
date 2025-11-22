@@ -1,6 +1,6 @@
 import 'package:hive_flutter/hive_flutter.dart';
 import '../../eighth_step/models/person.dart';
-import '../../fourth_step/services/inventory_drive_service.dart';
+import '../../shared/services/all_apps_drive_service.dart';
 import '../../fourth_step/models/inventory_entry.dart';
 
 class PersonService {
@@ -51,9 +51,9 @@ class PersonService {
   /// Trigger background sync after changes
   static void _triggerSync() {
     try {
-      // Trigger sync using the centralized InventoryDriveService
+      // Trigger sync using the centralized AllAppsDriveService
       final entriesBox = Hive.box<InventoryEntry>('entries');
-      InventoryDriveService.instance.scheduleUploadFromBox(entriesBox);
+      AllAppsDriveService.instance.scheduleUploadFromBox(entriesBox);
     } catch (e) {
       // Sync not available or failed, silently continue
     }

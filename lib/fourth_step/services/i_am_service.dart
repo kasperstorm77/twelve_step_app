@@ -2,7 +2,7 @@ import 'package:hive_flutter/hive_flutter.dart';
 import '../../fourth_step/models/i_am_definition.dart';
 import '../../fourth_step/models/inventory_entry.dart';
 import 'package:uuid/uuid.dart';
-import 'drive_service.dart';
+import '../../shared/services/legacy_drive_service.dart';
 
 class IAmService {
   static final IAmService _instance = IAmService._internal();

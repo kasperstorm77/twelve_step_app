@@ -6,19 +6,19 @@ import '../../shared/services/app_help_service.dart';
 import '../../shared/models/app_entry.dart';
 import '../../shared/pages/data_management_page.dart';
 import '../../shared/services/locale_provider.dart';
-import 'gratitude_today_tab.dart';
-import 'gratitude_list_tab.dart';
+import 'current_paper_tab.dart';
+import 'archive_tab.dart';
 
-class GratitudeHome extends StatefulWidget {
+class AgnosticismHome extends StatefulWidget {
   final VoidCallback? onAppSwitched;
 
-  const GratitudeHome({super.key, this.onAppSwitched});
+  const AgnosticismHome({super.key, this.onAppSwitched});
 
   @override
-  State<GratitudeHome> createState() => _GratitudeHomeState();
+  State<AgnosticismHome> createState() => _AgnosticismHomeState();
 }
 
-class _GratitudeHomeState extends State<GratitudeHome> with SingleTickerProviderStateMixin {
+class _AgnosticismHomeState extends State<AgnosticismHome> with SingleTickerProviderStateMixin {
   late final TabController _tabController;
 
   @override
@@ -31,13 +31,6 @@ class _GratitudeHomeState extends State<GratitudeHome> with SingleTickerProvider
   void dispose() {
     _tabController.dispose();
     super.dispose();
-  }
-
-  void _onDateSelected(DateTime date) {
-    setState(() {
-      // Switch to today tab when date selected from history
-    });
-    _tabController.animateTo(0);
   }
 
   void _changeLanguage(String langCode) {
@@ -108,13 +101,11 @@ class _GratitudeHomeState extends State<GratitudeHome> with SingleTickerProvider
     );
   }
 
-
-
   @override
   Widget build(BuildContext context) {
     return Scaffold(
       appBar: AppBar(
-        title: Text(t(context, 'gratitude_title')),
+        title: Text(t(context, 'agnosticism_title')),
         actions: [
           IconButton(
             icon: const Icon(Icons.apps),
@@ -127,7 +118,7 @@ class _GratitudeHomeState extends State<GratitudeHome> with SingleTickerProvider
             onPressed: () {
               AppHelpService.showHelpDialog(
                 context,
-                AvailableApps.gratitude,
+                AvailableApps.agnosticism,
               );
             },
           ),
@@ -147,18 +138,16 @@ class _GratitudeHomeState extends State<GratitudeHome> with SingleTickerProvider
         bottom: TabBar(
           controller: _tabController,
           tabs: [
-            Tab(text: t(context, 'gratitude_today_tab')),
-            Tab(text: t(context, 'gratitude_view_tab')),
+            Tab(text: t(context, 'agnosticism_current_tab')),
+            Tab(text: t(context, 'agnosticism_archive_tab')),
           ],
         ),
       ),
       body: TabBarView(
         controller: _tabController,
-        children: [
-          const GratitudeTodayTab(),
-          GratitudeListTab(
-            onDateSelected: _onDateSelected,
-          ),
+        children: const [
+          CurrentPaperTab(),
+          ArchiveTab(),
         ],
       ),
     );

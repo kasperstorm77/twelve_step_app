@@ -22,7 +22,7 @@ import 'package:google_sign_in/google_sign_in.dart'
     
 // Services - conditionally used based on platform
 import '../services/google_drive_client.dart';
-import '../../fourth_step/services/drive_service.dart';
+import '../services/legacy_drive_service.dart';
 
 // Desktop-only imports (only used when PlatformHelper.isDesktop)
 import '../services/google_drive/desktop_drive_client.dart'

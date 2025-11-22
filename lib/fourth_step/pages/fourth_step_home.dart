@@ -1,28 +1,26 @@
 import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
-import 'package:flutter_modular/flutter_modular.dart';
 import 'package:hive_flutter/hive_flutter.dart';
 import '../models/inventory_entry.dart';
 import '../../shared/models/app_entry.dart';
 import 'form_tab.dart';
 import 'list_tab.dart';
 import 'settings_tab.dart';
-import '../../eighth_step/pages/eighth_step_home.dart';
-import '../../evening_ritual/pages/evening_ritual_home.dart';
-import '../../gratitude/pages/gratitude_home.dart';
 import '../../shared/localizations.dart';
-import '../services/drive_service.dart';
+import '../../shared/services/legacy_drive_service.dart';
 import '../services/inventory_service.dart';
 import '../../shared/services/app_version_service.dart';
 import '../../shared/services/app_switcher_service.dart';
+import '../../shared/services/app_help_service.dart';
 import '../../shared/utils/platform_helper.dart';
 import '../../shared/pages/data_management_page.dart';
 
 class ModularInventoryHome extends StatefulWidget {
   final Locale? currentLocale;
   final void Function(Locale)? setLocale;
+  final VoidCallback? onAppSwitched;
 
-  const ModularInventoryHome({super.key, this.currentLocale, this.setLocale});
+  const ModularInventoryHome({super.key, this.currentLocale, this.setLocale, this.onAppSwitched});
 
   @override
   State<ModularInventoryHome> createState() => _ModularInventoryHomeState();
@@ -49,8 +47,8 @@ class _ModularInventoryHomeState extends State<ModularInventoryHome>
   void initState() {
     super.initState();
     _tabController = TabController(length: 3, vsync: this);
-    _inventoryService = Modular.get<InventoryService>();
-    _driveService = Modular.get<DriveService>();
+    _inventoryService = InventoryService();
+    _driveService = DriveService.instance;
     
     _driveService.loadSyncState();
     
@@ -187,8 +185,10 @@ class _ModularInventoryHomeState extends State<ModularInventoryHome>
                   await AppSwitcherService.setSelectedAppId(app.id);
                   if (!mounted) return;
                   
-                  // Refresh the UI
-                  setState(() {});
+                  // Trigger callback to refresh parent AppRouter
+                  if (widget.onAppSwitched != null) {
+                    widget.onAppSwitched!();
+                  }
                   
                   if (!context.mounted) return;
                   
@@ -218,52 +218,28 @@ class _ModularInventoryHomeState extends State<ModularInventoryHome>
 
   @override
   Widget build(BuildContext context) {
-    // Check if current app is 4th Step Inventory
-    final currentAppId = AppSwitcherService.getSelectedAppId();
-
-    // If 8th Step app is selected, show dedicated page
-    if (currentAppId == AvailableApps.eighthStepAmends) {
-      return EighthStepHome(
-        key: ValueKey(currentAppId), // Force rebuild when switching
-        onAppSwitched: () {
-          setState(() {}); // Trigger rebuild when app is switched
-        },
-      );
-    }
-
-    // If Evening Ritual app is selected, show dedicated page
-    if (currentAppId == AvailableApps.eveningRitual) {
-      return EveningRitualHome(
-        key: ValueKey(currentAppId), // Force rebuild when switching
-        onAppSwitched: () {
-          setState(() {}); // Trigger rebuild when app is switched
-        },
-      );
-    }
-
-    // If Gratitude app is selected, show dedicated page
-    if (currentAppId == AvailableApps.gratitude) {
-      return GratitudeHome(
-        key: ValueKey(currentAppId), // Force rebuild when switching
-        onAppSwitched: () {
-          setState(() {}); // Trigger rebuild when app is switched
-        },
-      );
-    }
-
-    // Otherwise show 4th step or placeholder
-    final is4thStepApp = AppSwitcherService.is4thStepInventorySelected();
-    final currentApp = AppSwitcherService.getSelectedApp();
-
+    // This widget now only displays the 4th Step app
+    // Routing to other apps is handled by AppRouter
     return Scaffold(
       appBar: AppBar(
-        title: Text(is4thStepApp ? t(context, 'app_title') : currentApp.name),
+        title: Text(t(context, 'app_title')),
         actions: [
           // App Switcher Icon
           IconButton(
             icon: const Icon(Icons.apps),
             tooltip: 'Switch App',
             onPressed: _showAppSwitcher,
+          ),
+          // Help Icon
+          IconButton(
+            icon: const Icon(Icons.help_outline),
+            tooltip: 'Help',
+            onPressed: () {
+              AppHelpService.showHelpDialog(
+                context,
+                AvailableApps.fourthStepInventory,
+              );
+            },
           ),
           // Settings Icon
           IconButton(
@@ -282,16 +258,16 @@ class _ModularInventoryHomeState extends State<ModularInventoryHome>
             icon: const Icon(Icons.language),
           ),
         ],
-        bottom: is4thStepApp ? TabBar(
+        bottom: TabBar(
           controller: _tabController,
           tabs: [
             Tab(text: t(context, 'form_title')),
             Tab(text: t(context, 'entries_title')),
             Tab(text: t(context, 'settings_title')),
           ],
-        ) : null,
+        ),
       ),
-      body: is4thStepApp ? TabBarView(
+      body: TabBarView(
         controller: _tabController,
         children: [
           FormTab(
@@ -318,28 +294,6 @@ class _ModularInventoryHomeState extends State<ModularInventoryHome>
           ),
           SettingsTab(box: Hive.box<InventoryEntry>('entries')),
         ],
-      ) : Center(
-        child: Column(
-          mainAxisAlignment: MainAxisAlignment.center,
-          children: [
-            const Icon(Icons.construction, size: 64, color: Colors.grey),
-            const SizedBox(height: 16),
-            Text(
-              currentApp.name,
-              style: const TextStyle(fontSize: 24, fontWeight: FontWeight.bold),
-            ),
-            const SizedBox(height: 8),
-            Text(
-              currentApp.description,
-              style: const TextStyle(fontSize: 16, color: Colors.grey),
-            ),
-            const SizedBox(height: 8),
-            const Text(
-              'Coming Soon',
-              style: TextStyle(fontSize: 18, fontStyle: FontStyle.italic),
-            ),
-          ],
-        ),
       ),
     );
   }

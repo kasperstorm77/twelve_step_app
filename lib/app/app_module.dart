@@ -1,22 +1,16 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_modular/flutter_modular.dart';
 import 'package:hive_flutter/hive_flutter.dart';
-import '../fourth_step/models/inventory_entry.dart';
-import '../fourth_step/services/drive_service.dart';
-import '../fourth_step/services/inventory_service.dart';
 import '../shared/services/locale_provider.dart';
-import '../fourth_step/pages/fourth_step_home.dart' show ModularInventoryHome;
+import '../shared/pages/app_router.dart';
 
 class AppModule extends Module {
   @override
   void binds(Injector i) {
-    // Core services - singleton instances
-    i.addSingleton<DriveService>(() => DriveService.instance);
-    i.addLazySingleton<InventoryService>(InventoryService.new);
+    // Shared services - singleton instances
     i.addSingleton<LocaleProvider>(LocaleProvider.new);
     
-    // Hive boxes - lazy singletons
-    i.addLazySingleton<Box<InventoryEntry>>(() => Hive.box<InventoryEntry>('entries'));
+    // Hive boxes - lazy singletons (shared across apps)
     i.addLazySingleton<Box>(() => Hive.box('settings'));
   }
 
@@ -26,18 +20,12 @@ class AppModule extends Module {
   }
 }
 
-// Simple wrapper for locale management
+// Simple wrapper for locale management and routing
 class AppHomePage extends StatelessWidget {
   const AppHomePage({super.key});
 
   @override
   Widget build(BuildContext context) {
-    final localeProvider = Modular.get<LocaleProvider>();
-    final currentLocale = Localizations.localeOf(context);
-    
-    return ModularInventoryHome(
-      currentLocale: currentLocale,
-      setLocale: localeProvider.changeLocale,
-    );
+    return const AppRouter();
   }
 }

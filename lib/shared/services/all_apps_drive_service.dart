@@ -7,26 +7,27 @@ import '../../fourth_step/models/i_am_definition.dart';
 import '../../eighth_step/models/person.dart';
 import '../../evening_ritual/models/reflection_entry.dart';
 import '../../gratitude/models/gratitude_entry.dart';
+import '../../agnosticism/models/agnosticism_paper.dart';
 import '../../shared/services/google_drive/drive_config.dart';
 import '../../shared/services/google_drive/mobile_drive_service.dart';
 
 // --------------------------------------------------------------------------
-// App-Specific Inventory Drive Service - Mobile Only
+// All Apps Drive Service - Mobile Only
 // --------------------------------------------------------------------------
 
-/// App-specific Google Drive service for inventory data (mobile platforms)
-/// Uses the MobileDriveService with inventory-specific logic
-class InventoryDriveService {
-  static InventoryDriveService? _instance;
-  static InventoryDriveService get instance {
-    _instance ??= InventoryDriveService._();
+/// Google Drive service that syncs all 5 apps (mobile platforms)
+/// Uses the MobileDriveService with multi-app logic
+class AllAppsDriveService {
+  static AllAppsDriveService? _instance;
+  static AllAppsDriveService get instance {
+    _instance ??= AllAppsDriveService._();
     return _instance!;
   }
 
   late final MobileDriveService _driveService;
   final StreamController<int> _uploadCountController = StreamController<int>.broadcast();
 
-  InventoryDriveService._() {
+  AllAppsDriveService._() {
     // Configure for inventory app
     const config = GoogleDriveConfig(
       fileName: 'aa4step_inventory_data.json',
@@ -101,12 +102,16 @@ class InventoryDriveService {
       final gratitudeBox = Hive.box<GratitudeEntry>('gratitude_box');
       final gratitudeEntries = gratitudeBox.values.map((g) => g.toJson()).toList();
 
+      // Get agnosticism papers
+      final agnosticismBox = Hive.box<AgnosticismPaper>('agnosticism_papers');
+      final agnosticismPapers = agnosticismBox.values.map((p) => p.toJson()).toList();
+
       // Prepare complete export data with I Am definitions and people
       final entries = box.values.map((e) => e.toJson()).toList();
       
       final now = DateTime.now().toUtc();
       final exportData = {
-        'version': '5.0', // Increment version to include gratitude
+        'version': '6.0', // Increment version to include agnosticism
         'exportDate': now.toIso8601String(),
         'lastModified': now.toIso8601String(), // For sync conflict detection
         'iAmDefinitions': iAmDefinitions,
@@ -114,6 +119,7 @@ class InventoryDriveService {
         'people': people, // Add 8th step people
         'reflections': reflections, // Add evening reflections
         'gratitude': gratitudeEntries, // Add gratitude entries
+        'agnosticism': agnosticismPapers, // Add agnosticism papers
       };
 
       // Serialize to JSON string
@@ -158,12 +164,16 @@ class InventoryDriveService {
       final gratitudeBox = Hive.box<GratitudeEntry>('gratitude_box');
       final gratitudeEntries = gratitudeBox.values.map((g) => g.toJson()).toList();
 
+      // Get agnosticism papers
+      final agnosticismBox = Hive.box<AgnosticismPaper>('agnosticism_papers');
+      final agnosticismPapers = agnosticismBox.values.map((p) => p.toJson()).toList();
+
       // Prepare complete export data with I Am definitions and people
       final entries = box.values.map((e) => e.toJson()).toList();
       
       final now = DateTime.now().toUtc();
       final exportData = {
-        'version': '5.0', // Increment version to include gratitude
+        'version': '6.0', // Increment version to include agnosticism
         'exportDate': now.toIso8601String(),
         'lastModified': now.toIso8601String(), // For sync conflict detection
         'iAmDefinitions': iAmDefinitions,
@@ -171,6 +181,7 @@ class InventoryDriveService {
         'people': people, // Add 8th step people
         'reflections': reflections, // Add evening reflections
         'gratitude': gratitudeEntries, // Add gratitude entries
+        'agnosticism': agnosticismPapers, // Add agnosticism papers
       };
 
       // Serialize to JSON string
@@ -194,7 +205,7 @@ class InventoryDriveService {
   /// Download and restore inventory entries
   Future<List<InventoryEntry>?> downloadEntries() async {
     if (!isAuthenticated) {
-      if (kDebugMode) print('InventoryDriveService: Download skipped - not authenticated');
+      if (kDebugMode) print('AllAppsDriveService: Download skipped - not authenticated');
       return null;
     }
 
@@ -204,7 +215,7 @@ class InventoryDriveService {
 
       return await _parseInventoryContent(content);
     } catch (e) {
-      if (kDebugMode) print('InventoryDriveService: Download failed - $e');
+      if (kDebugMode) print('AllAppsDriveService: Download failed - $e');
       rethrow;
     }
   }
@@ -227,7 +238,7 @@ class InventoryDriveService {
       final enabled = settingsBox.get('syncEnabled', defaultValue: false) ?? false;
       _driveService.setSyncEnabled(enabled);
     } catch (e) {
-      if (kDebugMode) print('InventoryDriveService: Failed to load sync state - $e');
+      if (kDebugMode) print('AllAppsDriveService: Failed to load sync state - $e');
     }
   }
 
@@ -237,7 +248,7 @@ class InventoryDriveService {
       final settingsBox = await Hive.openBox('settings');
       await settingsBox.put('syncEnabled', enabled);
     } catch (e) {
-      if (kDebugMode) print('InventoryDriveService: Failed to save sync state - $e');
+      if (kDebugMode) print('AllAppsDriveService: Failed to save sync state - $e');
     }
   }
 
@@ -247,7 +258,7 @@ class InventoryDriveService {
       final settingsBox = await Hive.openBox('settings');
       await settingsBox.put('lastModified', timestamp.toIso8601String());
     } catch (e) {
-      if (kDebugMode) print('InventoryDriveService: Failed to save lastModified - $e');
+      if (kDebugMode) print('AllAppsDriveService: Failed to save lastModified - $e');
     }
   }
 
@@ -260,31 +271,31 @@ class InventoryDriveService {
         return DateTime.parse(timestampStr);
       }
     } catch (e) {
-      if (kDebugMode) print('InventoryDriveService: Failed to get lastModified - $e');
+      if (kDebugMode) print('AllAppsDriveService: Failed to get lastModified - $e');
     }
     return null;
   }
 
   /// Check if remote data is newer than local and auto-sync if needed
   Future<bool> checkAndSyncIfNeeded() async {
-    if (kDebugMode) print('InventoryDriveService: Checking for remote updates...');
+    if (kDebugMode) print('AllAppsDriveService: Checking for remote updates...');
     
     if (!syncEnabled) {
-      if (kDebugMode) print('InventoryDriveService: Sync disabled, skipping check');
+      if (kDebugMode) print('AllAppsDriveService: Sync disabled, skipping check');
       return false;
     }
     
     if (!isAuthenticated) {
-      if (kDebugMode) print('InventoryDriveService: Not authenticated, skipping check');
+      if (kDebugMode) print('AllAppsDriveService: Not authenticated, skipping check');
       return false;
     }
 
     try {
       // Download remote content
-      if (kDebugMode) print('InventoryDriveService: Downloading remote file...');
+      if (kDebugMode) print('AllAppsDriveService: Downloading remote file...');
       final content = await _driveService.downloadContent();
       if (content == null) {
-        if (kDebugMode) print('InventoryDriveService: No remote file found');
+        if (kDebugMode) print('AllAppsDriveService: No remote file found');
         return false;
       }
 
@@ -293,7 +304,7 @@ class InventoryDriveService {
       final remoteTimestampStr = decoded['lastModified'] as String?;
       
       if (remoteTimestampStr == null) {
-        if (kDebugMode) print('InventoryDriveService: Remote file has no timestamp, skipping auto-sync');
+        if (kDebugMode) print('AllAppsDriveService: Remote file has no timestamp, skipping auto-sync');
         return false;
       }
 
@@ -303,7 +314,7 @@ class InventoryDriveService {
       // If local timestamp is null or remote is newer, sync down
       if (localTimestamp == null || remoteTimestamp.isAfter(localTimestamp)) {
         if (kDebugMode) {
-          print('InventoryDriveService: ⚠️ Remote data is NEWER - syncing down');
+          print('AllAppsDriveService: ⚠️ Remote data is NEWER - syncing down');
           print('  Local:  ${localTimestamp?.toIso8601String() ?? "never synced"}');
           print('  Remote: ${remoteTimestamp.toIso8601String()}');
         }
@@ -314,6 +325,7 @@ class InventoryDriveService {
         final people = decoded['people'] as List<dynamic>?; // Get people data
         final reflections = decoded['reflections'] as List<dynamic>?; // Get reflections data
         final gratitudeData = decoded['gratitude'] as List<dynamic>?; // Get gratitude data
+        final agnosticismData = decoded['agnosticism'] as List<dynamic>?; // Get agnosticism data
 
         // Update I Am definitions first
         if (iAmDefinitions != null) {
@@ -362,21 +374,31 @@ class InventoryDriveService {
           }
         }
 
+        // Update agnosticism papers (if present in remote data)
+        if (agnosticismData != null) {
+          final agnosticismBox = Hive.box<AgnosticismPaper>('agnosticism_papers');
+          await agnosticismBox.clear();
+          for (final paperJson in agnosticismData) {
+            final paper = AgnosticismPaper.fromJson(paperJson as Map<String, dynamic>);
+            await agnosticismBox.put(paper.id, paper);
+          }
+        }
+
         // Save the remote timestamp as our new local timestamp
         await _saveLastModified(remoteTimestamp);
 
-        if (kDebugMode) print('InventoryDriveService: ✓ Auto-sync complete (${entries.length} entries, ${iAmDefinitions?.length ?? 0} I Ams, ${people?.length ?? 0} people, ${reflections?.length ?? 0} reflections, ${gratitudeData?.length ?? 0} gratitude)');
+        if (kDebugMode) print('AllAppsDriveService: ✓ Auto-sync complete (${entries.length} entries, ${iAmDefinitions?.length ?? 0} I Ams, ${people?.length ?? 0} people, ${reflections?.length ?? 0} reflections, ${gratitudeData?.length ?? 0} gratitude, ${agnosticismData?.length ?? 0} agnosticism)');
         return true;
       } else {
         if (kDebugMode) {
-          print('InventoryDriveService: ✓ Local data is up to date');
+          print('AllAppsDriveService: ✓ Local data is up to date');
           print('  Local:  ${localTimestamp.toIso8601String()}');
           print('  Remote: ${remoteTimestamp.toIso8601String()}');
         }
         return false;
       }
     } catch (e) {
-      if (kDebugMode) print('InventoryDriveService: ❌ Auto-sync check failed - $e');
+      if (kDebugMode) print('AllAppsDriveService: ❌ Auto-sync check failed - $e');
       return false;
     }
   }
@@ -389,7 +411,7 @@ class InventoryDriveService {
         _uploadCountController.add(box.length);
       }
     } catch (e) {
-      if (kDebugMode) print('InventoryDriveService: Failed to get entries count - $e');
+      if (kDebugMode) print('AllAppsDriveService: Failed to get entries count - $e');
     }
   }
 

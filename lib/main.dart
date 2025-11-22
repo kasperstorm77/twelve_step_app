@@ -12,8 +12,9 @@ import 'shared/models/app_entry.dart';
 import 'eighth_step/models/person.dart';
 import 'evening_ritual/models/reflection_entry.dart';
 import 'gratitude/models/gratitude_entry.dart';
-import 'fourth_step/services/drive_service.dart';
-import 'fourth_step/services/inventory_drive_service.dart';
+import 'agnosticism/models/agnosticism_paper.dart';
+import 'shared/services/legacy_drive_service.dart';
+import 'shared/services/all_apps_drive_service.dart';
 import 'fourth_step/services/i_am_service.dart';
 import 'shared/utils/platform_helper.dart';
 
@@ -39,6 +40,8 @@ void main() async {
   Hive.registerAdapter(ReflectionEntryAdapter());
   Hive.registerAdapter(ReflectionTypeAdapter());
   Hive.registerAdapter(GratitudeEntryAdapter());
+  Hive.registerAdapter(PaperStatusAdapter());
+  Hive.registerAdapter(AgnosticismPaperAdapter());
 
   try {
     await Hive.openBox<InventoryEntry>('entries');
@@ -99,6 +102,16 @@ void main() async {
     if (kDebugMode) print('Cleared corrupted gratitude_box and created new one');
   }
 
+  // Open agnosticism papers box
+  try {
+    await Hive.openBox<AgnosticismPaper>('agnosticism_papers');
+  } catch (e) {
+    if (kDebugMode) print('Error opening agnosticism_papers: $e');
+    await Hive.deleteBoxFromDisk('agnosticism_papers');
+    await Hive.openBox<AgnosticismPaper>('agnosticism_papers');
+    if (kDebugMode) print('Cleared corrupted agnosticism_papers and created new one');
+  }
+
   // Open a separate settings box for sync preferences
   await Hive.openBox('settings');
 
@@ -110,8 +123,8 @@ void main() async {
   // PLATFORM: This only works on Android/iOS where google_sign_in is available
   if (PlatformHelper.isMobile) {
     try {
-      // Initialize the InventoryDriveService
-      await InventoryDriveService.instance.initialize();
+      // Initialize the AllAppsDriveService
+      await AllAppsDriveService.instance.initialize();
       
       final scopes = <String>['email', 'https://www.googleapis.com/auth/drive.appdata'];
       final googleSignIn = Platform.isIOS
@@ -136,14 +149,14 @@ void main() async {
           await settingsBox.put('syncEnabled', enabled); // Save the default
           await DriveService.instance.setSyncEnabled(enabled);
           
-          // Enable sync for InventoryDriveService too
-          await InventoryDriveService.instance.setSyncEnabled(enabled);
+          // Enable sync for AllAppsDriveService too
+          await AllAppsDriveService.instance.setSyncEnabled(enabled);
           
           // Check if remote data is newer and auto-sync if needed
           if (enabled) {
             try {
               if (kDebugMode) print('Checking for remote updates...');
-              final synced = await InventoryDriveService.instance.checkAndSyncIfNeeded();
+              final synced = await AllAppsDriveService.instance.checkAndSyncIfNeeded();
               if (synced) {
                 if (kDebugMode) print('✓ Auto-synced newer data from Google Drive');
               } else {

@@ -4,6 +4,7 @@ import 'package:table_calendar/table_calendar.dart';
 import '../services/reflection_service.dart';
 import '../../shared/localizations.dart';
 import '../../shared/services/app_switcher_service.dart';
+import '../../shared/services/app_help_service.dart';
 import '../../shared/models/app_entry.dart';
 import '../../shared/pages/data_management_page.dart';
 import '../../shared/services/locale_provider.dart';
@@ -124,6 +125,17 @@ class _EveningRitualHomeState extends State<EveningRitualHome> with SingleTicker
             icon: const Icon(Icons.apps),
             tooltip: 'Switch App',
             onPressed: _showAppSwitcher,
+          ),
+          // Help Icon
+          IconButton(
+            icon: const Icon(Icons.help_outline),
+            tooltip: 'Help',
+            onPressed: () {
+              AppHelpService.showHelpDialog(
+                context,
+                AvailableApps.eveningRitual,
+              );
+            },
           ),
           // Settings Icon
           IconButton(

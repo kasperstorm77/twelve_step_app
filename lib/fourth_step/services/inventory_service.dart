@@ -1,11 +1,10 @@
-import 'package:flutter_modular/flutter_modular.dart';
 import 'package:hive_flutter/hive_flutter.dart';
 import '../models/inventory_entry.dart';
-import 'drive_service.dart';
+import '../../shared/services/legacy_drive_service.dart';
 
 class InventoryService {
-  final Box<InventoryEntry> _box = Modular.get<Box<InventoryEntry>>();
-  final DriveService _driveService = Modular.get<DriveService>();
+  final Box<InventoryEntry> _box = Hive.box<InventoryEntry>('entries');
+  final DriveService _driveService = DriveService.instance;
 
   // Get all entries in reverse order (newest first)
   List<InventoryEntry> getAllEntries() {

@@ -1,17 +1,17 @@
 import 'package:hive_flutter/hive_flutter.dart';
 import '../../fourth_step/models/inventory_entry.dart';
-import '../../shared/services/google_drive_client.dart';
+import 'google_drive_client.dart';
 import 'dart:async';
 import 'package:flutter/foundation.dart';
-import '../../shared/utils/sync_utils.dart';
-import 'inventory_drive_service.dart';
+import '../utils/sync_utils.dart';
+import 'all_apps_drive_service.dart';
 
 // --------------------------------------------------------------------------
 // Legacy DriveService - Backward Compatibility Wrapper
 // --------------------------------------------------------------------------
 
 /// Legacy DriveService for backward compatibility
-/// Delegates to the new clean InventoryDriveService architecture
+/// Delegates to the new clean AllAppsDriveService architecture
 class DriveService {
   DriveService._privateConstructor() {
     // Initialize new service
@@ -21,7 +21,7 @@ class DriveService {
   static final DriveService instance = DriveService._privateConstructor();
 
   // New service delegate
-  final InventoryDriveService _newService = InventoryDriveService.instance;
+  final AllAppsDriveService _newService = AllAppsDriveService.instance;
   
   // Legacy fields for backward compatibility
   GoogleDriveClient? _client;
