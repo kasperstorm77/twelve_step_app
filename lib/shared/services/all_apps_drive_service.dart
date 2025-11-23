@@ -220,6 +220,26 @@ class AllAppsDriveService {
     }
   }
 
+  /// List available backup restore points
+  Future<List<Map<String, dynamic>>> listAvailableBackups() async {
+    return await _driveService.listAvailableBackups();
+  }
+
+  /// Download and restore from a specific backup file
+  Future<String?> downloadBackupContent(String fileName) async {
+    if (!isAuthenticated) {
+      if (kDebugMode) print('AllAppsDriveService: Download skipped - not authenticated');
+      return null;
+    }
+
+    try {
+      return await _driveService.downloadBackupContent(fileName);
+    } catch (e) {
+      if (kDebugMode) print('AllAppsDriveService: Backup download failed - $e');
+      rethrow;
+    }
+  }
+
   /// Check if inventory file exists on Drive
   Future<bool> inventoryFileExists() => _driveService.fileExists();
 

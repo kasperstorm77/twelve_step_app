@@ -98,11 +98,188 @@ class MobileDriveService {
     }
 
     try {
+      // Create dated backup (keeps last 3 days)
+      await _createDatedBackup(content);
+      
+      // Also update the main file for backward compatibility
       await _driveClient!.upsertFile(content);
       _uploadController.add('Upload successful');
     } catch (e) {
       final errorMsg = 'Upload failed: $e';
       _errorController.add(errorMsg);
+      rethrow;
+    }
+  }
+
+  /// Create dated backup and clean up old backups (keep last 3 days, one per day except today)
+  Future<void> _createDatedBackup(String content) async {
+    final now = DateTime.now();
+    final today = DateTime(now.year, now.month, now.day);
+    
+    // Clean up today's old backups first (keep only latest per day for previous days)
+    await _cleanupOldBackups();
+    
+    // Create today's backup
+    await _driveClient!.createDatedBackupFile(content, now);
+  }
+
+  /// Clean up backups: keep last 3 days, but only one backup per day for previous days
+  /// Current day can have multiple backups until the day rolls over
+  Future<void> _cleanupOldBackups() async {
+    try {
+      final backups = await listAvailableBackups();
+      if (backups.isEmpty) return;
+      
+      final now = DateTime.now();
+      final today = DateTime(now.year, now.month, now.day);
+      final cutoffDate = today.subtract(const Duration(days: 3));
+      
+      // Group backups by date
+      final backupsByDate = <DateTime, List<Map<String, dynamic>>>{};
+      for (final backup in backups) {
+        if (backup['date'] != null) {
+          final backupDate = backup['date'] as DateTime;
+          final dateOnly = DateTime(backupDate.year, backupDate.month, backupDate.day);
+          
+          if (!backupsByDate.containsKey(dateOnly)) {
+            backupsByDate[dateOnly] = [];
+          }
+          backupsByDate[dateOnly]!.add(backup);
+        }
+      }
+      
+      // Process each date
+      for (final entry in backupsByDate.entries) {
+        final date = entry.key;
+        final dateBackups = entry.value;
+        
+        // Delete backups older than 3 days
+        if (date.isBefore(cutoffDate)) {
+          for (final backup in dateBackups) {
+            await _deleteBackup(backup['fileName'] as String);
+          }
+        }
+        // For previous days (not today), keep only the most recent backup
+        else if (date.isBefore(today) && dateBackups.length > 1) {
+          // Sort by creation time (newest first)
+          dateBackups.sort((a, b) {
+            final dateA = a['date'] as DateTime;
+            final dateB = b['date'] as DateTime;
+            return dateB.compareTo(dateA);
+          });
+          
+          // Keep the first (newest), delete the rest
+          for (int i = 1; i < dateBackups.length; i++) {
+            await _deleteBackup(dateBackups[i]['fileName'] as String);
+          }
+        }
+        // For today, keep all backups (no cleanup)
+      }
+    } catch (e) {
+      if (kDebugMode) print('Failed to cleanup old backups: $e');
+    }
+  }
+  
+  /// Delete a backup file by name
+  Future<void> _deleteBackup(String fileName) async {
+    try {
+      final query = "name='$fileName' and trashed=false";
+      final result = await _driveClient!.listFiles(query: query);
+      if (result.isNotEmpty) {
+        await _driveClient!.deleteFile(result.first.id!);
+        if (kDebugMode) print('Deleted backup: $fileName');
+      }
+    } catch (e) {
+      if (kDebugMode) print('Failed to delete backup $fileName: $e');
+    }
+  }
+
+  /// List available backup files from Drive
+  Future<List<Map<String, dynamic>>> listAvailableBackups() async {
+    if (_driveClient == null) {
+      if (!await _ensureAuthenticated()) return [];
+    }
+
+    try {
+      // Find all backup files matching pattern
+      final baseName = _authService.config.fileName.replaceAll('.json', '');
+      final files = await _driveClient!.findBackupFiles('${baseName}_*.json');
+      
+      final backups = <Map<String, dynamic>>[];
+      for (final file in files) {
+        // Extract date and time from filename (e.g., aa4step_inventory_data_2025-11-23_14-30-15.json)
+        final regex = RegExp(r'(\d{4})-(\d{2})-(\d{2})(?:_(\d{2})-(\d{2})-(\d{2}))?');
+        final match = regex.firstMatch(file.name ?? '');
+        
+        if (match != null) {
+          final year = int.parse(match.group(1)!);
+          final month = int.parse(match.group(2)!);
+          final day = int.parse(match.group(3)!);
+          
+          // Parse time if available (for newer backups with timestamps)
+          int hour = 0, minute = 0, second = 0;
+          if (match.group(4) != null) {
+            hour = int.parse(match.group(4)!);
+            minute = int.parse(match.group(5)!);
+            second = int.parse(match.group(6)!);
+          }
+          
+          final date = DateTime(year, month, day, hour, minute, second);
+          final dateOnly = DateTime(year, month, day);
+          
+          // Format display date with time for current day, date only for previous days
+          final now = DateTime.now();
+          final today = DateTime(now.year, now.month, now.day);
+          
+          String displayDate;
+          if (dateOnly.isAtSameMomentAs(today)) {
+            // Show time for today's backups
+            displayDate = '${date.year}-${date.month.toString().padLeft(2, '0')}-${date.day.toString().padLeft(2, '0')} ${date.hour.toString().padLeft(2, '0')}:${date.minute.toString().padLeft(2, '0')}';
+          } else {
+            // Show only date for previous days
+            displayDate = '${date.year}-${date.month.toString().padLeft(2, '0')}-${date.day.toString().padLeft(2, '0')}';
+          }
+          
+          backups.add({
+            'fileName': file.name,
+            'fileId': file.id,
+            'date': date,
+            'dateOnly': dateOnly,
+            'displayDate': displayDate,
+          });
+        }
+      }
+      
+      // Sort by date descending (newest first)
+      backups.sort((a, b) => (b['date'] as DateTime).compareTo(a['date'] as DateTime));
+      
+      return backups;
+    } catch (e) {
+      if (kDebugMode) print('Failed to list backups: $e');
+      return [];
+    }
+  }
+
+  /// Download content from a specific backup file
+  Future<String?> downloadBackupContent(String fileName) async {
+    if (_driveClient == null) {
+      if (!await _ensureAuthenticated()) {
+        _errorController.add('Download failed - not authenticated');
+        return null;
+      }
+    }
+
+    try {
+      final content = await _driveClient!.readBackupFile(fileName);
+      if (content != null) {
+        _downloadController.add('Download successful');
+        if (kDebugMode) print('Backup download successful: $fileName');
+      }
+      return content;
+    } catch (e) {
+      final errorMsg = 'Download failed: $e';
+      _errorController.add(errorMsg);
+      if (kDebugMode) print(errorMsg);
       rethrow;
     }
   }

@@ -62,6 +62,11 @@ class _DataManagementTabState extends State<DataManagementTab> {
   String? _lastPromptedAccountId;
   bool _promptScheduled = false;
 
+  // Backup selection state
+  List<Map<String, dynamic>> _availableBackups = [];
+  String? _selectedBackupFileName;
+  bool _loadingBackups = false;
+
   @override
   void initState() {
     super.initState();
@@ -111,6 +116,38 @@ class _DataManagementTabState extends State<DataManagementTab> {
       });
       if (kDebugMode) {
         print('Google Drive sync not available on ${PlatformHelper.platformName}');
+      }
+    }
+    
+    // Load available backups if signed in
+    _loadAvailableBackups();
+  }
+
+  /// Load available backup restore points from Drive
+  Future<void> _loadAvailableBackups() async {
+    if (!PlatformHelper.isMobile || _currentUser == null) return;
+    
+    setState(() {
+      _loadingBackups = true;
+    });
+
+    try {
+      final backups = await DriveService.instance.listAvailableBackups();
+      if (mounted) {
+        setState(() {
+          _availableBackups = backups;
+          _loadingBackups = false;
+          // Select the most recent backup by default
+          if (_availableBackups.isNotEmpty && _selectedBackupFileName == null) {
+            _selectedBackupFileName = _availableBackups.first['fileName'] as String?;
+          }
+        });
+      }
+    } catch (e) {
+      if (mounted) {
+        setState(() {
+          _loadingBackups = false;
+        });
       }
     }
   }
@@ -207,6 +244,9 @@ class _DataManagementTabState extends State<DataManagementTab> {
         // Schedule the prompt; this is resilient to the ordering of
         // onCurrentUserChanged vs this handler resuming.
         _schedulePromptForAccount(account);
+        
+        // Load available backups after sign-in
+        _loadAvailableBackups();
       }
       // Do NOT clear the interactive/requested flags here — they are
       // cleared by `_maybePromptFetchAfterInteractiveSignIn` after the
@@ -356,8 +396,17 @@ class _DataManagementTabState extends State<DataManagementTab> {
 
   Future<void> _fetchFromGoogle() async {
     if (_driveClient == null) return;
+    
+    String? content;
+    
     try {
-      final content = await _driveClient!.downloadFile();
+      // Download from selected backup or current file
+      if (_selectedBackupFileName != null && _selectedBackupFileName!.isNotEmpty) {
+        content = await DriveService.instance.downloadBackupContent(_selectedBackupFileName!);
+      } else {
+        content = await _driveClient!.downloadFile();
+      }
+      
       if (content == null) return;
 
       final entriesBox = Hive.box<InventoryEntry>('entries');
@@ -905,13 +954,105 @@ class _DataManagementTabState extends State<DataManagementTab> {
           ElevatedButton(onPressed: _importJson, child: Text(t(context, 'import_json'))),
           const SizedBox(height: 16),
           
-          // Fetch from Google (only show when signed in on mobile)
-          if (isSignedIn && driveAvailable)
-            ElevatedButton(
-              onPressed: _fetchFromGoogle,
-              child: Text(t(context, 'googlefetch')),
+          // Backup selection dropdown and fetch button (only show when signed in on mobile)
+          if (isSignedIn && driveAvailable) ...[
+            Card(
+              child: Padding(
+                padding: const EdgeInsets.all(12),
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.stretch,
+                  children: [
+                    Row(
+                      children: [
+                        Icon(Icons.restore, color: Theme.of(context).colorScheme.primary),
+                        const SizedBox(width: 8),
+                        Text(
+                          t(context, 'select_restore_point'),
+                          style: Theme.of(context).textTheme.titleMedium,
+                        ),
+                        const Spacer(),
+                        if (_loadingBackups)
+                          const SizedBox(
+                            width: 20,
+                            height: 20,
+                            child: CircularProgressIndicator(strokeWidth: 2),
+                          )
+                        else
+                          IconButton(
+                            icon: const Icon(Icons.refresh),
+                            onPressed: _loadAvailableBackups,
+                            tooltip: 'Refresh backups',
+                          ),
+                      ],
+                    ),
+                    const SizedBox(height: 8),
+                    if (_availableBackups.isEmpty && !_loadingBackups)
+                      Text(
+                        t(context, 'no_backups_available'),
+                        style: Theme.of(context).textTheme.bodySmall?.copyWith(
+                          color: Colors.grey,
+                        ),
+                      )
+                    else
+                      DropdownButtonFormField<String>(
+                        value: _selectedBackupFileName,
+                        decoration: InputDecoration(
+                          border: const OutlineInputBorder(),
+                          contentPadding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
+                          labelText: t(context, 'restore_point_latest'),
+                        ),
+                        items: [
+                          // Add "Latest" option (uses current file, not dated backup)
+                          DropdownMenuItem<String>(
+                            value: null,
+                            child: Row(
+                              children: [
+                                Icon(Icons.cloud, size: 20, color: Theme.of(context).colorScheme.primary),
+                                const SizedBox(width: 8),
+                                Text(t(context, 'restore_point_latest')),
+                              ],
+                            ),
+                          ),
+                          // Add dated backups
+                          ..._availableBackups.map((backup) {
+                            final displayDate = backup['displayDate'] as String;
+                            final fileName = backup['fileName'] as String;
+                            return DropdownMenuItem<String>(
+                              value: fileName,
+                              child: Row(
+                                children: [
+                                  const Icon(Icons.history, size: 20, color: Colors.blue),
+                                  const SizedBox(width: 8),
+                                  Text(displayDate),
+                                ],
+                              ),
+                            );
+                          }),
+                        ],
+                        onChanged: (value) {
+                          setState(() {
+                            _selectedBackupFileName = value;
+                          });
+                        },
+                      ),
+                    const SizedBox(height: 12),
+                    ElevatedButton.icon(
+                      onPressed: _fetchFromGoogle,
+                      icon: const Icon(Icons.download),
+                      label: Text(t(context, 'restore_from_backup')),
+                      style: ElevatedButton.styleFrom(
+                        backgroundColor: Theme.of(context).colorScheme.primary,
+                        foregroundColor: Theme.of(context).colorScheme.onPrimary,
+                      ),
+                    ),
+                  ],
+                ),
+              ),
             ),
-          if (isSignedIn && driveAvailable) const SizedBox(height: 16),
+            const SizedBox(height: 16),
+          ],
+          
+          // Old fetch button removed - now part of backup card above
           
           ElevatedButton(
             style: ElevatedButton.styleFrom(backgroundColor: Colors.red),

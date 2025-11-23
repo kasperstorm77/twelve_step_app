@@ -99,6 +99,16 @@ class DriveService {
     }
   }
 
+  /// List available backup restore points
+  Future<List<Map<String, dynamic>>> listAvailableBackups() async {
+    return await _newService.listAvailableBackups();
+  }
+
+  /// Download content from a specific backup file
+  Future<String?> downloadBackupContent(String fileName) async {
+    return await _newService.downloadBackupContent(fileName);
+  }
+
   /// Delete file
   Future<void> deleteFile() async {
     await _newService.deleteInventoryFile();

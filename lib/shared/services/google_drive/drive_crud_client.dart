@@ -165,4 +165,64 @@ class GoogleDriveCrudClient {
     }
     return null;
   }
+
+  /// Find backup files matching a pattern (e.g., "aa4step_inventory_data_*.json")
+  Future<List<drive_api.File>> findBackupFiles(String fileNamePattern) async {
+    // Extract the base name without extension and wildcard
+    final baseName = fileNamePattern.replaceAll('*', '').replaceAll('.json', '');
+    
+    // Query for files that start with the base name
+    final query = "name contains '$baseName' and trashed=false";
+    final spaces = _config.parentFolder;
+    
+    final result = await _driveApi.files.list(
+      q: query,
+      spaces: spaces,
+      orderBy: 'name desc', // Most recent first (by name/date)
+      $fields: 'files(id, name, createdTime, modifiedTime)',
+    );
+    
+    return result.files ?? [];
+  }
+
+  /// Create a dated backup file with content
+  Future<String> createDatedBackupFile(String content, DateTime date) async {
+    final bytes = content.codeUnits;
+    final media = drive_api.Media(Stream.fromIterable([bytes]), bytes.length);
+
+    // Generate dated filename with timestamp (e.g., aa4step_inventory_data_2025-11-23_14-30-15.json)
+    final dateStr = '${date.year}-${date.month.toString().padLeft(2, '0')}-${date.day.toString().padLeft(2, '0')}';
+    final timeStr = '${date.hour.toString().padLeft(2, '0')}-${date.minute.toString().padLeft(2, '0')}-${date.second.toString().padLeft(2, '0')}';
+    final baseName = _config.fileName.replaceAll('.json', '');
+    final datedFileName = '${baseName}_${dateStr}_$timeStr.json';
+
+    final fileMetadata = drive_api.File()
+      ..name = datedFileName
+      ..mimeType = _config.mimeType;
+
+    // Set parent folder if specified
+    if (_config.parentFolder != null) {
+      fileMetadata.parents = [_config.parentFolder!];
+    }
+
+    final created = await _driveApi.files.create(fileMetadata, uploadMedia: media);
+    return created.id!;
+  }
+
+  /// Read content from a specific backup file by name
+  Future<String?> readBackupFile(String fileName) async {
+    final query = "name='$fileName' and trashed=false";
+    final spaces = _config.parentFolder;
+    
+    final result = await _driveApi.files.list(
+      q: query,
+      spaces: spaces,
+    );
+    
+    final files = result.files;
+    if (files != null && files.isNotEmpty) {
+      return await readFile(files.first.id!);
+    }
+    return null;
+  }
 }

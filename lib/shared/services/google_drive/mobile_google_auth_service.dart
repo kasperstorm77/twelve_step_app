@@ -39,6 +39,9 @@ class MobileGoogleAuthService {
   /// Current access token
   String? get accessToken => _accessToken;
   
+  /// Drive configuration
+  GoogleDriveConfig get config => _config;
+  
   /// Check if user is signed in
   bool get isSignedIn => _currentUser != null && _accessToken != null;
 
