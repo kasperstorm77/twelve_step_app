@@ -114,7 +114,6 @@ class MobileDriveService {
   /// Create dated backup and clean up old backups (keep last 3 days, one per day except today)
   Future<void> _createDatedBackup(String content) async {
     final now = DateTime.now();
-    final today = DateTime(now.year, now.month, now.day);
     
     // Clean up today's old backups first (keep only latest per day for previous days)
     await _cleanupOldBackups();

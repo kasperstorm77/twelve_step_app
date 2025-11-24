@@ -24,11 +24,31 @@ class ListTab extends StatefulWidget {
 
 class _ListTabState extends State<ListTab> {
   bool showTable = false;
+  late final Box<IAmDefinition> _iAmBox;
+
+  @override
+  void initState() {
+    super.initState();
+    _iAmBox = Hive.box<IAmDefinition>('i_am_definitions');
+    // Listen to I Am box changes to rebuild the list
+    _iAmBox.listenable().addListener(_onIAmChanged);
+  }
+
+  @override
+  void dispose() {
+    _iAmBox.listenable().removeListener(_onIAmChanged);
+    super.dispose();
+  }
+
+  void _onIAmChanged() {
+    if (mounted) {
+      setState(() {});
+    }
+  }
 
   String? _getIAmName(String? iAmId) {
     if (iAmId == null || iAmId.isEmpty) return null;
-    final iAmBox = Hive.box<IAmDefinition>('i_am_definitions');
-    final iAm = iAmBox.values.firstWhere(
+    final iAm = _iAmBox.values.firstWhere(
       (def) => def.id == iAmId,
       orElse: () => IAmDefinition(id: '', name: ''),
     );

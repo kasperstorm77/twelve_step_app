@@ -32,7 +32,6 @@ class _AppRouterState extends State<AppRouter> {
       case AvailableApps.fourthStepInventory:
         return ModularInventoryHome(
           key: ValueKey(currentAppId),
-          currentLocale: Localizations.localeOf(context),
           onAppSwitched: _onAppSwitched,
         );
 
@@ -64,7 +63,6 @@ class _AppRouterState extends State<AppRouter> {
         // Fallback to 4th step if unknown app ID
         return ModularInventoryHome(
           key: ValueKey(currentAppId),
-          currentLocale: Localizations.localeOf(context),
         );
     }
   }

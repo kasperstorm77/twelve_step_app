@@ -1,5 +1,6 @@
 import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
+import 'package:flutter_modular/flutter_modular.dart';
 import 'package:hive_flutter/hive_flutter.dart';
 import '../models/inventory_entry.dart';
 import '../../shared/models/app_entry.dart';
@@ -12,15 +13,14 @@ import '../services/inventory_service.dart';
 import '../../shared/services/app_version_service.dart';
 import '../../shared/services/app_switcher_service.dart';
 import '../../shared/services/app_help_service.dart';
+import '../../shared/services/locale_provider.dart';
 import '../../shared/utils/platform_helper.dart';
 import '../../shared/pages/data_management_page.dart';
 
 class ModularInventoryHome extends StatefulWidget {
-  final Locale? currentLocale;
-  final void Function(Locale)? setLocale;
   final VoidCallback? onAppSwitched;
 
-  const ModularInventoryHome({super.key, this.currentLocale, this.setLocale, this.onAppSwitched});
+  const ModularInventoryHome({super.key, this.onAppSwitched});
 
   @override
   State<ModularInventoryHome> createState() => _ModularInventoryHomeState();
@@ -148,7 +148,8 @@ class _ModularInventoryHomeState extends State<ModularInventoryHome>
   }
 
   void _changeLanguage(String langCode) {
-    widget.setLocale?.call(Locale(langCode));
+    final localeProvider = Modular.get<LocaleProvider>();
+    localeProvider.changeLocale(Locale(langCode));
   }
 
   void _openDataManagement() {
@@ -161,13 +162,13 @@ class _ModularInventoryHomeState extends State<ModularInventoryHome>
   }
 
   Future<void> _showAppSwitcher() async {
-    final apps = AvailableApps.getAll();
+    final apps = AvailableApps.getAll(context);
     final currentAppId = AppSwitcherService.getSelectedAppId();
 
     await showDialog(
       context: context,
-      builder: (context) => AlertDialog(
-        title: const Text('Select App'),
+      builder: (dialogContext) => AlertDialog(
+        title: Text(t(context, 'select_app')),
         content: Column(
           mainAxisSize: MainAxisSize.min,
           children: apps.map((app) {
@@ -175,7 +176,7 @@ class _ModularInventoryHomeState extends State<ModularInventoryHome>
             return ListTile(
               leading: Icon(
                 isSelected ? Icons.radio_button_checked : Icons.radio_button_unchecked,
-                color: isSelected ? Theme.of(context).colorScheme.primary : null,
+                color: isSelected ? Theme.of(dialogContext).colorScheme.primary : null,
               ),
               title: Text(app.name),
               subtitle: Text(app.description),
@@ -195,13 +196,13 @@ class _ModularInventoryHomeState extends State<ModularInventoryHome>
                   // Show snackbar
                   ScaffoldMessenger.of(context).showSnackBar(
                     SnackBar(
-                      content: Text('Switched to ${app.name}'),
+                      content: Text(t(context, 'switched_to_app').replaceFirst('%s', app.name)),
                       duration: const Duration(seconds: 2),
                     ),
                   );
                 }
-                if (!context.mounted) return;
-                Navigator.of(context).pop();
+                if (!dialogContext.mounted) return;
+                Navigator.of(dialogContext).pop();
               },
             );
           }).toList(),
@@ -209,7 +210,7 @@ class _ModularInventoryHomeState extends State<ModularInventoryHome>
         actions: [
           TextButton(
             onPressed: () => Navigator.of(context).pop(),
-            child: const Text('Cancel'),
+            child: Text(t(context, 'cancel')),
           ),
         ],
       ),

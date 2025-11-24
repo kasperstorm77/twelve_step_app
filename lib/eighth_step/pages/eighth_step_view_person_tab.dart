@@ -85,7 +85,7 @@ class _EighthStepViewPersonTabState extends State<EighthStepViewPersonTab> {
               ),
               const SizedBox(height: 16),
               Text(
-                'Select a person from the Main tab',
+                t(context, 'select_person_prompt'),
                 style: Theme.of(context).textTheme.titleMedium?.copyWith(
                   color: Colors.grey[600],
                 ),

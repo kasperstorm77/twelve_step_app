@@ -1,4 +1,5 @@
 import 'package:flutter/foundation.dart';
+import 'package:flutter/material.dart';
 import 'package:hive_flutter/hive_flutter.dart';
 import '../../shared/models/app_entry.dart';
 
@@ -30,13 +31,14 @@ class AppSwitcherService {
     }
   }
 
-  /// Get the currently selected app
-  static AppEntry getSelectedApp() {
+  /// Get the currently selected app (requires context for localization)
+  static AppEntry? getSelectedApp(BuildContext? context) {
     final selectedId = getSelectedAppId();
-    final apps = AvailableApps.getAll();
+    if (context == null) return null;
+    final apps = AvailableApps.getAll(context);
     return apps.firstWhere(
       (app) => app.id == selectedId,
-      orElse: () => AvailableApps.getDefault(),
+      orElse: () => AvailableApps.getDefault(context)!,
     );
   }
 

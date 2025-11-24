@@ -1,4 +1,6 @@
 import 'package:hive/hive.dart';
+import 'package:flutter/material.dart';
+import '../localizations.dart';
 
 part 'app_entry.g.dart';
 
@@ -48,42 +50,51 @@ class AvailableApps {
   static const String gratitude = 'gratitude';
   static const String agnosticism = 'agnosticism';
 
-  static List<AppEntry> getAll() {
+  static List<AppEntry> getAll(BuildContext context) {
     return [
       AppEntry(
         id: fourthStepInventory,
-        name: '4th Step Inventory',
-        description: 'AA 4th Step Resentment Inventory',
+        name: t(context, 'app_fourth_step_name'),
+        description: t(context, 'app_fourth_step_desc'),
         isActive: true,
       ),
       AppEntry(
         id: eighthStepAmends,
-        name: '8th Step Amends',
-        description: 'AA 8th Step - List of persons to make amends to',
+        name: t(context, 'app_eighth_step_name'),
+        description: t(context, 'app_eighth_step_desc'),
         isActive: true,
       ),
       AppEntry(
         id: eveningRitual,
-        name: 'Evening Ritual',
-        description: 'Daily evening reflection and inventory',
+        name: t(context, 'app_evening_ritual_name'),
+        description: t(context, 'app_evening_ritual_desc'),
         isActive: true,
       ),
       AppEntry(
         id: gratitude,
-        name: 'Gratitude',
-        description: 'Daily gratitude journal',
+        name: t(context, 'app_gratitude_name'),
+        description: t(context, 'app_gratitude_desc'),
         isActive: true,
       ),
       AppEntry(
         id: agnosticism,
-        name: 'My Current Agnosticism',
-        description: 'Barriers and new conception exercise',
+        name: t(context, 'app_agnosticism_name'),
+        description: t(context, 'app_agnosticism_desc'),
         isActive: true,
       ),
     ];
   }
 
-  static AppEntry getDefault() {
-    return getAll().first;
+  static AppEntry? getDefault(BuildContext? context) {
+    if (context == null) {
+      // Return non-localized default if no context available
+      return AppEntry(
+        id: fourthStepInventory,
+        name: '4th Step Inventory',
+        description: 'AA 4th Step Resentment Inventory',
+        isActive: true,
+      );
+    }
+    return getAll(context).first;
   }
 }

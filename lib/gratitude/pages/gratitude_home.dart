@@ -55,13 +55,13 @@ class _GratitudeHomeState extends State<GratitudeHome> with SingleTickerProvider
   }
 
   Future<void> _showAppSwitcher() async {
-    final apps = AvailableApps.getAll();
+    final apps = AvailableApps.getAll(context);
     final currentAppId = AppSwitcherService.getSelectedAppId();
 
     await showDialog(
       context: context,
-      builder: (context) => AlertDialog(
-        title: const Text('Select App'),
+      builder: (dialogContext) => AlertDialog(
+        title: Text(t(context, 'select_app')),
         content: Column(
           mainAxisSize: MainAxisSize.min,
           children: apps.map((app) {
@@ -87,13 +87,13 @@ class _GratitudeHomeState extends State<GratitudeHome> with SingleTickerProvider
                   
                   ScaffoldMessenger.of(context).showSnackBar(
                     SnackBar(
-                      content: Text('Switched to ${app.name}'),
+                      content: Text(t(context, 'switched_to_app').replaceFirst('%s', app.name)),
                       duration: const Duration(seconds: 2),
                     ),
                   );
                 }
-                if (!context.mounted) return;
-                Navigator.of(context).pop();
+                if (!dialogContext.mounted) return;
+                Navigator.of(dialogContext).pop();
               },
             );
           }).toList(),
@@ -101,7 +101,7 @@ class _GratitudeHomeState extends State<GratitudeHome> with SingleTickerProvider
         actions: [
           TextButton(
             onPressed: () => Navigator.of(context).pop(),
-            child: const Text('Cancel'),
+            child: Text(t(context, 'cancel')),
           ),
         ],
       ),

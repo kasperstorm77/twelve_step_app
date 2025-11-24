@@ -566,12 +566,8 @@ class _DataManagementTabState extends State<DataManagementTab> {
       final confirmImport = await showDialog<bool>(
         context: context,
         builder: (dialogContext) => AlertDialog(
-          title: const Text('Import from Google Drive'),
-          content: const Text(
-            'This will REPLACE all current data with data from Google Drive.\n\n'
-            'Make sure you have exported your current data first!\n\n'
-            'Continue with import?',
-          ),
+          title: Text(t(context, 'import_from_drive')),
+          content: Text(t(context, 'import_warning')),
           actions: [
             TextButton(
               onPressed: () => Navigator.of(dialogContext).pop(false),
@@ -583,7 +579,7 @@ class _DataManagementTabState extends State<DataManagementTab> {
                 backgroundColor: Colors.orange,
                 foregroundColor: Colors.white,
               ),
-              child: const Text('Import from Drive'),
+              child: Text(t(context, 'import_from_drive')),
             ),
           ],
         ),
@@ -995,7 +991,7 @@ class _DataManagementTabState extends State<DataManagementTab> {
                       )
                     else
                       DropdownButtonFormField<String>(
-                        value: _selectedBackupFileName,
+                        initialValue: _selectedBackupFileName,
                         decoration: InputDecoration(
                           border: const OutlineInputBorder(),
                           contentPadding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
