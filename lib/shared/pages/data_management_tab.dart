@@ -1052,7 +1052,18 @@ class _DataManagementTabState extends State<DataManagementTab> {
             const SizedBox(height: 16),
           ],
           
-          // Old fetch button removed - now part of backup card above
+          // Manual upload button for mobile when signed in
+          if (isSignedIn && driveAvailable)
+            ElevatedButton.icon(
+              onPressed: _uploadToDrive,
+              icon: const Icon(Icons.cloud_upload),
+              label: const Text('Upload to Google Drive'),
+              style: ElevatedButton.styleFrom(
+                backgroundColor: Colors.green.shade700,
+                foregroundColor: Colors.white,
+              ),
+            ),
+          if (isSignedIn && driveAvailable) const SizedBox(height: 16),
           
           ElevatedButton(
             style: ElevatedButton.styleFrom(backgroundColor: Colors.red),

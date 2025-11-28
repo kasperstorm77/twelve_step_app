@@ -3,9 +3,8 @@
 // --------------------------------------------------------------------------
 // Exports platform-specific implementation:
 // - Mobile (Android/iOS): Full Drive sync implementation
-// - Web: Stub implementation (Drive sync not supported yet)
-// - Desktop: Uses mobile implementation (with desktop auth)
+// - Web: Full Drive sync implementation (via google_sign_in web)
+// - Desktop: Full Drive sync implementation (via desktop OAuth)
 // --------------------------------------------------------------------------
 
-export 'all_apps_drive_service_impl.dart'
-    if (dart.library.html) 'all_apps_drive_service_web.dart';
+export 'all_apps_drive_service_impl.dart';

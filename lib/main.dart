@@ -15,7 +15,7 @@ import 'evening_ritual/models/reflection_entry.dart';
 import 'gratitude/models/gratitude_entry.dart';
 import 'agnosticism/models/agnosticism_paper.dart';
 import 'shared/services/legacy_drive_service.dart';
-import 'shared/services/all_apps_drive_service.dart';
+import 'shared/services/all_apps_drive_service_impl.dart';
 import 'fourth_step/services/i_am_service.dart';
 import 'shared/utils/platform_helper.dart';
 

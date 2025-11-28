@@ -12,6 +12,7 @@ class IAmService {
   final _uuid = const Uuid();
 
   /// Initialize the I Am definitions box with default value if empty
+  /// NOTE: This does NOT trigger a Drive upload - it's for initialization only
   Future<void> initializeDefaults() async {
     final box = Hive.box<IAmDefinition>('i_am_definitions');
     
@@ -21,6 +22,8 @@ class IAmService {
         name: 'Sober member of AA',
         reasonToExist: null,
       );
+      // Add directly to box without triggering Drive sync
+      // This is initialization only, not a user action
       await box.add(defaultIAm);
     }
   }

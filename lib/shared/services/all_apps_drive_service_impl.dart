@@ -460,14 +460,7 @@ List<InventoryEntry> _parseInventoryJson(String content) {
 
     return entries
         .cast<Map<String, dynamic>>()
-        .map((item) => InventoryEntry(
-              item['resentment']?.toString() ?? '',
-              item['reason']?.toString() ?? '',
-              item['affect']?.toString() ?? '',
-              item['part']?.toString() ?? '',
-              item['defect']?.toString() ?? '',
-              iAmId: item['iAmId']?.toString(),
-            ))
+        .map((item) => InventoryEntry.fromJson(item))
         .toList();
   } catch (e) {
     if (kDebugMode) print('Failed to parse inventory JSON: $e');
