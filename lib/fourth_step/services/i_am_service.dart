@@ -58,11 +58,47 @@ class IAmService {
   }
 
   /// Find I Am definition by ID
-  IAmDefinition? findById(Box<IAmDefinition> box, String id) {
-    return box.values.firstWhere(
-      (def) => def.id == id,
-      orElse: () => IAmDefinition(id: '', name: ''),
-    );
+  /// Returns null if not found (clean API - caller handles null case)
+  IAmDefinition? findById(Box<IAmDefinition> box, String? id) {
+    if (id == null || id.isEmpty) return null;
+    
+    try {
+      return box.values.firstWhere((def) => def.id == id);
+    } catch (e) {
+      // Not found
+      return null;
+    }
+  }
+
+  /// Get the name of an I Am definition by ID
+  /// Returns null if not found or if id is null/empty
+  String? getNameById(Box<IAmDefinition> box, String? id) {
+    final definition = findById(box, id);
+    return definition?.name;
+  }
+
+  /// Count how many entries reference a specific I Am definition
+  int getUsageCount(Box<InventoryEntry> entriesBox, String iAmId) {
+    return entriesBox.values.where((entry) => entry.iAmId == iAmId).length;
+  }
+
+  /// Get all entries that reference a specific I Am definition
+  List<InventoryEntry> getEntriesUsingIAm(Box<InventoryEntry> entriesBox, String iAmId) {
+    return entriesBox.values.where((entry) => entry.iAmId == iAmId).toList();
+  }
+
+  /// Check if an I Am definition is in use by any entry
+  bool isInUse(Box<InventoryEntry> entriesBox, String iAmId) {
+    return entriesBox.values.any((entry) => entry.iAmId == iAmId);
+  }
+
+  /// Find orphaned entries (entries with iAmId that doesn't exist in definitions)
+  List<InventoryEntry> findOrphanedEntries(Box<InventoryEntry> entriesBox, Box<IAmDefinition> iAmBox) {
+    final validIds = iAmBox.values.map((def) => def.id).toSet();
+    return entriesBox.values.where((entry) {
+      if (entry.iAmId == null || entry.iAmId!.isEmpty) return false;
+      return !validIds.contains(entry.iAmId);
+    }).toList();
   }
 
   /// Generate a new UUID

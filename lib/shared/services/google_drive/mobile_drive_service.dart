@@ -122,7 +122,7 @@ class MobileDriveService {
     await _driveClient!.createDatedBackupFile(content, now);
   }
 
-  /// Clean up backups: keep last 3 days, but only one backup per day for previous days
+  /// Clean up backups: keep last 7 days, but only one backup per day for previous days
   /// Current day can have multiple backups until the day rolls over
   Future<void> _cleanupOldBackups() async {
     try {
@@ -131,7 +131,7 @@ class MobileDriveService {
       
       final now = DateTime.now();
       final today = DateTime(now.year, now.month, now.day);
-      final cutoffDate = today.subtract(const Duration(days: 3));
+      final cutoffDate = today.subtract(const Duration(days: 7));
       
       // Group backups by date
       final backupsByDate = <DateTime, List<Map<String, dynamic>>>{};
@@ -152,7 +152,7 @@ class MobileDriveService {
         final date = entry.key;
         final dateBackups = entry.value;
         
-        // Delete backups older than 3 days
+        // Delete backups older than 7 days
         if (date.isBefore(cutoffDate)) {
           for (final backup in dateBackups) {
             await _deleteBackup(backup['fileName'] as String);
@@ -195,20 +195,31 @@ class MobileDriveService {
 
   /// List available backup files from Drive
   Future<List<Map<String, dynamic>>> listAvailableBackups() async {
+    if (kDebugMode) print('MobileDriveService.listAvailableBackups() called');
     if (_driveClient == null) {
-      if (!await _ensureAuthenticated()) return [];
+      if (kDebugMode) print('MobileDriveService: _driveClient is null, ensuring authenticated');
+      if (!await _ensureAuthenticated()) {
+        if (kDebugMode) print('MobileDriveService: _ensureAuthenticated() failed');
+        return [];
+      }
+      if (kDebugMode) print('MobileDriveService: _ensureAuthenticated() succeeded');
     }
 
     try {
       // Find all backup files matching pattern
       final baseName = _authService.config.fileName.replaceAll('.json', '');
-      final files = await _driveClient!.findBackupFiles('${baseName}_*.json');
+      final pattern = '${baseName}_*.json';
+      if (kDebugMode) print('MobileDriveService: searching for backup files with pattern: $pattern');
+      final files = await _driveClient!.findBackupFiles(pattern);
+      if (kDebugMode) print('MobileDriveService: found ${files.length} backup files');
       
       final backups = <Map<String, dynamic>>[];
       for (final file in files) {
         // Extract date and time from filename (e.g., aa4step_inventory_data_2025-11-23_14-30-15.json)
         final regex = RegExp(r'(\d{4})-(\d{2})-(\d{2})(?:_(\d{2})-(\d{2})-(\d{2}))?');
         final match = regex.firstMatch(file.name ?? '');
+        
+        if (kDebugMode) print('MobileDriveService: Processing file: ${file.name}');
         
         if (match != null) {
           final year = int.parse(match.group(1)!);
@@ -221,6 +232,9 @@ class MobileDriveService {
             hour = int.parse(match.group(4)!);
             minute = int.parse(match.group(5)!);
             second = int.parse(match.group(6)!);
+            if (kDebugMode) print('MobileDriveService: Parsed time: $hour:$minute:$second');
+          } else {
+            if (kDebugMode) print('MobileDriveService: No time found in filename');
           }
           
           final date = DateTime(year, month, day, hour, minute, second);

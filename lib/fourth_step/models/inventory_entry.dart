@@ -52,17 +52,21 @@ class InventoryEntry extends HiveObject {
     'affect': affect,
     'part': part,
     'defect': defect,
-    'iAmId': iAmId,
+    if (iAmId != null && iAmId != 'null') 'iAmId': iAmId,  // Only include if not null and not the string "null"
   };
 
   factory InventoryEntry.fromJson(Map<String, dynamic> json) {
+    // Handle the case where iAmId might be the string "null" instead of null
+    final iAmIdValue = json['iAmId'];
+    final String? parsedIAmId = (iAmIdValue == null || iAmIdValue == 'null') ? null : iAmIdValue as String?;
+    
     return InventoryEntry(
       json['resentment'] as String?,
       json['reason'] as String?,
       json['affect'] as String?,
       json['part'] as String?,
       json['defect'] as String?,
-      iAmId: json['iAmId'] as String?,
+      iAmId: parsedIAmId,
     );
   }
 }

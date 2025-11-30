@@ -4,6 +4,21 @@
 
 Multi-app Flutter system for AA recovery tools (5 apps: 4th Step Inventory, 8th Step Amends, Evening Ritual, Gratitude, Agnosticism) with shared infrastructure. Uses Hive for local storage, Google Drive for cloud sync, and Flutter Modular for DI/routing.
 
+## Core Development Principle
+
+**ALWAYS choose the best solution over the easy solution.** When implementing features:
+- ✅ Choose the most robust, maintainable, and native approach
+- ✅ Consider long-term maintenance and scalability
+- ✅ Implement industry-standard patterns even if they require more setup
+- ❌ Don't take shortcuts just because they're faster to implement
+- ❌ Don't use "quick and dirty" solutions that compromise quality
+
+Examples:
+- Use deep links for OAuth (not local HTTP servers)
+- Use proper platform-specific implementations (not shared hacks)
+- Implement complete error handling (not minimal try-catch)
+- Write maintainable code (not clever one-liners)
+
 ## Architecture Pattern
 
 **Modular Structure**: Each app lives in its own folder (`lib/fourth_step/`, `lib/eighth_step/`, `lib/evening_ritual/`, `lib/gratitude/`, `lib/agnosticism/`) with app-specific models, services, and pages. Shared code in `lib/shared/`.
@@ -159,63 +174,25 @@ See `_showAppSwitcher()` in any home page. Lists all 5 apps from `AvailableApps.
 
 ## Platform-Specific Code
 
-**Platform Support**: The app targets Android, iOS, Windows, macOS, Linux, and Web.
+**Platform Support**: The app targets Android, iOS, Windows, macOS, and Linux. Web is NOT supported.
 
 **Platform Detection**: Use `PlatformHelper` (in `lib/shared/utils/platform_helper.dart`):
 - `PlatformHelper.isMobile` - Android or iOS
 - `PlatformHelper.isDesktop` - Windows, macOS, or Linux
-- `PlatformHelper.isWeb` - Web browser
 - `PlatformHelper.isAndroid`, `isIOS`, `isWindows`, `isMacOS`, `isLinux` - Specific platforms
+- `PlatformHelper.isWeb` - Always false (web not supported)
 
 **Google Drive Sync Platform Support**:
 - **Mobile (Android/iOS)**: Full Google Drive sync via `google_sign_in` package
 - **Desktop (Windows/macOS/Linux)**: Full sync using desktop OAuth (see `docs/GOOGLE_OAUTH_SETUP.md`)
-- **Web**: Stub implementation (no-op) - Drive sync NOT supported yet
-  - All Drive methods return null/false/empty on web
-  - Console logs indicate unsupported operations
-  - Future: Implement OAuth2 web flow when needed
-
-**Conditional Exports for Web**:
-All platform-specific services use conditional exports:
-```dart
-// Example: all_apps_drive_service.dart
-export 'all_apps_drive_service_impl.dart'
-    if (dart.library.html) 'all_apps_drive_service_web.dart';
-```
-
-Web stub files:
-- `lib/shared/services/all_apps_drive_service_web.dart`
-- `lib/shared/services/legacy_drive_service_web.dart`
-- `lib/shared/services/google_drive_client_web.dart`
-- `lib/shared/services/google_drive/mobile_drive_service_web.dart`
-- `lib/shared/services/google_drive/mobile_google_auth_service_web.dart`
-- `lib/shared/utils/platform_helper_web.dart` (provides Platform/File/Directory stubs)
+- **Web**: NOT SUPPORTED - web platform has been removed from the project
 
 **Platform-Specific Imports**:
-Always use conditional imports for `dart:io` and platform-specific packages:
+No conditional imports needed anymore. All imports are straightforward:
 ```dart
-import 'dart:io' show Platform
-    if (dart.library.html) 'shared/utils/platform_helper_web.dart';
-import 'package:google_sign_in/google_sign_in.dart'
-    if (dart.library.html) 'shared/services/google_drive_client_web.dart';
+import 'dart:io' show Platform;
+import 'package:google_sign_in/google_sign_in.dart';
 ```
-
-**Wrapping Platform Code**:
-```dart
-// Good: Wrap Google Sign-In calls
-if (PlatformHelper.isMobile) {
-  final googleSignIn = GoogleSignIn(scopes: scopes);
-  await googleSignIn.signIn();
-}
-
-// Good: Initialize services on all platforms (web uses stub)
-await AllAppsDriveService.instance.initialize(); // Works everywhere
-
-// Bad: Don't use Platform checks for services with conditional exports
-// The exports handle platform differences automatically
-```
-
-**Desktop OAuth**: Requires `desktop_oauth_config.dart` in `lib/shared/services/google_drive/` (not tracked in git). See `docs/GOOGLE_OAUTH_SETUP.md` for setup.
 
 ## Key Files Reference
 

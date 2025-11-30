@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:hive_flutter/hive_flutter.dart';
 import '../../fourth_step/models/inventory_entry.dart';
 import '../../fourth_step/models/i_am_definition.dart';
+import '../../fourth_step/services/i_am_service.dart';
 import '../../shared/localizations.dart';
 
 class FormTab extends StatelessWidget {
@@ -37,12 +38,9 @@ class FormTab extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final iAmBox = Hive.box<IAmDefinition>('i_am_definitions');
-    final selectedIAm = selectedIAmId != null
-        ? iAmBox.values.firstWhere(
-            (def) => def.id == selectedIAmId,
-            orElse: () => IAmDefinition(id: '', name: ''),
-          )
-        : null;
+    final iAmService = IAmService();
+    // Use the centralized service to find I Am definition
+    final selectedIAm = iAmService.findById(iAmBox, selectedIAmId);
 
     return Padding(
       padding: const EdgeInsets.all(16),

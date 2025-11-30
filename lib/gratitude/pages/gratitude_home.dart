@@ -137,9 +137,9 @@ class _GratitudeHomeState extends State<GratitudeHome> with SingleTickerProvider
           ),
           PopupMenuButton<String>(
             onSelected: _changeLanguage,
-            itemBuilder: (context) => const [
-              PopupMenuItem(value: 'en', child: Text('English')),
-              PopupMenuItem(value: 'da', child: Text('Dansk')),
+            itemBuilder: (context) => [
+              PopupMenuItem(value: 'en', child: Text(t(context, 'lang_english'))),
+              PopupMenuItem(value: 'da', child: Text(t(context, 'lang_danish'))),
             ],
             icon: const Icon(Icons.language),
           ),

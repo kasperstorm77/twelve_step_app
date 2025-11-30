@@ -1,6 +1,5 @@
 //main.dart - Flutter Modular Integration
-import 'dart:io' show Platform
-    if (dart.library.html) 'shared/utils/platform_helper_web.dart';
+import 'dart:io' show Platform;
 import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_modular/flutter_modular.dart';

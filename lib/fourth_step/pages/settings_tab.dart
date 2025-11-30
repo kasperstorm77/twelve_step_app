@@ -187,9 +187,9 @@ class _SettingsTabState extends State<SettingsTab> {
     final definition = box.getAt(index);
     if (definition == null) return;
 
-    // Check if this I Am is being used by any entries
+    // Use the centralized service to check if I Am is in use
     final entriesBox = widget.box;
-    final usageCount = entriesBox.values.where((entry) => entry.iAmId == definition.id).length;
+    final usageCount = _iAmService.getUsageCount(entriesBox, definition.id);
 
     if (usageCount > 0) {
       showDialog(

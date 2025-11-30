@@ -2,20 +2,16 @@
 // GoogleDriveClient - Handles Google Drive API Calls
 // --------------------------------------------------------------------------
 // 
-// PLATFORM SUPPORT: Android, iOS, and Desktop
-// This file depends on google_sign_in which is only available on mobile platforms.
-// For desktop platforms (Windows/macOS/Linux), alternative authentication methods
-// are used (desktop_webview_auth).
-// For web platform, a stub implementation is provided.
+// PLATFORM SUPPORT: Android, iOS, Windows, macOS, Linux
+// This file depends on google_sign_in for mobile or desktop OAuth for desktop.
 // 
-// Usage: Import this file directly - it will automatically use the correct
-// platform-specific implementation via conditional exports.
+// Usage: Import this file directly - it will use the appropriate authentication
+// method based on the platform.
 // --------------------------------------------------------------------------
 
 import 'dart:async';
 import 'package:flutter/foundation.dart';
-import 'package:google_sign_in/google_sign_in.dart'
-    if (dart.library.html) 'google_drive_client_web.dart';
+import 'package:google_sign_in/google_sign_in.dart';
 import 'package:googleapis/drive/v3.dart' as drive_api;
 import 'package:googleapis_auth/googleapis_auth.dart' as auth;
 import 'package:http/http.dart' as http;

@@ -5,13 +5,11 @@
 // PLATFORM SUPPORT: Android and iOS only
 // This service depends on google_sign_in which is only available on mobile platforms.
 // For desktop platforms (Windows/macOS/Linux), use desktop_drive_auth instead.
-// For web platform, use the web stub implementation.
 // 
 // Usage: Only import and use this service when PlatformHelper.isMobile returns true.
 // --------------------------------------------------------------------------
 
-import 'dart:io' show Platform
-    if (dart.library.html) '../../utils/platform_helper_web.dart';
+import 'dart:io' show Platform;
 import 'package:flutter/foundation.dart';
 import 'package:google_sign_in/google_sign_in.dart';
 import 'drive_config.dart';

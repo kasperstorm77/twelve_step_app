@@ -100,11 +100,11 @@ class AppHelpService {
 
       default:
         return AppHelpContent(
-          title: 'Help',
+          title: t(context, 'help'),
           sections: [
             HelpSection(
-              title: 'Information',
-              content: 'Help content not available for this app.',
+              title: t(context, 'information'),
+              content: t(context, 'help_not_available'),
             ),
           ],
         );

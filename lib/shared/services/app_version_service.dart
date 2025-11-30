@@ -156,19 +156,19 @@ class AppVersionService {
       // Show loading indicator
       if (context.mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
-          const SnackBar(
+          SnackBar(
             content: Row(
               children: [
-                SizedBox(
+                const SizedBox(
                   width: 20,
                   height: 20,
                   child: CircularProgressIndicator(strokeWidth: 2),
                 ),
-                SizedBox(width: 16),
-                Text('Fetching data from Google Drive...'),
+                const SizedBox(width: 16),
+                Text(t(context, 'fetching_data')),
               ],
             ),
-            duration: Duration(seconds: 30),
+            duration: const Duration(seconds: 30),
           ),
         );
       }
@@ -184,8 +184,8 @@ class AppVersionService {
         if (context.mounted) {
           ScaffoldMessenger.of(context).clearSnackBars();
           ScaffoldMessenger.of(context).showSnackBar(
-            const SnackBar(
-              content: Text('No data found in Google Drive'),
+            SnackBar(
+              content: Text(t(context, 'no_data_found')),
               backgroundColor: Colors.orange,
             ),
           );
@@ -257,7 +257,7 @@ class AppVersionService {
           ScaffoldMessenger.of(context).clearSnackBars();
           ScaffoldMessenger.of(context).showSnackBar(
             SnackBar(
-              content: Text('Successfully fetched $entriesCount entries from Google Drive ($fetchType)'),
+              content: Text('${t(context, 'fetch_success')} ($entriesCount $fetchType)'),
               backgroundColor: Colors.green,
               duration: const Duration(seconds: 3),
             ),
@@ -271,8 +271,8 @@ class AppVersionService {
         if (context.mounted) {
           ScaffoldMessenger.of(context).clearSnackBars();
           ScaffoldMessenger.of(context).showSnackBar(
-            const SnackBar(
-              content: Text('No entries found in Google Drive'),
+            SnackBar(
+              content: Text(t(context, 'no_entries_found')),
               backgroundColor: Colors.orange,
             ),
           );
@@ -288,7 +288,7 @@ class AppVersionService {
         ScaffoldMessenger.of(context).clearSnackBars();
         ScaffoldMessenger.of(context).showSnackBar(
           SnackBar(
-            content: Text('Failed to fetch from Google Drive: ${e.toString()}'),
+            content: Text('${t(context, 'fetch_failed')}: ${e.toString()}'),
             backgroundColor: Colors.red,
             duration: const Duration(seconds: 4),
           ),

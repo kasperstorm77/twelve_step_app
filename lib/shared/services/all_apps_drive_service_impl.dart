@@ -9,15 +9,16 @@ import '../../evening_ritual/models/reflection_entry.dart';
 import '../../gratitude/models/gratitude_entry.dart';
 import '../../agnosticism/models/agnosticism_paper.dart';
 import 'google_drive/drive_config.dart';
-import 'google_drive/mobile_drive_service.dart'
-    if (dart.library.html) 'google_drive/mobile_drive_service_web.dart';
+import 'google_drive/mobile_drive_service.dart';
+import 'google_drive/windows_drive_service_wrapper.dart';
+import '../utils/platform_helper.dart';
 
 // --------------------------------------------------------------------------
 // All Apps Drive Service - Platform-Aware Implementation
 // --------------------------------------------------------------------------
 
 /// Google Drive service that syncs all 5 apps
-/// Uses platform-specific MobileDriveService (mobile/web stub)
+/// Uses platform-specific drive services (mobile or Windows)
 class AllAppsDriveService {
   static AllAppsDriveService? _instance;
   static AllAppsDriveService get instance {
@@ -25,10 +26,18 @@ class AllAppsDriveService {
     return _instance!;
   }
 
-  late final MobileDriveService _driveService;
+  // Platform-specific drive services
+  MobileDriveService? _mobileDriveService;
+  WindowsDriveServiceWrapper? _windowsDriveService;
+  
   final StreamController<int> _uploadCountController = StreamController<int>.broadcast();
 
   AllAppsDriveService._() {
+    _initializePlatformService();
+  }
+
+  /// Initialize the appropriate platform-specific service
+  void _initializePlatformService() {
     // Configure for inventory app
     const config = GoogleDriveConfig(
       fileName: 'aa4step_inventory_data.json',
@@ -37,43 +46,113 @@ class AllAppsDriveService {
       parentFolder: 'appDataFolder',
     );
 
-    _driveService = MobileDriveService(config: config);
+    if (PlatformHelper.isWindows) {
+      // Windows uses WindowsDriveServiceWrapper
+      if (kDebugMode) print('AllAppsDriveService: Initializing for Windows');
+      // Will be created async in initialize()
+    } else {
+      // Mobile (Android/iOS) uses MobileDriveService
+      if (kDebugMode) print('AllAppsDriveService: Initializing for Mobile');
+      _mobileDriveService = MobileDriveService(config: config);
+    }
     
     // Note: We don't auto-listen to all upload events anymore
     // UI notifications are only triggered for user-initiated actions
   }
 
   // Expose underlying service properties
-  bool get syncEnabled => _driveService.syncEnabled;
-  bool get isAuthenticated => _driveService.isAuthenticated;
-  Stream<bool> get onSyncStateChanged => _driveService.onSyncStateChanged;
+  bool get syncEnabled {
+    if (PlatformHelper.isWindows) {
+      return _windowsDriveService?.syncEnabled ?? false;
+    } else {
+      return _mobileDriveService?.syncEnabled ?? false;
+    }
+  }
+  
+  bool get isAuthenticated {
+    if (PlatformHelper.isWindows) {
+      return _windowsDriveService?.isAuthenticated ?? false;
+    } else {
+      return _mobileDriveService?.isAuthenticated ?? false;
+    }
+  }
+  
+  Stream<bool> get onSyncStateChanged {
+    if (PlatformHelper.isWindows) {
+      return _windowsDriveService?.onSyncStateChanged ?? Stream.empty();
+    } else {
+      return _mobileDriveService?.onSyncStateChanged ?? Stream.empty();
+    }
+  }
+  
   Stream<int> get onUpload => _uploadCountController.stream;
-  Stream<String> get onError => _driveService.onError;
+  
+  Stream<String> get onError {
+    if (PlatformHelper.isWindows) {
+      return _windowsDriveService?.onError ?? Stream.empty();
+    } else {
+      return _mobileDriveService?.onError ?? Stream.empty();
+    }
+  }
 
   /// Initialize the service
   Future<void> initialize() async {
-    await _driveService.initialize();
+    if (PlatformHelper.isWindows) {
+      // Create WindowsDriveService and wrap it
+      const config = GoogleDriveConfig(
+        fileName: 'aa4step_inventory_data.json',
+        mimeType: 'application/json',
+        scope: 'https://www.googleapis.com/auth/drive.appdata',
+        parentFolder: 'appDataFolder',
+      );
+      _windowsDriveService = await WindowsDriveServiceWrapper.create(
+        config: config,
+        syncEnabled: false,
+        uploadDelay: const Duration(milliseconds: 700),
+      );
+      await _windowsDriveService!.initialize();
+    } else {
+      await _mobileDriveService!.initialize();
+    }
     await _loadSyncState();
   }
 
   /// Sign in to Google
-  Future<bool> signIn() => _driveService.signIn();
+  Future<bool> signIn() {
+    if (PlatformHelper.isWindows) {
+      return _windowsDriveService!.driveService.signIn();
+    } else {
+      return _mobileDriveService!.signIn();
+    }
+  }
 
   /// Sign out from Google  
   Future<void> signOut() async {
-    await _driveService.signOut();
+    if (PlatformHelper.isWindows) {
+      await _windowsDriveService!.driveService.signOut();
+    } else {
+      await _mobileDriveService!.signOut();
+    }
     await _saveSyncState(false);
   }
 
   /// Enable/disable sync
   Future<void> setSyncEnabled(bool enabled) async {
-    _driveService.setSyncEnabled(enabled);
+    if (PlatformHelper.isWindows) {
+      _windowsDriveService!.setSyncEnabled(enabled);
+    } else {
+      _mobileDriveService!.setSyncEnabled(enabled);
+    }
     await _saveSyncState(enabled);
   }
 
   /// Upload raw content directly
   Future<void> uploadContent(String content) async {
-    await _driveService.uploadContent(content);
+    if (PlatformHelper.isWindows) {
+      _windowsDriveService!.scheduleUpload(content);
+    } else {
+      await _mobileDriveService!.uploadContent(content);
+    }
   }
 
   /// Upload inventory entries from Hive box
@@ -85,10 +164,15 @@ class AllAppsDriveService {
     try {
       // Get I Am definitions
       final iAmBox = Hive.box<IAmDefinition>('i_am_definitions');
-      final iAmDefinitions = iAmBox.values.map((def) => {
-        'id': def.id,
-        'name': def.name,
-        'reasonToExist': def.reasonToExist,
+      final iAmDefinitions = iAmBox.values.map((def) {
+        final map = <String, dynamic>{
+          'id': def.id,
+          'name': def.name,
+        };
+        if (def.reasonToExist != null && def.reasonToExist!.isNotEmpty) {
+          map['reasonToExist'] = def.reasonToExist;
+        }
+        return map;
       }).toList();
 
       // Get 8th step people
@@ -126,7 +210,11 @@ class AllAppsDriveService {
       // Serialize to JSON string
       final jsonString = json.encode(exportData);
 
-      await _driveService.uploadContent(jsonString);
+      if (PlatformHelper.isWindows) {
+        _windowsDriveService!.scheduleUpload(jsonString);
+      } else {
+        await _mobileDriveService!.uploadContent(jsonString);
+      }
       
       // Save the upload timestamp locally
       await _saveLastModified(now);
@@ -142,15 +230,24 @@ class AllAppsDriveService {
 
   /// Schedule debounced upload from box (background sync - no UI notifications)
   void scheduleUploadFromBox(Box<InventoryEntry> box) {
-    if (!syncEnabled || !isAuthenticated) return;
+    if (kDebugMode) print('AllAppsDriveService: scheduleUploadFromBox called - syncEnabled=$syncEnabled, isAuthenticated=$isAuthenticated');
+    if (!syncEnabled || !isAuthenticated) {
+      if (kDebugMode) print('AllAppsDriveService: ⚠️ Upload skipped - sync not enabled or not authenticated');
+      return;
+    }
 
     try {
       // Get I Am definitions
       final iAmBox = Hive.box<IAmDefinition>('i_am_definitions');
-      final iAmDefinitions = iAmBox.values.map((def) => {
-        'id': def.id,
-        'name': def.name,
-        'reasonToExist': def.reasonToExist,
+      final iAmDefinitions = iAmBox.values.map((def) {
+        final map = <String, dynamic>{
+          'id': def.id,
+          'name': def.name,
+        };
+        if (def.reasonToExist != null && def.reasonToExist!.isNotEmpty) {
+          map['reasonToExist'] = def.reasonToExist;
+        }
+        return map;
       }).toList();
 
       // Get 8th step people
@@ -192,7 +289,11 @@ class AllAppsDriveService {
       _saveLastModified(now);
       
       // Schedule upload (debounced)
-      _driveService.scheduleUpload(jsonString);
+      if (PlatformHelper.isWindows) {
+        _windowsDriveService!.scheduleUpload(jsonString);
+      } else {
+        _mobileDriveService!.scheduleUpload(jsonString);
+      }
     } catch (e) {
       // Background sync failed, will retry on next change
     }
@@ -211,7 +312,13 @@ class AllAppsDriveService {
     }
 
     try {
-      final content = await _driveService.downloadContent();
+      final String? content;
+      if (PlatformHelper.isWindows) {
+        content = await _windowsDriveService!.downloadContent();
+      } else {
+        content = await _mobileDriveService!.downloadContent();
+      }
+      
       if (content == null) return null;
 
       return await _parseInventoryContent(content);
@@ -223,7 +330,11 @@ class AllAppsDriveService {
 
   /// List available backup restore points
   Future<List<Map<String, dynamic>>> listAvailableBackups() async {
-    return await _driveService.listAvailableBackups();
+    if (PlatformHelper.isWindows) {
+      return await _windowsDriveService!.listAvailableBackups();
+    } else {
+      return await _mobileDriveService!.listAvailableBackups();
+    }
   }
 
   /// Download and restore from a specific backup file
@@ -234,7 +345,11 @@ class AllAppsDriveService {
     }
 
     try {
-      return await _driveService.downloadBackupContent(fileName);
+      if (PlatformHelper.isWindows) {
+        return await _windowsDriveService!.downloadBackupContent(fileName);
+      } else {
+        return await _mobileDriveService!.downloadBackupContent(fileName);
+      }
     } catch (e) {
       if (kDebugMode) print('AllAppsDriveService: Backup download failed - $e');
       rethrow;
@@ -242,10 +357,22 @@ class AllAppsDriveService {
   }
 
   /// Check if inventory file exists on Drive
-  Future<bool> inventoryFileExists() => _driveService.fileExists();
+  Future<bool> inventoryFileExists() {
+    if (PlatformHelper.isWindows) {
+      return _windowsDriveService!.fileExists();
+    } else {
+      return _mobileDriveService!.fileExists();
+    }
+  }
 
   /// Delete inventory file from Drive
-  Future<bool> deleteInventoryFile() => _driveService.deleteContent();
+  Future<bool> deleteInventoryFile() {
+    if (PlatformHelper.isWindows) {
+      return _windowsDriveService!.deleteContent();
+    } else {
+      return _mobileDriveService!.deleteContent();
+    }
+  }
 
   /// Parse downloaded content into InventoryEntry objects
   Future<List<InventoryEntry>> _parseInventoryContent(String content) async {
@@ -257,7 +384,11 @@ class AllAppsDriveService {
     try {
       final settingsBox = await Hive.openBox('settings');
       final enabled = settingsBox.get('syncEnabled', defaultValue: false) ?? false;
-      _driveService.setSyncEnabled(enabled);
+      if (PlatformHelper.isWindows) {
+        _windowsDriveService?.setSyncEnabled(enabled);
+      } else {
+        _mobileDriveService?.setSyncEnabled(enabled);
+      }
     } catch (e) {
       if (kDebugMode) print('AllAppsDriveService: Failed to load sync state - $e');
     }
@@ -314,7 +445,13 @@ class AllAppsDriveService {
     try {
       // Download remote content
       if (kDebugMode) print('AllAppsDriveService: Downloading remote file...');
-      final content = await _driveService.downloadContent();
+      final String? content;
+      if (PlatformHelper.isWindows) {
+        content = await _windowsDriveService!.downloadContent();
+      } else {
+        content = await _mobileDriveService!.downloadContent();
+      }
+      
       if (content == null) {
         if (kDebugMode) print('AllAppsDriveService: No remote file found');
         return false;
@@ -345,8 +482,10 @@ class AllAppsDriveService {
         final iAmDefinitions = decoded['iAmDefinitions'] as List<dynamic>?;
         final people = decoded['people'] as List<dynamic>?; // Get people data
         final reflections = decoded['reflections'] as List<dynamic>?; // Get reflections data
-        final gratitudeData = decoded['gratitude'] as List<dynamic>?; // Get gratitude data
-        final agnosticismData = decoded['agnosticism'] as List<dynamic>?; // Get agnosticism data
+        // Handle both old ('gratitudeEntries') and new ('gratitude') field names
+        final gratitudeData = (decoded['gratitude'] ?? decoded['gratitudeEntries']) as List<dynamic>?; 
+        // Handle both old ('agnosticismPapers') and new ('agnosticism') field names
+        final agnosticismData = (decoded['agnosticism'] ?? decoded['agnosticismPapers']) as List<dynamic>?;
 
         // Update I Am definitions first
         if (iAmDefinitions != null) {
@@ -441,7 +580,11 @@ class AllAppsDriveService {
 
   /// Dispose resources
   void dispose() {
-    _driveService.dispose();
+    if (PlatformHelper.isWindows) {
+      _windowsDriveService?.dispose();
+    } else {
+      _mobileDriveService?.dispose();
+    }
     _uploadCountController.close();
   }
 }
@@ -457,6 +600,14 @@ List<InventoryEntry> _parseInventoryJson(String content) {
     
     final entries = decoded['entries'] as List<dynamic>?;
     if (entries == null) return [];
+
+    if (kDebugMode && entries.isNotEmpty) {
+      print('_parseInventoryJson: First entry raw JSON: ${entries.first}');
+      print('_parseInventoryJson: Has iAmId field? ${(entries.first as Map).containsKey('iAmId')}');
+      if ((entries.first as Map).containsKey('iAmId')) {
+        print('_parseInventoryJson: iAmId value: ${(entries.first as Map)['iAmId']}');
+      }
+    }
 
     return entries
         .cast<Map<String, dynamic>>()

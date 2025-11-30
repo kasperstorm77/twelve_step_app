@@ -2,7 +2,7 @@ name: twelvestepsapp
 description: "12 Steps App - AA Inventory & Recovery Tools"
 publish_to: 'none'
 
-version: 1.0.1+41
+version: 1.0.1+45
 
 environment:
   sdk: ^3.9.2
@@ -32,6 +32,7 @@ dependencies:
   phosphor_flutter: ^2.1.0
   flutter_bloc: ^8.1.3
   intl: any  # Provided by flutter_localizations
+  app_links: ^6.3.2  # Deep link handling for Windows OAuth
 
 dev_dependencies:
   flutter_test:

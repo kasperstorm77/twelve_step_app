@@ -71,7 +71,7 @@ New methods:
 #### 2. `MobileDriveService`
 New methods:
 - `_createDatedBackup(String content)` - Create today's backup
-- `_cleanupOldBackups()` - Delete backups older than 3 days
+- `_cleanupOldBackups()` - Delete backups older than 7 days
 - `listAvailableBackups()` - Return list of available backups with dates
 - `downloadBackupContent(String fileName)` - Download specific backup
 

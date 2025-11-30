@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:hive_flutter/hive_flutter.dart';
 import '../../fourth_step/models/inventory_entry.dart';
 import '../../fourth_step/models/i_am_definition.dart';
+import '../../fourth_step/services/i_am_service.dart';
 import '../../shared/localizations.dart';
 
 class ListTab extends StatefulWidget {
@@ -25,6 +26,7 @@ class ListTab extends StatefulWidget {
 class _ListTabState extends State<ListTab> {
   bool showTable = false;
   late final Box<IAmDefinition> _iAmBox;
+  final _iAmService = IAmService();
 
   @override
   void initState() {
@@ -46,13 +48,10 @@ class _ListTabState extends State<ListTab> {
     }
   }
 
+  /// Get the I Am name for display, using the centralized service
+  /// Returns null if iAmId is null/empty or if the I Am definition is not found
   String? _getIAmName(String? iAmId) {
-    if (iAmId == null || iAmId.isEmpty) return null;
-    final iAm = _iAmBox.values.firstWhere(
-      (def) => def.id == iAmId,
-      orElse: () => IAmDefinition(id: '', name: ''),
-    );
-    return iAm.name.isNotEmpty ? iAm.name : null;
+    return _iAmService.getNameById(_iAmBox, iAmId);
   }
 
   @override

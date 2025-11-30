@@ -2,9 +2,8 @@
 // GoogleDriveClient - Platform Conditional Export
 // --------------------------------------------------------------------------
 // 
-// PLATFORM SUPPORT: Mobile (Android/iOS) and Web
-// This file conditionally exports the correct implementation based on platform
+// PLATFORM SUPPORT: Mobile (Android/iOS), Desktop (Windows/macOS/Linux)
+// This file exports the implementation for supported platforms
 // --------------------------------------------------------------------------
 
-export 'google_drive_client_impl.dart'
-    if (dart.library.html) 'google_drive_client_web.dart';
+export 'google_drive_client_impl.dart';

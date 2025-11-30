@@ -1,38 +1,46 @@
 # Google OAuth Setup
 
-This document covers OAuth setup for **desktop platforms only** (Windows/macOS/Linux). Mobile (Android/iOS) and Web platforms have OAuth already configured and working.
+This document covers OAuth setup for **desktop platforms only** (Windows/macOS/Linux). Mobile (Android/iOS) platforms have OAuth already configured and working.
 
 ## Platform Status
 
 - ✅ **Android**: OAuth configured via SHA-1 fingerprint + package name (no setup needed)
 - ✅ **iOS**: OAuth configured via iOS client ID in code and Info.plist (no setup needed)
-- ✅ **Web**: OAuth configured via web client ID in `web/index.html` (no setup needed)
-- ⚙️ **Desktop**: Requires manual OAuth setup (this document)
+- ⚙️ **Windows**: Requires OAuth setup + URL protocol registration (this document)
+- ⚙️ **macOS/Linux**: Requires manual OAuth setup (not implemented yet)
 
-## Desktop OAuth Setup (Optional)
+## Windows OAuth Setup
 
-Desktop platforms (Windows/macOS/Linux) can use Google Drive sync, but require manual OAuth credential configuration.
+Windows uses **deep link OAuth** with custom URL protocol for automatic redirect handling.
 
 ### Step 1: Create OAuth Client ID
 
 1. Go to [Google Cloud Console](https://console.cloud.google.com/apis/credentials)
 2. Select your project (or create a new one)
 3. Click **"Create Credentials"** → **"OAuth client ID"**
-4. Choose Application type: **"Desktop app"**
-5. Give it a name (e.g., "4-Step Inventory Desktop")
+4. Choose Application type: **"Desktop app"** (NOT "Web application")
+5. Give it a name (e.g., "12 Steps App - Windows")
 6. Click **"Create"**
 
 You'll get:
 - **Client ID**: Something like `1234567890-abc123def456.apps.googleusercontent.com`
 - **Client Secret**: Something like `GOCSPX-abc123def456`
 
-### Step 2: Enable Google Drive API
+### Step 2: Add Redirect URI
+
+**CRITICAL**: Desktop OAuth clients need the custom URL scheme as a redirect URI.
+
+1. Edit your Desktop OAuth client in Google Cloud Console
+2. Add authorized redirect URI: **`twelvestepsapp://auth`**
+3. Click **"Save"**
+
+### Step 3: Enable Google Drive API
 
 1. In Google Cloud Console, go to **"APIs & Services"** → **"Library"**
 2. Search for **"Google Drive API"**
 3. Click **"Enable"**
 
-### Step 3: Add Credentials to Your App
+### Step 4: Add Credentials to Your App
 
 Copy the template configuration file:
 
@@ -44,20 +52,28 @@ cp lib/shared/services/google_drive/desktop_oauth_config.dart.template \
 Open `lib/shared/services/google_drive/desktop_oauth_config.dart` and replace:
 
 ```dart
-static const String _clientId = 'YOUR_DESKTOP_CLIENT_ID.apps.googleusercontent.com';
-static const String _clientSecret = 'YOUR_CLIENT_SECRET';
+const String desktopOAuthClientId = 'YOUR_CLIENT_ID.apps.googleusercontent.com';
+const String desktopOAuthClientSecret = 'YOUR_CLIENT_SECRET';
 ```
 
 With your actual credentials:
 
 ```dart
-static const String _clientId = '1234567890-abc123def456.apps.googleusercontent.com';
-static const String _clientSecret = 'GOCSPX-abc123def456';
+const String desktopOAuthClientId = '1234567890-abc123def456.apps.googleusercontent.com';
+const String desktopOAuthClientSecret = 'GOCSPX-abc123def456';
 ```
 
 **Note**: The file `desktop_oauth_config.dart` is gitignored for security. The template is tracked in git for reference.
 
-### Step 4: Test the Flow
+### Step 5: Register Windows URL Protocol
+
+Windows needs to know how to handle `twelvestepsapp://` URLs. See [`WINDOWS_URL_PROTOCOL.md`](WINDOWS_URL_PROTOCOL.md) for detailed instructions.
+
+**Quick steps:**
+1. Build the Windows app: `flutter build windows --release`
+2. Run as Administrator: `windows\register_url_protocol.bat`
+
+### Step 6: Test the Flow
 
 1. Run the app on Windows: `flutter run -d windows`
 2. Go to **Data Management** tab

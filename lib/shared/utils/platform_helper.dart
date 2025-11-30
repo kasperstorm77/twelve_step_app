@@ -1,5 +1,4 @@
-import 'dart:io' show Platform
-    if (dart.library.html) 'platform_helper_web.dart';
+import 'dart:io' show Platform;
 import 'package:flutter/foundation.dart' show kIsWeb;
 
 /// Simple platform detection helper for conditional code execution.
@@ -32,7 +31,7 @@ class PlatformHelper {
   /// Returns true if running on Linux
   static bool get isLinux => !kIsWeb && Platform.isLinux;
 
-  /// Returns true if running on Web
+  /// Returns true if running on Web (not supported)
   static bool get isWeb => kIsWeb;
 
   /// Returns true if running on any mobile platform (Android or iOS)
