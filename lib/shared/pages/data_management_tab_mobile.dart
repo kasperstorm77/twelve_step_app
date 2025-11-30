@@ -283,9 +283,9 @@ class _DataManagementTabState extends State<DataManagementTab> {
   }
 
   Future<void> _maybePromptFetchAfterInteractiveSignIn(GoogleSignInAccount account) async {
-  // Only prompt when this sign-in was interactive/requested and we haven't
-  // already prompted for this account id.
-  if (!(_interactiveSignIn || _interactiveSignInRequested)) return;
+  // Prompt can happen either from interactive sign-in OR from silent sign-in
+  // (when the user navigates to Settings tab and we detect an existing account).
+  // The key is just not to prompt the same account twice in the same session.
   if (_lastPromptedAccountId == account.id) return;
   if (!mounted) return;
 

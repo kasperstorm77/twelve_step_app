@@ -78,6 +78,10 @@ class _ListTabState extends State<ListTab> {
             child: ValueListenableBuilder(
               valueListenable: widget.box.listenable(),
               builder: (context, Box<InventoryEntry> box, _) {
+                // Also listen to I Am box changes for name lookups
+                return ValueListenableBuilder(
+                  valueListenable: _iAmBox.listenable(),
+                  builder: (context, Box<IAmDefinition> iAmBox, _) {
                 if (box.isEmpty) {
                   return Center(child: Text(t(context, 'no_entries')));
                 }
@@ -246,6 +250,8 @@ class _ListTabState extends State<ListTab> {
                         ),
                       ),
                     );
+                  },
+                );
                   },
                 );
               },
