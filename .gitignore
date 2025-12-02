@@ -94,3 +94,4 @@ coverage/
 # Only track your pubspec.yaml
 # Only track your assets/ if you have custom assets
 # Only track documentation and project files you created
+*.apk
