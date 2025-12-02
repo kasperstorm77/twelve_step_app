@@ -280,6 +280,10 @@ Before making changes that affect data:
 
 ## Common Pitfalls
 
+⛔ **NEVER DELETE THESE FILES** (even if they seem "unused"):
+- `my-release-key.jks` - Release signing key. **IF DELETED: Cannot update app on Play Store EVER**
+- `debug.keystore` - Debug signing key with registered SHA-1. **IF DELETED: Google Sign-In breaks**
+
 ❌ **Don't**: Reuse Hive type IDs (0-13 are assigned)
 ❌ **Don't**: Delete I Am without checking usage  
 ❌ **Don't**: Import entries before I Am definitions  
@@ -287,6 +291,7 @@ Before making changes that affect data:
 ❌ **Don't**: Use custom URI schemes for desktop OAuth (Google deprecated them)
 ❌ **Don't**: Forget to add translations to BOTH en and da maps
 ❌ **Don't**: Forget `mounted` checks before using context after async operations
+❌ **Don't**: Delete `.jks` or `.keystore` files when "cleaning up" the project root
 ✅ **Do**: Use loopback HTTP server for desktop OAuth (`http://127.0.0.1:PORT`)
 ✅ **Do**: Use debounced uploads for performance (700ms)
 ✅ **Do**: Show warnings before data replacement  
