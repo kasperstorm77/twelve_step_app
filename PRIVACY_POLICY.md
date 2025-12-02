@@ -1,17 +1,17 @@
 # Privacy Policy for the 12 steps app
 
 **Effective Date**: October 13th 2025  
-**Last Updated**: November 14th 2025
+**Last Updated**: December 2nd 2025
 
 ## About This App
 
-the 12 steps app is a personal inventory management app designed for the AA (Alcoholics Anonymous) 4th Step process, soon to be extended. This app helps users track and manage their personal inventory entries locally on their device with optional cloud backup functionality.
+The Twelve Steps App is a comprehensive recovery toolkit designed for the AA (Alcoholics Anonymous) program. This app provides six integrated tools: 4th Step Inventory, 8th Step Amends, Morning Ritual, Evening Ritual, Gratitude Journal, and Agnosticism Papers. All apps help users manage their recovery work locally on their device with optional Google Drive cloud backup.
 
 ## Information We Collect
 
 ### Personal Information
 - **Google Account Information**: If you choose to enable Google Drive sync, we access your Google account email and display name solely for authentication purposes.
-- **Inventory Entries**: The app stores your personal inventory data (resentments, reasons, affects, parts, and character defects) that you voluntarily enter.
+- **Recovery Data**: The app stores your personal recovery data (resentments, amends, rituals, gratitude entries, and spiritual reflections) that you voluntarily enter across all six integrated apps.
 
 ### Technical Information
 - **App Version Data**: The app stores version information locally to detect updates and offer data sync prompts.
@@ -127,7 +127,7 @@ For questions about this Privacy Policy or your data, please contact:
 
 ## Your Consent
 
-By using AA 4Step Inventory, you consent to this Privacy Policy. If you do not agree with this policy, please discontinue use of the app.
+By using the Twelve Steps App, you consent to this Privacy Policy. If you do not agree with this policy, please discontinue use of the app.
 
 ## Key Privacy Highlights
 

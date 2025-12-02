@@ -1,6 +1,6 @@
 # Twelve Steps App - AA Recovery Tools
 
-A comprehensive Flutter application for AA recovery work with five integrated apps: 4th Step Inventory, 8th Step Amends, Evening Ritual, Gratitude Journal, and Agnosticism Papers.
+A comprehensive Flutter application for AA recovery work with six integrated apps: 4th Step Inventory, 8th Step Amends, Morning Ritual, Evening Ritual, Gratitude Journal, and Agnosticism Papers.
 
 **Repository**: [https://github.com/kasperstorm77/twelve_step_app](https://github.com/kasperstorm77/twelve_step_app)
 
@@ -10,7 +10,7 @@ A comprehensive Flutter application for AA recovery work with five integrated ap
 
 ## Overview
 
-This app provides integrated recovery tools for AA members with seamless switching between five specialized apps:
+This app provides integrated recovery tools for AA members with seamless switching between six specialized apps:
 
 ### 1. **4th Step Inventory**
 Manage resentments and character defects following the AA 4th step process.
@@ -36,7 +36,17 @@ List and manage people to whom amends need to be made.
 - Notes and details for each person
 - Drag-and-drop organization
 
-### 3. **Evening Ritual**
+### 3. **Morning Ritual**
+Daily morning practice for structured recovery routine.
+
+**Features:**
+- Customizable ritual items (prayers, readings, meditations)
+- Daily completion tracking with timestamps
+- Three item types: Prayer, Reading, Meditation
+- History view to track consistency
+- Visual progress indicators
+
+### 4. **Evening Ritual**
 Daily evening reflection for ongoing recovery work.
 
 **Features:**
@@ -45,7 +55,7 @@ Daily evening reflection for ongoing recovery work.
 - Gratitude logging
 - Track patterns over time
 
-### 4. **Gratitude Journal**
+### 5. **Gratitude Journal**
 Daily gratitude practice and tracking.
 
 **Features:**
@@ -54,18 +64,18 @@ Daily gratitude practice and tracking.
 - Historical review
 - Positive mindset reinforcement
 
-### 5. **Agnosticism Papers**
+### 6. **Agnosticism Papers**
 Work through barriers to belief and develop new conception (Step 2).
 
 **Features:**
-- List barriers to belief
-- Develop new spiritual conception
-- Archive completed papers
-- Track spiritual growth
+- List barriers to belief paired with new powers/conceptions
+- Track spiritual growth through barrier/power pairs
+- Archive completed work
+- Build personal spiritual understanding
 
 ## App Switching
 
-**Seamless Navigation** between all 5 apps:
+**Seamless Navigation** between all 6 apps:
 - Grid icon in AppBar opens app switcher
 - Single click to switch between tools
 - All apps share common infrastructure
@@ -75,25 +85,26 @@ Work through barriers to belief and develop new conception (Step 2).
 
 ### Modular Multi-App System
 
-The app uses **Flutter Modular** architecture with five independent apps sharing common infrastructure:
+The app uses **Flutter Modular** architecture with six independent apps sharing common infrastructure:
 
 ```
 AppRouter (Global Switching)
 ├── 4th Step Inventory App
 ├── 8th Step Amends App
+├── Morning Ritual App
 ├── Evening Ritual App
 ├── Gratitude App
 └── Agnosticism App
 ```
 
 **Each App Has:**
-- Independent data models (Hive typeIds 0-9)
+- Independent data models (Hive typeIds 0-13)
 - Separate local storage boxes
 - Own UI screens and navigation
 - Dedicated CRUD services
 
 **Shared Infrastructure:**
-- `AllAppsDriveService`: Syncs ALL 5 apps to single Google Drive JSON
+- `AllAppsDriveService`: Syncs ALL 6 apps to single Google Drive JSON
 - `AppRouter`: Global app switching
 - `LocaleProvider`: English/Danish localization
 - `AppSwitcherService`: Remembers selected app
@@ -105,7 +116,7 @@ AppRouter (Global Switching)
 Each App's Home Page
 ├── AppBar
 │   ├── App Title
-│   ├── Grid Icon → App Switcher Dialog (5 apps)
+│   ├── Grid Icon → App Switcher Dialog (6 apps)
 │   ├── Help Icon → Context-sensitive help
 │   ├── Settings Icon → Data Management
 │   └── Language Selector → English/Danish
@@ -117,9 +128,9 @@ Each App's Home Page
 ```
 
 **Unified Data Management** (accessed via gear icon in any app):
-- Google Sign In/Out (mobile, web, desktop)
+- Google Sign In/Out (mobile and desktop)
 - Sync toggle (enable/disable Google Drive sync)
-- Export to JSON (ALL 5 apps in one file)
+- Export to JSON (ALL 6 apps in one file)
 - Import from JSON (with data loss warning)
 - Fetch from Google Drive
 - Upload to Google Drive (manual)
@@ -129,27 +140,22 @@ Each App's Home Page
 
 **Core Models (with Hive typeIds):**
 
-**4th Step:**
-- `IAmDefinition` (typeId: 1) - Identity perspectives
-- `InventoryEntry` (typeId: 0) - Resentment entries with iAmId links
-
-**8th Step:**
-- `Person` (typeId: 3) - People for amends
-- `ColumnType` (typeId: 4) - Kanban column enum
-
-**Evening Ritual:**
-- `ReflectionEntry` (typeId: 5) - Daily reflections
-- `ReflectionType` (typeId: 6) - Reflection category enum
-
-**Gratitude:**
-- `GratitudeEntry` (typeId: 7) - Gratitude journal entries
-
-**Agnosticism:**
-- `AgnosticismPaper` (typeId: 8) - Barrier/conception papers
-- `PaperStatus` (typeId: 9) - Paper status enum
-
-**Shared:**
-- `AppEntry` (typeId: 2) - Multi-app system definition
+| typeId | Model | App |
+|--------|-------|-----|
+| 0 | InventoryEntry | 4th Step |
+| 1 | IAmDefinition | 4th Step |
+| 2 | AppEntry | Shared |
+| 3 | Person | 8th Step |
+| 4 | ColumnType | 8th Step |
+| 5 | ReflectionEntry | Evening Ritual |
+| 6 | ReflectionType | Evening Ritual |
+| 7 | GratitudeEntry | Gratitude |
+| 8 | BarrierPowerPair | Agnosticism |
+| 9 | RitualItemType | Morning Ritual |
+| 10 | RitualItem | Morning Ritual |
+| 11 | RitualItemStatus | Morning Ritual |
+| 12 | RitualItemRecord | Morning Ritual |
+| 13 | MorningRitualEntry | Morning Ritual |
 
 All models include:
 - Hive annotations for local storage
@@ -161,9 +167,10 @@ All models include:
 All CRUD operations are handled by app-specific services:
 - `InventoryService` - 4th step entries and I Am definitions
 - `PersonService` - 8th step people
+- `MorningRitualService` - Morning ritual items and entries
 - `ReflectionService` - Evening ritual reflections
 - `GratitudeService` - Gratitude entries
-- `AgnosticismService` - Agnosticism papers
+- `AgnosticismService` - Agnosticism barrier/power pairs
 
 **Example (4th Step):**
 ```dart
@@ -185,12 +192,10 @@ await _inventoryService.deleteEntry(box, index);
 ### Google Drive Sync
 
 **Centralized Architecture:**
-- `AllAppsDriveService`: Syncs ALL 5 apps to single Google Drive JSON file
-- `LegacyDriveService`: Backward compatibility wrapper
+- `AllAppsDriveService`: Syncs ALL 6 apps to single Google Drive JSON file
 - Platform-specific auth:
   - Mobile (Android/iOS): `MobileGoogleAuthService` with `google_sign_in`
-  - Web: Web OAuth2 via `google_sign_in` web implementation
-  - Desktop: `DesktopDriveAuth` with OAuth2 out-of-band flow
+  - Desktop (Windows): `WindowsGoogleAuthService` with loopback HTTP server OAuth
 - `GoogleDriveCrudClient`: Pure Drive API operations
 
 **Sync Flow:**
@@ -199,20 +204,22 @@ await _inventoryService.deleteEntry(box, index);
 3. Sync toggle enables/disables automatic uploads
 4. CRUD operations in ANY app trigger debounced uploads (700ms)
 5. Data stored in Drive AppData folder as `aa4step_inventory_data.json`
-6. Single JSON file contains all 5 apps' data
+6. Single JSON file contains all 6 apps' data
 
-**JSON Format v6.0:**
+**JSON Format v7.0:**
 ```json
 {
-  "version": "6.0",
-  "exportDate": "2025-11-28T...",
-  "lastModified": "2025-11-28T...",
+  "version": "7.0",
+  "exportDate": "2025-12-02T...",
+  "lastModified": "2025-12-02T...",
+  "iAmDefinitions": [...],       // 4th step I Am (imported FIRST)
   "entries": [...],              // 4th step inventory
-  "iAmDefinitions": [...],       // 4th step I Am
   "people": [...],               // 8th step
+  "morningRitualItems": [...],   // Morning ritual definitions
+  "morningRitualEntries": [...], // Morning ritual daily completions
   "reflections": [...],          // Evening ritual
-  "gratitudeEntries": [...],     // Gratitude
-  "agnosticismPapers": [...]     // Agnosticism
+  "gratitude": [...],            // Gratitude
+  "agnosticism": [...]           // Agnosticism
 }
 ```
 
@@ -222,18 +229,18 @@ await _inventoryService.deleteEntry(box, index);
 - Background serialization using `compute()` isolates
 - Conflict resolution via `lastModified` timestamps
 - Auto-sync on app start if remote data is newer
-- **Data Safety**: All 5 apps sync atomically in one transaction
-- **Platform Support**: Android, iOS, Web (full sync), Desktop (manual auth)
+- **Data Safety**: All 6 apps sync atomically in one transaction
+- **Platform Support**: Android, iOS, Windows (full sync)
 
 ### JSON Import/Export
 
 **Export:**
 ```dart
 await _exportJson();
-// Creates JSON v6.0 with ALL 5 apps:
-// - Version number (6.0)
+// Creates JSON v7.0 with ALL 6 apps:
+// - Version number (7.0)
 // - Export timestamp + lastModified
-// - All data from all 5 apps in one file
+// - All data from all 6 apps in one file
 // Filename: twelve_steps_export_<timestamp>.json
 ```
 
@@ -241,7 +248,7 @@ await _exportJson();
 ```dart
 await _importJson();
 // Shows WARNING dialog (all app data will be replaced)
-// Imports all 5 apps' data from single JSON file
+// Imports all 6 apps' data from single JSON file
 // Preserves relationships (e.g., iAmId links)
 // Backward compatible with older format versions
 ```
@@ -258,14 +265,14 @@ See `docs/MODULAR_ARCHITECTURE.md` for complete multi-app system details.
 
 ### Localization
 
-Supports **English (en)** and **Danish (da)** across all 5 apps:
+Supports **English (en)** and **Danish (da)** across all 6 apps:
 
 ```dart
 t(context, 'key') // Translation helper function
 ```
 
 **Centralized Translations** in `lib/shared/localizations.dart`:
-- All 5 apps share common localization infrastructure
+- All 6 apps share common localization infrastructure
 - App-specific keys prefixed by app name
 - Common UI strings shared across apps
 
@@ -283,7 +290,7 @@ t(context, 'key') // Translation helper function
 ### Setup
 ```bash
 flutter pub get
-flutter pub run build_runner build --delete-conflicting-outputs
+dart run build_runner build --delete-conflicting-outputs
 ```
 
 ### Run
@@ -301,6 +308,9 @@ flutter build apk --release
 
 # App Bundle
 flutter build appbundle --release
+
+# Windows Release + ZIP (PowerShell)
+.\scripts\build_windows_release.ps1
 ```
 
 ### Version Increment
@@ -337,6 +347,12 @@ flutter analyze
 - `lib/eighth_step/models/person.dart`: Person data model
 - `lib/eighth_step/services/person_service.dart`: Person CRUD
 
+### Morning Ritual
+- `lib/morning_ritual/pages/morning_ritual_home.dart`: Main container
+- `lib/morning_ritual/models/ritual_item.dart`: Ritual item definition
+- `lib/morning_ritual/models/morning_ritual_entry.dart`: Daily completion
+- `lib/morning_ritual/services/morning_ritual_service.dart`: CRUD operations
+
 ### Evening Ritual
 - `lib/evening_ritual/pages/evening_ritual_home.dart`: Main container
 - `lib/evening_ritual/models/reflection_entry.dart`: Reflection data model
@@ -349,14 +365,15 @@ flutter analyze
 
 ### Agnosticism
 - `lib/agnosticism/pages/agnosticism_home.dart`: Main container
-- `lib/agnosticism/models/agnosticism_paper.dart`: Paper data model
-- `lib/agnosticism/services/agnosticism_service.dart`: Paper CRUD
+- `lib/agnosticism/models/barrier_power_pair.dart`: Barrier/power pair model
+- `lib/agnosticism/services/agnosticism_service.dart`: Pair CRUD
 
 ### Shared Infrastructure
-- `lib/shared/services/all_apps_drive_service.dart`: Centralized Drive sync
-- `lib/shared/services/legacy_drive_service.dart`: Backward compatibility
+- `lib/shared/services/all_apps_drive_service_impl.dart`: Centralized Drive sync
 - `lib/shared/services/google_drive/`: Platform-specific Drive auth
-- `lib/shared/pages/data_management_page.dart`: JSON/Drive UI
+- `lib/shared/pages/data_management_tab.dart`: Platform selector
+- `lib/shared/pages/data_management_tab_mobile.dart`: Android/iOS data management
+- `lib/shared/pages/data_management_tab_windows.dart`: Windows data management
 - `lib/shared/localizations.dart`: Translation system (EN/DA)
 - `lib/shared/models/app_entry.dart`: Multi-app system definition
 
@@ -365,11 +382,12 @@ flutter analyze
 See the `docs/` folder for detailed documentation:
 - `MODULAR_ARCHITECTURE.md`: Complete multi-app system architecture and data flow
 - `BUILD_SCRIPTS.md`: Build automation and version management
-- `GOOGLE_OAUTH_SETUP.md`: Google OAuth configuration for desktop
+- `GOOGLE_OAUTH_SETUP.md`: Google OAuth configuration (mobile and desktop loopback)
 - `VS_CODE_DEBUG.md`: VS Code debugging setup
 - `PLAY_STORE_DESCRIPTIONS.md`: App store listing content
 - `IOS_RELEASE.md`: iOS build and release process
 - `LOCAL_SETUP.md`: Git clone setup instructions (not tracked - contains credentials)
+- `BACKUP_RESTORE_POINTS.md`: Google Drive backup/restore system
 
 See also:
 - `PRIVACY_POLICY.md`: Privacy policy for app stores (root directory)
@@ -383,7 +401,7 @@ See also:
 - **flutter_localizations**: Internationalization support
 
 **Google Drive Sync:**
-- **google_sign_in**: Google authentication (Android, iOS, Web)
+- **google_sign_in**: Google authentication (Android, iOS)
 - **googleapis**: Drive API v3
 - **googleapis_auth**: OAuth2 authentication
 - **http**: HTTP client for API calls
@@ -409,5 +427,6 @@ See also:
 
 - ✅ **Android** - Full support with Google Drive sync
 - ✅ **iOS** - Full support with Google Drive sync
-- ✅ **Web** - Full support with Google Drive sync via OAuth2
-- ⚠️ **Windows/Linux/macOS** - Limited (manual Drive auth, no file picker on some platforms)
+- ✅ **Windows** - Full support with loopback OAuth Drive sync
+- ⚠️ **macOS/Linux** - Possible but not tested
+- ❌ **Web** - Not supported
