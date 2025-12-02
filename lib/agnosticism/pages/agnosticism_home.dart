@@ -74,15 +74,6 @@ class _AgnosticismHomeState extends State<AgnosticismHome> with SingleTickerProv
                   if (widget.onAppSwitched != null) {
                     widget.onAppSwitched!();
                   }
-                  
-                  if (!context.mounted) return;
-                  
-                  ScaffoldMessenger.of(context).showSnackBar(
-                    SnackBar(
-                      content: Text(t(context, 'switched_to_app').replaceFirst('%s', app.name)),
-                      duration: const Duration(seconds: 2),
-                    ),
-                  );
                 }
                 if (!dialogContext.mounted) return;
                 Navigator.of(dialogContext).pop();

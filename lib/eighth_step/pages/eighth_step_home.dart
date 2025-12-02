@@ -89,16 +89,6 @@ class _EighthStepHomeState extends State<EighthStepHome> with SingleTickerProvid
                   if (widget.onAppSwitched != null) {
                     widget.onAppSwitched!();
                   }
-                  
-                  if (!context.mounted) return;
-                  
-                  // Show snackbar
-                  ScaffoldMessenger.of(context).showSnackBar(
-                    SnackBar(
-                      content: Text(t(context, 'switched_to_app').replaceFirst('%s', app.name)),
-                      duration: const Duration(seconds: 2),
-                    ),
-                  );
                 }
                 if (!dialogContext.mounted) return;
                 Navigator.of(dialogContext).pop();
