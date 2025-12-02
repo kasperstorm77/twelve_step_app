@@ -98,6 +98,25 @@ class AppHelpService {
           ],
         );
 
+      case AvailableApps.morningRitual:
+        return AppHelpContent(
+          title: t(context, 'help_morning_ritual_title'),
+          sections: [
+            HelpSection(
+              title: t(context, 'help_morning_ritual_purpose_title'),
+              content: t(context, 'help_morning_ritual_purpose'),
+            ),
+            HelpSection(
+              title: t(context, 'help_morning_ritual_items_title'),
+              content: t(context, 'help_morning_ritual_items'),
+            ),
+            HelpSection(
+              title: t(context, 'help_morning_ritual_practice_title'),
+              content: t(context, 'help_morning_ritual_practice'),
+            ),
+          ],
+        );
+
       default:
         return AppHelpContent(
           title: t(context, 'help'),

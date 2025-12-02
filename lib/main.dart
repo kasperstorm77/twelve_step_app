@@ -11,6 +11,8 @@ import 'fourth_step/models/i_am_definition.dart';
 import 'shared/models/app_entry.dart';
 import 'eighth_step/models/person.dart';
 import 'evening_ritual/models/reflection_entry.dart';
+import 'morning_ritual/models/ritual_item.dart';
+import 'morning_ritual/models/morning_ritual_entry.dart';
 import 'gratitude/models/gratitude_entry.dart';
 import 'agnosticism/models/barrier_power_pair.dart';
 import 'shared/services/legacy_drive_service.dart';
@@ -39,6 +41,11 @@ void main() async {
   Hive.registerAdapter(ReflectionTypeAdapter());
   Hive.registerAdapter(GratitudeEntryAdapter());
   Hive.registerAdapter(BarrierPowerPairAdapter());
+  Hive.registerAdapter(RitualItemTypeAdapter());
+  Hive.registerAdapter(RitualItemAdapter());
+  Hive.registerAdapter(RitualItemStatusAdapter());
+  Hive.registerAdapter(RitualItemRecordAdapter());
+  Hive.registerAdapter(MorningRitualEntryAdapter());
 
   try {
     await Hive.openBox<InventoryEntry>('entries');
@@ -107,6 +114,26 @@ void main() async {
     await Hive.deleteBoxFromDisk('agnosticism_pairs');
     await Hive.openBox<BarrierPowerPair>('agnosticism_pairs');
     if (kDebugMode) print('Cleared corrupted agnosticism_pairs and created new one');
+  }
+
+  // Open morning ritual items box (definitions)
+  try {
+    await Hive.openBox<RitualItem>('morning_ritual_items');
+  } catch (e) {
+    if (kDebugMode) print('Error opening morning_ritual_items: $e');
+    await Hive.deleteBoxFromDisk('morning_ritual_items');
+    await Hive.openBox<RitualItem>('morning_ritual_items');
+    if (kDebugMode) print('Cleared corrupted morning_ritual_items and created new one');
+  }
+
+  // Open morning ritual entries box (daily completions)
+  try {
+    await Hive.openBox<MorningRitualEntry>('morning_ritual_entries');
+  } catch (e) {
+    if (kDebugMode) print('Error opening morning_ritual_entries: $e');
+    await Hive.deleteBoxFromDisk('morning_ritual_entries');
+    await Hive.openBox<MorningRitualEntry>('morning_ritual_entries');
+    if (kDebugMode) print('Cleared corrupted morning_ritual_entries and created new one');
   }
 
   // Open a separate settings box for sync preferences

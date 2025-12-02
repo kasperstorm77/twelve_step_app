@@ -4,6 +4,7 @@ import '../../shared/services/app_switcher_service.dart';
 import '../../fourth_step/pages/fourth_step_home.dart';
 import '../../eighth_step/pages/eighth_step_home.dart';
 import '../../evening_ritual/pages/evening_ritual_home.dart';
+import '../../morning_ritual/pages/morning_ritual_home.dart';
 import '../../gratitude/pages/gratitude_home.dart';
 import '../../agnosticism/pages/agnosticism_home.dart';
 
@@ -43,6 +44,12 @@ class _AppRouterState extends State<AppRouter> {
 
       case AvailableApps.eveningRitual:
         return EveningRitualHome(
+          key: ValueKey(currentAppId),
+          onAppSwitched: _onAppSwitched,
+        );
+
+      case AvailableApps.morningRitual:
+        return MorningRitualHome(
           key: ValueKey(currentAppId),
           onAppSwitched: _onAppSwitched,
         );

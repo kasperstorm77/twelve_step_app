@@ -47,11 +47,18 @@ class AvailableApps {
   static const String fourthStepInventory = 'fourth_step_inventory';
   static const String eighthStepAmends = 'eighth_step_amends';
   static const String eveningRitual = 'evening_ritual';
+  static const String morningRitual = 'morning_ritual';
   static const String gratitude = 'gratitude';
   static const String agnosticism = 'agnosticism';
 
   static List<AppEntry> getAll(BuildContext context) {
     return [
+      AppEntry(
+        id: agnosticism,
+        name: t(context, 'app_agnosticism_name'),
+        description: t(context, 'app_agnosticism_desc'),
+        isActive: true,
+      ),
       AppEntry(
         id: fourthStepInventory,
         name: t(context, 'app_fourth_step_name'),
@@ -65,6 +72,12 @@ class AvailableApps {
         isActive: true,
       ),
       AppEntry(
+        id: morningRitual,
+        name: t(context, 'app_morning_ritual_name'),
+        description: t(context, 'app_morning_ritual_desc'),
+        isActive: true,
+      ),
+      AppEntry(
         id: eveningRitual,
         name: t(context, 'app_evening_ritual_name'),
         description: t(context, 'app_evening_ritual_desc'),
@@ -74,12 +87,6 @@ class AvailableApps {
         id: gratitude,
         name: t(context, 'app_gratitude_name'),
         description: t(context, 'app_gratitude_desc'),
-        isActive: true,
-      ),
-      AppEntry(
-        id: agnosticism,
-        name: t(context, 'app_agnosticism_name'),
-        description: t(context, 'app_agnosticism_desc'),
         isActive: true,
       ),
     ];

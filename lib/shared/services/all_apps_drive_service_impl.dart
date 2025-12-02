@@ -6,6 +6,8 @@ import '../../fourth_step/models/inventory_entry.dart';
 import '../../fourth_step/models/i_am_definition.dart';
 import '../../eighth_step/models/person.dart';
 import '../../evening_ritual/models/reflection_entry.dart';
+import '../../morning_ritual/models/ritual_item.dart';
+import '../../morning_ritual/models/morning_ritual_entry.dart';
 import '../../gratitude/models/gratitude_entry.dart';
 import '../../agnosticism/models/barrier_power_pair.dart';
 import 'google_drive/drive_config.dart';
@@ -191,12 +193,20 @@ class AllAppsDriveService {
       final agnosticismBox = Hive.box<BarrierPowerPair>('agnosticism_pairs');
       final agnosticismPairs = agnosticismBox.values.map((p) => p.toJson()).toList();
 
+      // Get morning ritual items (definitions)
+      final morningRitualItemsBox = Hive.box<RitualItem>('morning_ritual_items');
+      final morningRitualItems = morningRitualItemsBox.values.map((i) => i.toJson()).toList();
+
+      // Get morning ritual entries (daily completions)
+      final morningRitualEntriesBox = Hive.box<MorningRitualEntry>('morning_ritual_entries');
+      final morningRitualEntries = morningRitualEntriesBox.values.map((e) => e.toJson()).toList();
+
       // Prepare complete export data with I Am definitions and people
       final entries = box.values.map((e) => e.toJson()).toList();
       
       final now = DateTime.now().toUtc();
       final exportData = {
-        'version': '6.0', // Increment version to include agnosticism
+        'version': '7.0', // Increment version to include morning ritual
         'exportDate': now.toIso8601String(),
         'lastModified': now.toIso8601String(), // For sync conflict detection
         'iAmDefinitions': iAmDefinitions,
@@ -205,6 +215,8 @@ class AllAppsDriveService {
         'reflections': reflections, // Add evening reflections
         'gratitude': gratitudeEntries, // Add gratitude entries
         'agnosticism': agnosticismPairs, // Add agnosticism barrier/power pairs
+        'morningRitualItems': morningRitualItems, // Add morning ritual definitions
+        'morningRitualEntries': morningRitualEntries, // Add morning ritual daily entries
       };
 
       // Serialize to JSON string
@@ -266,12 +278,20 @@ class AllAppsDriveService {
       final agnosticismBox = Hive.box<BarrierPowerPair>('agnosticism_pairs');
       final agnosticismPairs = agnosticismBox.values.map((p) => p.toJson()).toList();
 
+      // Get morning ritual items (definitions)
+      final morningRitualItemsBox = Hive.box<RitualItem>('morning_ritual_items');
+      final morningRitualItems = morningRitualItemsBox.values.map((i) => i.toJson()).toList();
+
+      // Get morning ritual entries (daily completions)
+      final morningRitualEntriesBox = Hive.box<MorningRitualEntry>('morning_ritual_entries');
+      final morningRitualEntries = morningRitualEntriesBox.values.map((e) => e.toJson()).toList();
+
       // Prepare complete export data with I Am definitions and people
       final entries = box.values.map((e) => e.toJson()).toList();
       
       final now = DateTime.now().toUtc();
       final exportData = {
-        'version': '6.0', // Increment version to include agnosticism
+        'version': '7.0', // Increment version to include morning ritual
         'exportDate': now.toIso8601String(),
         'lastModified': now.toIso8601String(), // For sync conflict detection
         'iAmDefinitions': iAmDefinitions,
@@ -280,6 +300,8 @@ class AllAppsDriveService {
         'reflections': reflections, // Add evening reflections
         'gratitude': gratitudeEntries, // Add gratitude entries
         'agnosticism': agnosticismPairs, // Add agnosticism barrier/power pairs
+        'morningRitualItems': morningRitualItems, // Add morning ritual definitions
+        'morningRitualEntries': morningRitualEntries, // Add morning ritual daily entries
       };
 
       // Serialize to JSON string
@@ -486,6 +508,9 @@ class AllAppsDriveService {
         final gratitudeData = (decoded['gratitude'] ?? decoded['gratitudeEntries']) as List<dynamic>?; 
         // Handle both old ('agnosticismPapers') and new ('agnosticism') field names
         final agnosticismData = (decoded['agnosticism'] ?? decoded['agnosticismPapers']) as List<dynamic>?;
+        // Get morning ritual data
+        final morningRitualItemsData = decoded['morningRitualItems'] as List<dynamic>?;
+        final morningRitualEntriesData = decoded['morningRitualEntries'] as List<dynamic>?;
 
         // Update I Am definitions first
         if (iAmDefinitions != null) {
@@ -547,10 +572,30 @@ class AllAppsDriveService {
           }
         }
 
+        // Update morning ritual items (definitions) (if present in remote data)
+        if (morningRitualItemsData != null) {
+          final morningRitualItemsBox = Hive.box<RitualItem>('morning_ritual_items');
+          await morningRitualItemsBox.clear();
+          for (final itemJson in morningRitualItemsData) {
+            final item = RitualItem.fromJson(itemJson as Map<String, dynamic>);
+            await morningRitualItemsBox.put(item.id, item);
+          }
+        }
+
+        // Update morning ritual entries (daily completions) (if present in remote data)
+        if (morningRitualEntriesData != null) {
+          final morningRitualEntriesBox = Hive.box<MorningRitualEntry>('morning_ritual_entries');
+          await morningRitualEntriesBox.clear();
+          for (final entryJson in morningRitualEntriesData) {
+            final entry = MorningRitualEntry.fromJson(entryJson as Map<String, dynamic>);
+            await morningRitualEntriesBox.put(entry.id, entry);
+          }
+        }
+
         // Save the remote timestamp as our new local timestamp
         await _saveLastModified(remoteTimestamp);
 
-        if (kDebugMode) print('AllAppsDriveService: ✓ Auto-sync complete (${entries.length} entries, ${iAmDefinitions?.length ?? 0} I Ams, ${people?.length ?? 0} people, ${reflections?.length ?? 0} reflections, ${gratitudeData?.length ?? 0} gratitude, ${agnosticismData?.length ?? 0} agnosticism)');
+        if (kDebugMode) print('AllAppsDriveService: ✓ Auto-sync complete (${entries.length} entries, ${iAmDefinitions?.length ?? 0} I Ams, ${people?.length ?? 0} people, ${reflections?.length ?? 0} reflections, ${gratitudeData?.length ?? 0} gratitude, ${agnosticismData?.length ?? 0} agnosticism, ${morningRitualItemsData?.length ?? 0} morning ritual items, ${morningRitualEntriesData?.length ?? 0} morning ritual entries)');
         return true;
       } else {
         if (kDebugMode) {
