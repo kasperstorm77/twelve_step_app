@@ -7,10 +7,12 @@ import '../../shared/localizations.dart';
 
 class EveningRitualFormTab extends StatefulWidget {
   final DateTime selectedDate;
+  final ValueChanged<bool>? onEditingChanged;
 
   const EveningRitualFormTab({
     super.key,
     required this.selectedDate,
+    this.onEditingChanged,
   });
 
   @override
@@ -20,6 +22,7 @@ class EveningRitualFormTab extends StatefulWidget {
 class _EveningRitualFormTabState extends State<EveningRitualFormTab> {
   ReflectionEntry? _editingEntry;
   final _detailController = TextEditingController();
+  final _detailFocusNode = FocusNode();
   ReflectionType? _selectedType;
   double _thinkingFocusValue = 0.5;
 
@@ -27,6 +30,12 @@ class _EveningRitualFormTabState extends State<EveningRitualFormTab> {
   void initState() {
     super.initState();
     _loadThinkingFocus();
+    _detailFocusNode.addListener(_onFocusChange);
+  }
+
+  void _onFocusChange() {
+    // Notify parent when focus changes (editing started/stopped)
+    widget.onEditingChanged?.call(_detailFocusNode.hasFocus || _selectedType != null);
   }
 
   @override
@@ -55,6 +64,8 @@ class _EveningRitualFormTabState extends State<EveningRitualFormTab> {
 
   @override
   void dispose() {
+    _detailFocusNode.removeListener(_onFocusChange);
+    _detailFocusNode.dispose();
     _detailController.dispose();
     super.dispose();
   }
@@ -74,6 +85,8 @@ class _EveningRitualFormTabState extends State<EveningRitualFormTab> {
       _detailController.text = entry.safeDetail;
       // Don't modify slider value when editing regular reflection entries
     });
+    // Notify parent that editing started
+    widget.onEditingChanged?.call(true);
   }
 
   void _resetForm() {
@@ -83,6 +96,8 @@ class _EveningRitualFormTabState extends State<EveningRitualFormTab> {
       _detailController.clear();
       // Don't reset _thinkingFocusValue here - it's independent of reflection entries
     });
+    // Notify parent that editing ended
+    widget.onEditingChanged?.call(false);
   }
 
   Future<void> _saveEntry() async {
@@ -265,39 +280,51 @@ class _EveningRitualFormTabState extends State<EveningRitualFormTab> {
                                     setState(() {
                                       _selectedType = value;
                                     });
+                                    // Notify parent that editing started
+                                    widget.onEditingChanged?.call(true);
                                   },
                                 )
                               else
                                 Column(
                                   crossAxisAlignment: CrossAxisAlignment.stretch,
                                   children: [
-                                    TextField(
-                                      controller: _detailController,
-                                      decoration: InputDecoration(
-                                        labelText: t(context, _selectedType!.labelKey()),
-                                        border: const OutlineInputBorder(),
-                                      ),
-                                      maxLines: 3,
-                                      autofocus: true,
-                                    ),
-                                    const SizedBox(height: 12),
                                     Row(
+                                      crossAxisAlignment: CrossAxisAlignment.end,
                                       children: [
                                         Expanded(
-                                          child: ElevatedButton.icon(
-                                            icon: Icon(_editingEntry != null ? Icons.save : Icons.add),
-                                            onPressed: _saveEntry,
-                                            label: Text(
-                                              _editingEntry != null
-                                                  ? t(context, 'save_changes')
-                                                  : t(context, 'add_reflection'),
+                                          child: TextField(
+                                            controller: _detailController,
+                                            focusNode: _detailFocusNode,
+                                            decoration: InputDecoration(
+                                              labelText: t(context, _selectedType!.labelKey()),
+                                              border: const OutlineInputBorder(),
                                             ),
+                                            maxLines: 3,
+                                            minLines: 1,
+                                            autofocus: true,
+                                            textInputAction: TextInputAction.send,
+                                            onSubmitted: (_) => _saveEntry(),
                                           ),
                                         ),
                                         const SizedBox(width: 8),
-                                        TextButton(
-                                          onPressed: _resetForm,
-                                          child: Text(t(context, 'cancel')),
+                                        Column(
+                                          mainAxisSize: MainAxisSize.min,
+                                          children: [
+                                            IconButton.filled(
+                                              onPressed: _saveEntry,
+                                              icon: const Icon(Icons.add),
+                                              tooltip: t(context, 'add_reflection'),
+                                            ),
+                                            const SizedBox(height: 4),
+                                            IconButton(
+                                              onPressed: _resetForm,
+                                              icon: const Icon(Icons.close),
+                                              tooltip: t(context, 'cancel'),
+                                              style: IconButton.styleFrom(
+                                                foregroundColor: Theme.of(context).colorScheme.error,
+                                              ),
+                                            ),
+                                          ],
                                         ),
                                       ],
                                     ),
@@ -342,29 +369,43 @@ class _EveningRitualFormTabState extends State<EveningRitualFormTab> {
                                     ),
                                   ),
                                   const SizedBox(height: 12),
-                                  TextField(
-                                    controller: _detailController,
-                                    decoration: InputDecoration(
-                                      labelText: t(context, 'reflection_detail'),
-                                      border: const OutlineInputBorder(),
-                                    ),
-                                    maxLines: 3,
-                                    autofocus: true,
-                                  ),
-                                  const SizedBox(height: 12),
                                   Row(
+                                    crossAxisAlignment: CrossAxisAlignment.end,
                                     children: [
                                       Expanded(
-                                        child: ElevatedButton.icon(
-                                          icon: const Icon(Icons.save),
-                                          onPressed: _saveEntry,
-                                          label: Text(t(context, 'save_changes')),
+                                        child: TextField(
+                                          controller: _detailController,
+                                          focusNode: _detailFocusNode,
+                                          decoration: InputDecoration(
+                                            labelText: t(context, 'reflection_detail'),
+                                            border: const OutlineInputBorder(),
+                                          ),
+                                          maxLines: 3,
+                                          minLines: 1,
+                                          autofocus: true,
+                                          textInputAction: TextInputAction.send,
+                                          onSubmitted: (_) => _saveEntry(),
                                         ),
                                       ),
                                       const SizedBox(width: 8),
-                                      TextButton(
-                                        onPressed: _resetForm,
-                                        child: Text(t(context, 'cancel')),
+                                      Column(
+                                        mainAxisSize: MainAxisSize.min,
+                                        children: [
+                                          IconButton.filled(
+                                            onPressed: _saveEntry,
+                                            icon: const Icon(Icons.check),
+                                            tooltip: t(context, 'save_changes'),
+                                          ),
+                                          const SizedBox(height: 4),
+                                          IconButton(
+                                            onPressed: _resetForm,
+                                            icon: const Icon(Icons.close),
+                                            tooltip: t(context, 'cancel'),
+                                            style: IconButton.styleFrom(
+                                              foregroundColor: Theme.of(context).colorScheme.error,
+                                            ),
+                                          ),
+                                        ],
                                       ),
                                     ],
                                   ),

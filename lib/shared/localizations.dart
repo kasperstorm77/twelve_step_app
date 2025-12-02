@@ -204,7 +204,7 @@ final Map<String, Map<String, String>> localizedValues = {
     'update': 'Update',
     'add': 'Add',
     // Agnosticism
-    'agnosticism_title': 'Surrender & Correction',
+    'agnosticism_title': 'Agnosticism',
     'agnosticism_paper_tab': 'Paper',
     'agnosticism_archive_tab': 'Archive',
     'agnosticism_barriers_title': 'Not Given to God (Front)',
@@ -331,7 +331,7 @@ final Map<String, Map<String, String>> localizedValues = {
     'help_morning_ritual_practice': 'Each morning, start your ritual from the Today tab. Complete or skip each item as you go. Your history is tracked on the calendar - green checkmarks for completed items, red X for skipped or missed. Consistency builds spiritual discipline.',
   },
   'da': {
-    'app_title': '4. Trins opgørelse',
+    'app_title': '4. Trins liste',
     'form_title': 'Form',
     'entries_title': 'Indtastninger',
     'settings_title': 'Indstillinger',

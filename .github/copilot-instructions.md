@@ -2,7 +2,7 @@
 
 ## Project Overview
 
-Multi-app Flutter system for AA recovery tools (5 apps: 4th Step Inventory, 8th Step Amends, Evening Ritual, Gratitude, Agnosticism) with shared infrastructure. Uses Hive for local storage, Google Drive for cloud sync, and Flutter Modular for DI/routing.
+Multi-app Flutter system for AA recovery tools (**6 apps**: 4th Step Inventory, 8th Step Amends, Morning Ritual, Evening Ritual, Gratitude, Agnosticism) with shared infrastructure. Uses Hive for local storage, Google Drive for cloud sync, and Flutter Modular for DI/routing.
 
 ## Core Development Principle
 
@@ -21,32 +21,40 @@ Examples:
 
 ## Architecture Pattern
 
-**Modular Structure**: Each app lives in its own folder (`lib/fourth_step/`, `lib/eighth_step/`, `lib/evening_ritual/`, `lib/gratitude/`, `lib/agnosticism/`) with app-specific models, services, and pages. Shared code in `lib/shared/`.
+**Modular Structure**: Each app lives in its own folder (`lib/fourth_step/`, `lib/eighth_step/`, `lib/morning_ritual/`, `lib/evening_ritual/`, `lib/gratitude/`, `lib/agnosticism/`) with app-specific models, services, and pages. Shared code in `lib/shared/`.
 
 **App Switching**: `AppSwitcherService` stores selected app ID in Hive `settings` box. `AppRouter` (in `lib/shared/pages/app_router.dart`) switches between apps based on selected ID. Each app has grid icon in AppBar to show app switcher dialog.
 
 **Data Isolation**: Each app has separate Hive boxes:
 - 4th Step: `entries` (Box<InventoryEntry>), `i_am_definitions` (Box<IAmDefinition>)
-- 8th Step: `people_box` (Box<Person>)  
+- 8th Step: `people_box` (Box<Person>)
+- Morning Ritual: `morning_ritual_items` (Box<RitualItem>), `morning_ritual_entries` (Box<MorningRitualEntry>)
 - Evening Ritual: `reflections_box` (Box<ReflectionEntry>)
 - Gratitude: `gratitude_box` (Box<GratitudeEntry>)
 - Agnosticism: `agnosticism_pairs` (Box<BarrierPowerPair>)
 
-**Hive Type IDs** (NEVER reuse):
-- `typeId: 0` - InventoryEntry
-- `typeId: 1` - IAmDefinition  
-- `typeId: 2` - AppEntry
-- `typeId: 3` - Person
-- `typeId: 4` - ColumnType
-- `typeId: 5` - ReflectionEntry
-- `typeId: 6` - ReflectionType
-- `typeId: 7` - GratitudeEntry
-- `typeId: 8` - BarrierPowerPair (was AgnosticismPaper)
+**Hive Type IDs** (NEVER reuse - 0-13 assigned):
+| typeId | Model | App |
+|--------|-------|-----|
+| 0 | InventoryEntry | 4th Step |
+| 1 | IAmDefinition | 4th Step |
+| 2 | AppEntry | Shared |
+| 3 | Person | 8th Step |
+| 4 | ColumnType | 8th Step |
+| 5 | ReflectionEntry | Evening Ritual |
+| 6 | ReflectionType | Evening Ritual |
+| 7 | GratitudeEntry | Gratitude |
+| 8 | BarrierPowerPair | Agnosticism |
+| 9 | RitualItemType | Morning Ritual |
+| 10 | RitualItem | Morning Ritual |
+| 11 | RitualItemStatus | Morning Ritual |
+| 12 | RitualItemRecord | Morning Ritual |
+| 13 | MorningRitualEntry | Morning Ritual |
 
 ## Critical Developer Workflows
 
 ### Build & Version Management
-```powershell
+```bash
 # Auto-increment version (1.0.1+36 → 1.0.1+37)
 dart scripts/increment_version.dart
 
@@ -57,12 +65,12 @@ dart scripts/increment_version.dart
 ```
 
 ### Platform Builds
-```powershell
+```bash
 # Android APK (release)
 flutter build apk --release
 # Output: build/app/outputs/flutter-apk/app-release.apk
 
-# Windows Release + ZIP (recommended)
+# Windows Release + ZIP (recommended - PowerShell)
 .\scripts\build_windows_release.ps1
 # Output: build/releases/twelvestepsapp-windows-{version}.zip
 
@@ -72,7 +80,7 @@ flutter run -d windows
 
 ### Code Generation (After Model Changes)
 ```bash
-flutter pub run build_runner build --delete-conflicting-outputs
+dart run build_runner build --delete-conflicting-outputs
 ```
 
 ### Debugging
@@ -94,7 +102,7 @@ flutter pub run build_runner build --delete-conflicting-outputs
 ## Google Drive Sync Architecture
 
 **Centralized Design**:
-- **All Apps Service**: `AllAppsDriveService` (in `lib/shared/services/all_apps_drive_service_impl.dart`) syncs ALL 5 apps to single Google Drive JSON file
+- **All Apps Service**: `AllAppsDriveService` (in `lib/shared/services/all_apps_drive_service_impl.dart`) syncs ALL 6 apps to single Google Drive JSON file
 - **Platform Selection**: Automatically uses `MobileDriveService` or `WindowsDriveServiceWrapper` based on platform
 - **Auth Layer**: 
   - Mobile: `MobileGoogleAuthService` via `google_sign_in` package
@@ -106,15 +114,17 @@ flutter pub run build_runner build --delete-conflicting-outputs
 - `data_management_tab_mobile.dart` - Android/iOS implementation
 - `data_management_tab_windows.dart` - Windows implementation
 
-**JSON Format v6.0**: Single file contains all app data:
+**JSON Format v7.0**: Single file contains all app data:
 ```json
 {
-  "version": "6.0",
-  "exportDate": "2025-11-22T...",
-  "lastModified": "2025-11-22T...",
+  "version": "7.0",
+  "exportDate": "2025-12-02T...",
+  "lastModified": "2025-12-02T...",
   "iAmDefinitions": [...],       // 4th step I Am (imported FIRST)
   "entries": [...],              // 4th step inventory
   "people": [...],               // 8th step
+  "morningRitualItems": [...],   // Morning ritual definitions
+  "morningRitualEntries": [...], // Morning ritual daily completions
   "reflections": [...],          // Evening ritual
   "gratitude": [...],            // Gratitude (also accepts 'gratitudeEntries')
   "agnosticism": [...]           // Agnosticism (also accepts 'agnosticismPapers')
@@ -153,7 +163,7 @@ final provider = Modular.get<LocaleProvider>();
 final box = Modular.get<Box<InventoryEntry>>();
 ```
 
-**Routing**: Single route (`/`) points to `AppHomePage` which renders `AppRouter`. `AppRouter` switches between the 5 app home pages based on `AppSwitcherService.getSelectedAppId()`.
+**Routing**: Single route (`/`) points to `AppHomePage` which renders `AppRouter`. `AppRouter` switches between the 6 app home pages based on `AppSwitcherService.getSelectedAppId()`.
 
 ## Common Patterns
 
@@ -169,7 +179,7 @@ try {
 ```
 
 ### CRUD Operations
-Use app-specific service classes (`InventoryService`, `PersonService`, `ReflectionService`, `GratitudeService`, `AgnosticismService`). These automatically trigger Drive sync when enabled:
+Use app-specific service classes (`InventoryService`, `PersonService`, `MorningRitualService`, `ReflectionService`, `GratitudeService`, `AgnosticismService`). These automatically trigger Drive sync when enabled:
 ```dart
 await inventoryService.addEntry(box, entry); // Auto-syncs via AllAppsDriveService
 await inventoryService.updateEntry(box, index, entry); // Auto-syncs
@@ -227,7 +237,7 @@ import 'package:google_sign_in/google_sign_in.dart'; // Mobile only
 
 - **App Entry**: `lib/main.dart` (Hive init, silent sign-in, auto-sync for all platforms)
 - **Routing**: `lib/app/app_module.dart`, `lib/app/app_widget.dart`, `lib/shared/pages/app_router.dart`
-- **Drive Sync**: `lib/shared/services/all_apps_drive_service_impl.dart` (syncs all 5 apps)
+- **Drive Sync**: `lib/shared/services/all_apps_drive_service_impl.dart` (syncs all 6 apps)
 - **Windows OAuth**: `lib/shared/services/google_drive/windows_google_auth_service.dart` (loopback method)
 - **Mobile OAuth**: `lib/shared/services/google_drive/mobile_google_auth_service.dart`
 - **Data Management**: 
@@ -242,6 +252,7 @@ import 'package:google_sign_in/google_sign_in.dart'; // Mobile only
 **App Home Pages**:
 - 4th Step: `lib/fourth_step/pages/fourth_step_home.dart`
 - 8th Step: `lib/eighth_step/pages/eighth_step_home.dart`
+- Morning Ritual: `lib/morning_ritual/pages/morning_ritual_home.dart`
 - Evening Ritual: `lib/evening_ritual/pages/evening_ritual_home.dart`
 - Gratitude: `lib/gratitude/pages/gratitude_home.dart`
 - Agnosticism: `lib/agnosticism/pages/agnosticism_home.dart`
@@ -249,13 +260,14 @@ import 'package:google_sign_in/google_sign_in.dart'; // Mobile only
 ## Documentation
 
 Essential docs in `docs/`:
-- `MODULAR_ARCHITECTURE.md` - Complete 5-app architecture and data flow
+- `MODULAR_ARCHITECTURE.md` - Complete 6-app architecture and data flow
 - `BUILD_SCRIPTS.md` - Version management and build automation
 - `GOOGLE_OAUTH_SETUP.md` - OAuth setup for mobile and desktop (loopback method)
 - `VS_CODE_DEBUG.md` - VS Code debugging configuration
 - `PLAY_STORE_DESCRIPTIONS.md` - App store listings
 - `IOS_RELEASE.md` - iOS build and release process
 - `LOCAL_SETUP.md` - Git clone setup instructions (not tracked)
+- `BACKUP_RESTORE_POINTS.md` - Google Drive backup/restore system
 
 ## Testing Considerations
 
@@ -268,7 +280,7 @@ Before making changes that affect data:
 
 ## Common Pitfalls
 
-❌ **Don't**: Reuse Hive type IDs (0-9 are assigned)
+❌ **Don't**: Reuse Hive type IDs (0-13 are assigned)
 ❌ **Don't**: Delete I Am without checking usage  
 ❌ **Don't**: Import entries before I Am definitions  
 ❌ **Don't**: Skip timestamp comparison in Drive sync  
@@ -279,6 +291,6 @@ Before making changes that affect data:
 ✅ **Do**: Use debounced uploads for performance (700ms)
 ✅ **Do**: Show warnings before data replacement  
 ✅ **Do**: Handle null I Am references gracefully  
-✅ **Do**: Include lastModified in all sync JSON (v6.0 format)
+✅ **Do**: Include lastModified in all sync JSON (v7.0 format)
 ✅ **Do**: Use nested ValueListenableBuilder when UI depends on multiple boxes
 ✅ **Do**: Pass `onAppSwitched` callback to all app home pages

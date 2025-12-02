@@ -24,6 +24,7 @@ class _EveningRitualHomeState extends State<EveningRitualHome> with SingleTicker
   late final TabController _tabController;
   DateTime _selectedDay = DateTime.now();
   DateTime _focusedDay = DateTime.now();
+  bool _isEditing = false;
 
   @override
   void initState() {
@@ -166,54 +167,61 @@ class _EveningRitualHomeState extends State<EveningRitualHome> with SingleTicker
         child: TabBarView(
           controller: _tabController,
           children: [
-            // Form Tab with Calendar at top
+            // Form Tab with Calendar at top (hidden during editing)
             Column(
             children: [
-              Card(
-                margin: const EdgeInsets.all(8.0),
-                child: TableCalendar(
-                  firstDay: DateTime.utc(2020, 1, 1),
-                  lastDay: DateTime.utc(2030, 12, 31),
-                  focusedDay: _focusedDay,
-                  selectedDayPredicate: (day) => isSameDay(_selectedDay, day),
-                  calendarFormat: CalendarFormat.week,
-                  availableCalendarFormats: const {
-                    CalendarFormat.week: 'Week',
-                    CalendarFormat.month: 'Month',
-                  },
-                  eventLoader: (day) {
-                    return ReflectionService.hasReflectionsForDate(day) ? [true] : [];
-                  },
-                  onDaySelected: (selectedDay, focusedDay) {
-                    setState(() {
-                      _selectedDay = selectedDay;
-                      _focusedDay = focusedDay;
-                    });
-                  },
-                  onPageChanged: (focusedDay) {
-                    setState(() {
-                      _focusedDay = focusedDay;
-                    });
-                  },
-                  calendarStyle: CalendarStyle(
-                    todayDecoration: BoxDecoration(
-                      color: Theme.of(context).colorScheme.primary.withValues(alpha: 0.5),
-                      shape: BoxShape.circle,
-                    ),
-                    selectedDecoration: BoxDecoration(
-                      color: Theme.of(context).colorScheme.primary,
-                      shape: BoxShape.circle,
-                    ),
-                    markerDecoration: BoxDecoration(
-                      color: Theme.of(context).colorScheme.secondary,
-                      shape: BoxShape.circle,
+              // Hide calendar when editing for more screen space
+              if (!_isEditing)
+                Card(
+                  margin: const EdgeInsets.all(8.0),
+                  child: TableCalendar(
+                    firstDay: DateTime.utc(2020, 1, 1),
+                    lastDay: DateTime.utc(2030, 12, 31),
+                    focusedDay: _focusedDay,
+                    selectedDayPredicate: (day) => isSameDay(_selectedDay, day),
+                    calendarFormat: CalendarFormat.week,
+                    availableCalendarFormats: const {
+                      CalendarFormat.week: 'Week',
+                      CalendarFormat.month: 'Month',
+                    },
+                    eventLoader: (day) {
+                      return ReflectionService.hasReflectionsForDate(day) ? [true] : [];
+                    },
+                    onDaySelected: (selectedDay, focusedDay) {
+                      setState(() {
+                        _selectedDay = selectedDay;
+                        _focusedDay = focusedDay;
+                      });
+                    },
+                    onPageChanged: (focusedDay) {
+                      setState(() {
+                        _focusedDay = focusedDay;
+                      });
+                    },
+                    calendarStyle: CalendarStyle(
+                      todayDecoration: BoxDecoration(
+                        color: Theme.of(context).colorScheme.primary.withValues(alpha: 0.5),
+                        shape: BoxShape.circle,
+                      ),
+                      selectedDecoration: BoxDecoration(
+                        color: Theme.of(context).colorScheme.primary,
+                        shape: BoxShape.circle,
+                      ),
+                      markerDecoration: BoxDecoration(
+                        color: Theme.of(context).colorScheme.secondary,
+                        shape: BoxShape.circle,
+                      ),
                     ),
                   ),
                 ),
-              ),
               Expanded(
                 child: EveningRitualFormTab(
                   selectedDate: _selectedDay,
+                  onEditingChanged: (isEditing) {
+                    setState(() {
+                      _isEditing = isEditing;
+                    });
+                  },
                 ),
               ),
             ],

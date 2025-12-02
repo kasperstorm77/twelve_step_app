@@ -2,7 +2,7 @@
 
 ## Overview
 
-The app now maintains **daily dated backups** on Google Drive with a **3-day rolling history**. Users can restore from any backup point within the last 3 days.
+The app now maintains **daily dated backups** on Google Drive with a **3-day rolling history**. Users can restore from any backup point within the last 3 days. All 6 apps sync to a single backup file.
 
 ## How It Works
 
@@ -130,7 +130,7 @@ Future<void> _fetchFromGoogle() // Now uses selected backup or current file
 Backups are created automatically when:
 1. User manually uploads to Drive
 2. Auto-sync triggers after data changes
-3. User adds/edits/deletes entries in any of the 5 apps
+3. User adds/edits/deletes entries in any of the 6 apps
 
 ### Restoring from Backup
 
