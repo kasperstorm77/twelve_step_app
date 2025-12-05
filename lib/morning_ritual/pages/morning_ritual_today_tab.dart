@@ -1,6 +1,7 @@
 import 'dart:async';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
+import 'package:hive_flutter/hive_flutter.dart';
 import 'package:vibration/vibration.dart';
 import '../models/ritual_item.dart';
 import '../models/morning_ritual_entry.dart';
@@ -41,6 +42,8 @@ class _MorningRitualTodayTabState extends State<MorningRitualTodayTab> {
   void initState() {
     super.initState();
     _loadRitualItems();
+    // Listen to ritual items box for changes (e.g., after sync)
+    MorningRitualService.ritualItemsBox.listenable().addListener(_onRitualItemsChanged);
   }
 
   @override
@@ -55,7 +58,15 @@ class _MorningRitualTodayTabState extends State<MorningRitualTodayTab> {
   @override
   void dispose() {
     _timer?.cancel();
+    MorningRitualService.ritualItemsBox.listenable().removeListener(_onRitualItemsChanged);
     super.dispose();
+  }
+
+  void _onRitualItemsChanged() {
+    // Only reload if ritual hasn't started yet (don't interrupt ongoing ritual)
+    if (!_ritualStarted && mounted) {
+      _loadRitualItems();
+    }
   }
 
   void _loadRitualItems() {
