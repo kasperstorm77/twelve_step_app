@@ -260,7 +260,8 @@ class AllAppsDriveService {
   }
 
   /// Schedule debounced upload from box (background sync - no UI notifications)
-  void scheduleUploadFromBox(Box<InventoryEntry> box) {
+  /// The box parameter is optional - if not provided, entries will be fetched from the standard entries box
+  void scheduleUploadFromBox([Box<InventoryEntry>? box]) {
     if (kDebugMode) print('AllAppsDriveService: scheduleUploadFromBox called - syncEnabled=$syncEnabled, isAuthenticated=$isAuthenticated');
     if (!syncEnabled || !isAuthenticated) {
       if (kDebugMode) print('AllAppsDriveService: ⚠️ Upload skipped - sync not enabled or not authenticated');
@@ -306,7 +307,9 @@ class AllAppsDriveService {
       final morningRitualEntries = morningRitualEntriesBox.values.map((e) => e.toJson()).toList();
 
       // Prepare complete export data with I Am definitions and people
-      final entries = box.values.map((e) => e.toJson()).toList();
+      // Get entries from passed box or fetch from standard entries box
+      final entriesBox = box ?? Hive.box<InventoryEntry>('entries');
+      final entries = entriesBox.values.map((e) => e.toJson()).toList();
       
       final now = DateTime.now().toUtc();
       final exportData = {

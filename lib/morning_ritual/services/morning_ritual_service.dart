@@ -3,7 +3,6 @@ import 'package:hive_flutter/hive_flutter.dart';
 import '../models/ritual_item.dart';
 import '../models/morning_ritual_entry.dart';
 import '../../shared/services/all_apps_drive_service.dart';
-import '../../fourth_step/models/inventory_entry.dart';
 
 class MorningRitualService {
   static Box<RitualItem>? _ritualItemsBox;
@@ -172,8 +171,8 @@ class MorningRitualService {
   static void _triggerSync() {
     try {
       // Trigger sync using the centralized AllAppsDriveService
-      final entriesBox = Hive.box<InventoryEntry>('entries');
-      AllAppsDriveService.instance.scheduleUploadFromBox(entriesBox);
+      // No box parameter needed - it will fetch all data internally
+      AllAppsDriveService.instance.scheduleUploadFromBox();
     } catch (e) {
       if (kDebugMode) {
         print('Sync not available or failed: $e');
