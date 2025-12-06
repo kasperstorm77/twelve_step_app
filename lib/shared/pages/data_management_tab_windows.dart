@@ -627,7 +627,7 @@ class _DataManagementTabState extends State<DataManagementTab> {
                     )
                   else
                     DropdownButtonFormField<String>(
-                      value: _selectedBackupFileName,
+                      initialValue: _selectedBackupFileName,
                       decoration: InputDecoration(
                         border: const OutlineInputBorder(),
                         contentPadding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
