@@ -215,6 +215,32 @@ class MobileDriveService {
     }
   }
 
+  /// Delete all backup files (DEBUG ONLY)
+  Future<int> deleteAllBackups() async {
+    if (_driveClient == null) {
+      if (!await _ensureAuthenticated()) {
+        return 0;
+      }
+    }
+
+    try {
+      final backups = await listAvailableBackups();
+      int deletedCount = 0;
+      
+      for (final backup in backups) {
+        final fileName = backup['fileName'] as String;
+        await _deleteBackup(fileName);
+        deletedCount++;
+      }
+      
+      if (kDebugMode) print('Deleted $deletedCount backup files');
+      return deletedCount;
+    } catch (e) {
+      if (kDebugMode) print('Failed to delete all backups: $e');
+      return 0;
+    }
+  }
+
   /// List available backup files from Drive
   Future<List<Map<String, dynamic>>> listAvailableBackups() async {
     if (kDebugMode) print('MobileDriveService.listAvailableBackups() called');

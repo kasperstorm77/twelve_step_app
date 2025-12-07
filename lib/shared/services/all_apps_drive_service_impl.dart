@@ -418,6 +418,16 @@ class AllAppsDriveService {
     }
   }
 
+  /// Delete all backup files (DEBUG ONLY)
+  Future<int> deleteAllBackups() async {
+    if (PlatformHelper.isWindows) {
+      // TODO: Implement for Windows if needed
+      return 0;
+    } else {
+      return await _mobileDriveService!.deleteAllBackups();
+    }
+  }
+
   /// Parse downloaded content into InventoryEntry objects
   Future<List<InventoryEntry>> _parseInventoryContent(String content) async {
     return compute(_parseInventoryJson, content);

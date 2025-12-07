@@ -397,6 +397,47 @@ class _DataManagementTabState extends State<DataManagementTab> {
     }
   }
 
+  /// Delete all backup files from Drive (DEBUG ONLY)
+  Future<void> _deleteAllBackups() async {
+    if (!AllAppsDriveService.instance.isAuthenticated) return;
+
+    final confirmed = await showDialog<bool>(
+      context: context,
+      builder: (context) => AlertDialog(
+        title: Text(t(context, 'delete_all_backups')),
+        content: Text(t(context, 'confirm_delete_all_backups')),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.pop(context, false),
+            child: Text(t(context, 'cancel')),
+          ),
+          TextButton(
+            onPressed: () => Navigator.pop(context, true),
+            child: Text(t(context, 'delete'), style: const TextStyle(color: Colors.red)),
+          ),
+        ],
+      ),
+    );
+
+    if (confirmed != true || !mounted) return;
+
+    try {
+      final deletedCount = await AllAppsDriveService.instance.deleteAllBackups();
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(content: Text('Deleted $deletedCount backup files')),
+        );
+        _loadAvailableBackups();
+      }
+    } catch (e) {
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(content: Text('Failed to delete backups: $e')),
+        );
+      }
+    }
+  }
+
   Future<void> _fetchFromGoogle() async {
     if (kDebugMode) print('_fetchFromGoogle: Starting restore...');
     if (!AllAppsDriveService.instance.isAuthenticated) {
@@ -1059,6 +1100,20 @@ class _DataManagementTabState extends State<DataManagementTab> {
               ),
             ),
           if (isSignedIn && driveAvailable) const SizedBox(height: 16),
+          
+          // Debug only: Delete all backups button
+          if (kDebugMode && isSignedIn && driveAvailable) ...[
+            ElevatedButton.icon(
+              onPressed: _deleteAllBackups,
+              icon: const Icon(Icons.delete_forever),
+              label: Text(t(context, 'delete_all_backups')),
+              style: ElevatedButton.styleFrom(
+                backgroundColor: Colors.orange.shade800,
+                foregroundColor: Colors.white,
+              ),
+            ),
+            const SizedBox(height: 16),
+          ],
           
           ElevatedButton(
             style: ElevatedButton.styleFrom(backgroundColor: Colors.red),
