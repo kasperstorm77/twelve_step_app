@@ -5,13 +5,31 @@ import '../models/reflection_entry.dart';
 import '../services/reflection_service.dart';
 import '../../shared/localizations.dart';
 
-class EveningRitualListTab extends StatelessWidget {
+class EveningRitualListTab extends StatefulWidget {
   final Function(DateTime) onDateSelected;
 
   const EveningRitualListTab({
     super.key,
     required this.onDateSelected,
   });
+
+  @override
+  State<EveningRitualListTab> createState() => _EveningRitualListTabState();
+}
+
+class _EveningRitualListTabState extends State<EveningRitualListTab> {
+  final Set<DateTime> _expandedDates = {};
+
+  String _getSliderLabel(BuildContext context, int value) {
+    final normalized = value / 10.0;
+    if (normalized == 0.0) return t(context, 'slider_completely_self');
+    if (normalized <= 0.2) return t(context, 'slider_mostly_self');
+    if (normalized < 0.5) return t(context, 'slider_leaning_self');
+    if (normalized == 0.5) return t(context, 'slider_balanced');
+    if (normalized < 0.8) return t(context, 'slider_leaning_others');
+    if (normalized < 1.0) return t(context, 'slider_mostly_others');
+    return t(context, 'slider_completely_others');
+  }
 
   @override
   Widget build(BuildContext context) {
@@ -66,31 +84,33 @@ class EveningRitualListTab extends StatelessWidget {
           itemBuilder: (context, index) {
             final date = sortedDates[index];
             final entriesForDate = groupedByDate[date]!;
-            return _buildDateCard(context, date, entriesForDate);
+            final isExpanded = _expandedDates.contains(date);
+            return _buildDateCard(context, date, entriesForDate, isExpanded);
           },
         );
       },
     );
   }
 
-  Widget _buildDateCard(BuildContext context, DateTime date, List<ReflectionEntry> entries) {
+  Widget _buildDateCard(BuildContext context, DateTime date, List<ReflectionEntry> entries, bool isExpanded) {
     final regularEntries = entries.where((e) => e.thinkingFocus == null).toList();
     final thinkingEntry = entries.where((e) => e.thinkingFocus != null).firstOrNull;
     
     return Card(
       margin: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
       child: InkWell(
-        onTap: () => onDateSelected(date),
+        onTap: () => widget.onDateSelected(date),
         child: Stack(
           children: [
             Padding(
-              padding: const EdgeInsets.all(12),
+              padding: const EdgeInsets.all(10),
               child: Row(
+                crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
                   // Date indicator
                   Container(
-                    width: 60,
-                    padding: const EdgeInsets.symmetric(vertical: 8, horizontal: 4),
+                    width: 50,
+                    padding: const EdgeInsets.symmetric(vertical: 6, horizontal: 4),
                     decoration: BoxDecoration(
                       color: Theme.of(context).colorScheme.primaryContainer,
                       borderRadius: BorderRadius.circular(8),
@@ -99,28 +119,22 @@ class EveningRitualListTab extends StatelessWidget {
                       children: [
                         Text(
                           DateFormat.MMM().format(date),
-                          style: Theme.of(context).textTheme.bodySmall?.copyWith(
+                          style: Theme.of(context).textTheme.labelSmall?.copyWith(
                             color: Theme.of(context).colorScheme.onPrimaryContainer,
                             fontWeight: FontWeight.bold,
                           ),
                         ),
                         Text(
                           DateFormat.d().format(date),
-                          style: Theme.of(context).textTheme.titleLarge?.copyWith(
+                          style: Theme.of(context).textTheme.titleMedium?.copyWith(
                             color: Theme.of(context).colorScheme.onPrimaryContainer,
                             fontWeight: FontWeight.bold,
-                          ),
-                        ),
-                        Text(
-                          DateFormat.y().format(date),
-                          style: Theme.of(context).textTheme.bodySmall?.copyWith(
-                            color: Theme.of(context).colorScheme.onPrimaryContainer,
                           ),
                         ),
                       ],
                     ),
                   ),
-                  const SizedBox(width: 12),
+                  const SizedBox(width: 10),
                   
                   // Content summary
                   Expanded(
@@ -131,13 +145,13 @@ class EveningRitualListTab extends StatelessWidget {
                           children: [
                             Text(
                               DateFormat.EEEE().format(date),
-                              style: Theme.of(context).textTheme.titleMedium?.copyWith(
+                              style: Theme.of(context).textTheme.titleSmall?.copyWith(
                                 fontWeight: FontWeight.bold,
                               ),
                             ),
-                            const SizedBox(width: 8),
+                            const SizedBox(width: 6),
                             Container(
-                              padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 2),
+                              padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 1),
                               decoration: BoxDecoration(
                                 color: Theme.of(context).colorScheme.secondaryContainer,
                                 borderRadius: BorderRadius.circular(12),
@@ -152,64 +166,137 @@ class EveningRitualListTab extends StatelessWidget {
                             ),
                           ],
                         ),
-                        const SizedBox(height: 4),
-                        if (regularEntries.isNotEmpty) ...[
-                          ...regularEntries.take(2).map((entry) => Padding(
-                            padding: const EdgeInsets.only(top: 2),
-                            child: Text(
-                              '${t(context, entry.type.labelKey())}${entry.detail != null && entry.detail!.isNotEmpty ? ': ${entry.detail}' : ''}',
-                              style: Theme.of(context).textTheme.bodySmall,
-                              maxLines: 1,
-                              overflow: TextOverflow.ellipsis,
-                            ),
-                          )),
-                          if (regularEntries.length > 2)
-                            Text(
-                              '+${regularEntries.length - 2} more',
-                              style: Theme.of(context).textTheme.bodySmall?.copyWith(
-                                fontStyle: FontStyle.italic,
-                                color: Theme.of(context).colorScheme.primary,
-                              ),
-                            ),
-                        ],
+                        const SizedBox(height: 2),
+                        // Show thinking focus first (slider heading + label text only)
                         if (thinkingEntry != null)
                           Padding(
-                            padding: const EdgeInsets.only(top: 4),
-                            child: Text(
-                              '${t(context, 'thinking_focus_question')} ${thinkingEntry.thinkingFocus}/10',
-                              style: Theme.of(context).textTheme.bodySmall?.copyWith(
-                                color: Theme.of(context).colorScheme.tertiary,
-                              ),
-                              maxLines: 1,
-                              overflow: TextOverflow.ellipsis,
+                            padding: const EdgeInsets.only(bottom: 2),
+                            child: Column(
+                              crossAxisAlignment: CrossAxisAlignment.start,
+                              children: [
+                                Text(
+                                  t(context, 'thinking_focus_question'),
+                                  style: Theme.of(context).textTheme.bodySmall?.copyWith(
+                                    color: Theme.of(context).colorScheme.primary,
+                                    fontWeight: FontWeight.w500,
+                                  ),
+                                ),
+                                Text(
+                                  _getSliderLabel(context, thinkingEntry.thinkingFocus!),
+                                  style: Theme.of(context).textTheme.bodyMedium,
+                                ),
+                              ],
                             ),
                           ),
+                        // Show reflection entries - limited when collapsed
+                        if (regularEntries.isNotEmpty) ...[
+                          if (isExpanded)
+                            // Show all entries when expanded
+                            ...regularEntries.map((entry) => Padding(
+                              padding: const EdgeInsets.only(top: 2),
+                              child: Column(
+                                crossAxisAlignment: CrossAxisAlignment.start,
+                                children: [
+                                  Text(
+                                    t(context, entry.type.labelKey()),
+                                    style: Theme.of(context).textTheme.bodySmall?.copyWith(
+                                      color: Theme.of(context).colorScheme.primary,
+                                      fontWeight: FontWeight.w500,
+                                    ),
+                                  ),
+                                  if (entry.detail != null && entry.detail!.isNotEmpty)
+                                    Text(
+                                      entry.detail!,
+                                      style: Theme.of(context).textTheme.bodyMedium,
+                                    ),
+                                ],
+                              ),
+                            ))
+                          else
+                            // Show limited entries when collapsed (first entry only, 1 line)
+                            ...regularEntries.take(1).map((entry) => Padding(
+                              padding: const EdgeInsets.only(top: 2),
+                              child: Column(
+                                crossAxisAlignment: CrossAxisAlignment.start,
+                                children: [
+                                  Text(
+                                    t(context, entry.type.labelKey()),
+                                    style: Theme.of(context).textTheme.bodySmall?.copyWith(
+                                      color: Theme.of(context).colorScheme.primary,
+                                      fontWeight: FontWeight.w500,
+                                    ),
+                                    maxLines: 1,
+                                    overflow: TextOverflow.ellipsis,
+                                  ),
+                                  if (entry.detail != null && entry.detail!.isNotEmpty)
+                                    Text(
+                                      entry.detail!,
+                                      style: Theme.of(context).textTheme.bodyMedium,
+                                      maxLines: 1,
+                                      overflow: TextOverflow.ellipsis,
+                                    ),
+                                ],
+                              ),
+                            )),
+                          // Always show more/less button
+                          GestureDetector(
+                            onTap: () {
+                              setState(() {
+                                if (isExpanded) {
+                                  _expandedDates.remove(date);
+                                } else {
+                                  _expandedDates.add(date);
+                                }
+                              });
+                            },
+                            child: Padding(
+                              padding: const EdgeInsets.only(top: 4),
+                              child: Text(
+                                isExpanded 
+                                    ? t(context, 'show_less')
+                                    : t(context, 'show_more'),
+                                style: Theme.of(context).textTheme.bodySmall?.copyWith(
+                                  fontStyle: FontStyle.italic,
+                                  color: Theme.of(context).colorScheme.primary,
+                                ),
+                              ),
+                            ),
+                          ),
+                        ],
                       ],
                     ),
                   ),
-                  
-                  const Icon(Icons.chevron_right),
                 ],
               ),
             ),
             // Delete button in top right corner
             Positioned(
-              top: 4,
-              right: 4,
+              top: 0,
+              right: 0,
               child: Material(
                 color: Colors.transparent,
                 child: InkWell(
                   onTap: () => _confirmDeleteDay(context, date, entries),
                   borderRadius: BorderRadius.circular(12),
                   child: Container(
-                    padding: const EdgeInsets.all(4),
-                    child: const Icon(
-                      Icons.delete,
+                    padding: const EdgeInsets.all(6),
+                    child: Icon(
+                      Icons.delete_outline,
                       size: 16,
-                      color: Colors.red,
+                      color: Colors.red.withOpacity(0.6),
                     ),
                   ),
                 ),
+              ),
+            ),
+            // Chevron in bottom right corner
+            Positioned(
+              bottom: 8,
+              right: 8,
+              child: Icon(
+                Icons.chevron_right,
+                size: 20,
+                color: Theme.of(context).colorScheme.onSurfaceVariant,
               ),
             ),
           ],

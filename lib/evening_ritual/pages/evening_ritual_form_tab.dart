@@ -59,6 +59,10 @@ class _EveningRitualFormTabState extends State<EveningRitualFormTab> {
       setState(() {
         _thinkingFocusValue = 0.5;
       });
+      // Auto-save the default value for today so it's always registered
+      if (_isToday) {
+        _saveThinkingFocus();
+      }
     }
   }
 
@@ -302,8 +306,7 @@ class _EveningRitualFormTabState extends State<EveningRitualFormTab> {
                                             maxLines: 3,
                                             minLines: 1,
                                             autofocus: true,
-                                            textInputAction: TextInputAction.send,
-                                            onSubmitted: (_) => _saveEntry(),
+                                            textInputAction: TextInputAction.newline,
                                           ),
                                         ),
                                         const SizedBox(width: 8),
@@ -383,8 +386,7 @@ class _EveningRitualFormTabState extends State<EveningRitualFormTab> {
                                           maxLines: 3,
                                           minLines: 1,
                                           autofocus: true,
-                                          textInputAction: TextInputAction.send,
-                                          onSubmitted: (_) => _saveEntry(),
+                                          textInputAction: TextInputAction.newline,
                                         ),
                                       ),
                                       const SizedBox(width: 8),
@@ -418,17 +420,34 @@ class _EveningRitualFormTabState extends State<EveningRitualFormTab> {
                         // Show normal view mode
                         return Card(
                           margin: const EdgeInsets.only(bottom: 8),
-                          child: ListTile(
-                            title: Text(t(context, entry.type.labelKey())),
-                            subtitle: entry.detail != null && entry.detail!.isNotEmpty
-                                ? Text(
-                                    entry.detail!,
-                                    maxLines: 2,
-                                    overflow: TextOverflow.ellipsis,
-                                  )
-                                : null,
-                            trailing: isEditable
-                                ? Row(
+                          child: Padding(
+                            padding: const EdgeInsets.all(12),
+                            child: Row(
+                              crossAxisAlignment: CrossAxisAlignment.start,
+                              children: [
+                                Expanded(
+                                  child: Column(
+                                    crossAxisAlignment: CrossAxisAlignment.start,
+                                    children: [
+                                      Text(
+                                        t(context, entry.type.labelKey()),
+                                        style: Theme.of(context).textTheme.bodySmall?.copyWith(
+                                          color: Theme.of(context).colorScheme.primary,
+                                          fontWeight: FontWeight.w500,
+                                        ),
+                                      ),
+                                      if (entry.detail != null && entry.detail!.isNotEmpty) ...[
+                                        const SizedBox(height: 4),
+                                        Text(
+                                          entry.detail!,
+                                          style: Theme.of(context).textTheme.bodyLarge,
+                                        ),
+                                      ],
+                                    ],
+                                  ),
+                                ),
+                                if (isEditable)
+                                  Row(
                                     mainAxisSize: MainAxisSize.min,
                                     children: [
                                       IconButton(
@@ -440,8 +459,9 @@ class _EveningRitualFormTabState extends State<EveningRitualFormTab> {
                                         onPressed: () => _confirmDelete(entry),
                                       ),
                                     ],
-                                  )
-                                : null,
+                                  ),
+                              ],
+                            ),
                           ),
                         );
                       }),
