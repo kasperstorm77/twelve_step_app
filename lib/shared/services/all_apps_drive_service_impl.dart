@@ -14,6 +14,7 @@ import 'google_drive/drive_config.dart';
 import 'google_drive/mobile_drive_service.dart';
 import 'google_drive/windows_drive_service_wrapper.dart';
 import '../utils/platform_helper.dart';
+import 'app_settings_service.dart';
 
 // --------------------------------------------------------------------------
 // All Apps Drive Service - Platform-Aware Implementation
@@ -220,12 +221,15 @@ class AllAppsDriveService {
       final morningRitualEntriesBox = Hive.box<MorningRitualEntry>('morning_ritual_entries');
       final morningRitualEntries = morningRitualEntriesBox.values.map((e) => e.toJson()).toList();
 
+      // Get app settings for sync
+      final appSettings = AppSettingsService.exportForSync();
+
       // Prepare complete export data with I Am definitions and people
       final entries = box.values.map((e) => e.toJson()).toList();
       
       final now = DateTime.now().toUtc();
       final exportData = {
-        'version': '7.0', // Increment version to include morning ritual
+        'version': '8.0', // Increment version to include app settings
         'exportDate': now.toIso8601String(),
         'lastModified': now.toIso8601String(), // For sync conflict detection
         'iAmDefinitions': iAmDefinitions,
@@ -236,6 +240,7 @@ class AllAppsDriveService {
         'agnosticism': agnosticismPairs, // Add agnosticism barrier/power pairs
         'morningRitualItems': morningRitualItems, // Add morning ritual definitions
         'morningRitualEntries': morningRitualEntries, // Add morning ritual daily entries
+        'appSettings': appSettings, // Add app settings (morning ritual auto-load, etc.)
       };
 
       // Serialize to JSON string
@@ -306,6 +311,9 @@ class AllAppsDriveService {
       final morningRitualEntriesBox = Hive.box<MorningRitualEntry>('morning_ritual_entries');
       final morningRitualEntries = morningRitualEntriesBox.values.map((e) => e.toJson()).toList();
 
+      // Get app settings for sync
+      final appSettings = AppSettingsService.exportForSync();
+
       // Prepare complete export data with I Am definitions and people
       // Get entries from passed box or fetch from standard entries box
       final entriesBox = box ?? Hive.box<InventoryEntry>('entries');
@@ -313,7 +321,7 @@ class AllAppsDriveService {
       
       final now = DateTime.now().toUtc();
       final exportData = {
-        'version': '7.0', // Increment version to include morning ritual
+        'version': '8.0', // Increment version to include app settings
         'exportDate': now.toIso8601String(),
         'lastModified': now.toIso8601String(), // For sync conflict detection
         'iAmDefinitions': iAmDefinitions,
@@ -324,6 +332,7 @@ class AllAppsDriveService {
         'agnosticism': agnosticismPairs, // Add agnosticism barrier/power pairs
         'morningRitualItems': morningRitualItems, // Add morning ritual definitions
         'morningRitualEntries': morningRitualEntries, // Add morning ritual daily entries
+        'appSettings': appSettings, // Add app settings (morning ritual auto-load, etc.)
       };
 
       // Serialize to JSON string
@@ -542,6 +551,8 @@ class AllAppsDriveService {
         // Get morning ritual data
         final morningRitualItemsData = decoded['morningRitualItems'] as List<dynamic>?;
         final morningRitualEntriesData = decoded['morningRitualEntries'] as List<dynamic>?;
+        // Get app settings
+        final appSettingsData = decoded['appSettings'] as Map<String, dynamic>?;
 
         // Update I Am definitions first
         if (iAmDefinitions != null) {
@@ -621,6 +632,11 @@ class AllAppsDriveService {
             final entry = MorningRitualEntry.fromJson(entryJson as Map<String, dynamic>);
             await morningRitualEntriesBox.put(entry.id, entry);
           }
+        }
+
+        // Update app settings (if present in remote data)
+        if (appSettingsData != null) {
+          await AppSettingsService.importFromSync(appSettingsData);
         }
 
         // Save the remote timestamp as our new local timestamp

@@ -26,9 +26,10 @@ class _AppRouterState extends State<AppRouter> {
 
   @override
   Widget build(BuildContext context) {
+    // Get the user's selected app
     final currentAppId = AppSwitcherService.getSelectedAppId();
 
-    // Route to the appropriate app based on selected ID
+    // Route to the appropriate app based on selection
     switch (currentAppId) {
       case AvailableApps.fourthStepInventory:
         return ModularInventoryHome(

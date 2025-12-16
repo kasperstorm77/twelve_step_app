@@ -168,47 +168,37 @@ class _FormTabState extends State<FormTab> {
         border: Border.all(color: Theme.of(context).colorScheme.outline),
         borderRadius: BorderRadius.circular(8),
       ),
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          Padding(
-            padding: const EdgeInsets.fromLTRB(12, 8, 12, 4),
-            child: Text(
-              t(context, 'category'),
-              style: Theme.of(context).textTheme.labelMedium?.copyWith(
-                color: Theme.of(context).colorScheme.onSurfaceVariant,
-              ),
-            ),
+      child: Padding(
+        padding: const EdgeInsets.fromLTRB(12, 8, 12, 12),
+        child: DropdownButtonFormField<InventoryCategory>(
+          initialValue: widget.selectedCategory,
+          decoration: InputDecoration(
+            labelText: t(context, 'category'),
+            border: const OutlineInputBorder(),
+            contentPadding: const EdgeInsets.symmetric(horizontal: 12, vertical: 12),
           ),
-          SingleChildScrollView(
-            scrollDirection: Axis.horizontal,
-            padding: const EdgeInsets.fromLTRB(8, 4, 8, 12),
-            child: Row(
-              children: InventoryCategory.values.map((category) {
-                final isSelected = widget.selectedCategory == category;
-                return Padding(
-                  padding: const EdgeInsets.symmetric(horizontal: 4),
-                  child: ChoiceChip(
-                    selected: isSelected,
-                    onSelected: (selected) {
-                      if (selected) {
-                        widget.onCategoryChanged?.call(category);
-                      }
-                    },
-                    avatar: Icon(
-                      _getCategoryIcon(category),
-                      size: 18,
-                      color: isSelected 
-                        ? Theme.of(context).colorScheme.onPrimaryContainer
-                        : Theme.of(context).colorScheme.onSurfaceVariant,
-                    ),
-                    label: Text(t(context, _getCategoryLabelKey(category))),
+          items: InventoryCategory.values.map((category) {
+            return DropdownMenuItem<InventoryCategory>(
+              value: category,
+              child: Row(
+                children: [
+                  Icon(
+                    _getCategoryIcon(category),
+                    size: 20,
+                    color: Theme.of(context).colorScheme.onSurfaceVariant,
                   ),
-                );
-              }).toList(),
-            ),
-          ),
-        ],
+                  const SizedBox(width: 12),
+                  Text(t(context, _getCategoryLabelKey(category))),
+                ],
+              ),
+            );
+          }).toList(),
+          onChanged: (category) {
+            if (category != null) {
+              widget.onCategoryChanged?.call(category);
+            }
+          },
+        ),
       ),
     );
   }

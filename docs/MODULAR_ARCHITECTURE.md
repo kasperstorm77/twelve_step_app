@@ -43,6 +43,7 @@ lib/
 │   │
 │   ├── pages/
 │   │   ├── app_router.dart              # Global routing (switches between apps)
+│   │   ├── data_management_page.dart    # Settings page (tabs: Data Management, General Settings)
 │   │   ├── data_management_tab.dart     # Platform selector
 │   │   ├── data_management_tab_mobile.dart  # Android/iOS implementation
 │   │   └── data_management_tab_windows.dart # Windows implementation
@@ -135,12 +136,14 @@ lib/
 - **Services**: 
   - `AllAppsDriveService`: Syncs all 6 apps to single Drive JSON
   - `AppSwitcherService`: App selection persistence
+  - `AppSettingsService`: App settings (morning ritual auto-load, etc.)
   - `AppHelpService`: Context-sensitive help for each app
   - `LocaleProvider`: EN/DA language switching
   - Authentication & Drive infrastructure
 - **Pages**: 
   - `AppRouter`: Global routing (switches between apps)
-  - Data import/export UI (JSON v7.0 format)
+  - `DataManagementPage`: Settings with tabs (Data Management, General Settings)
+  - Data import/export UI (JSON v8.0 format)
 - **Utils**: Platform detection, sync utilities
 - **Localizations**: All UI strings for all apps (EN/DA)
 
@@ -270,10 +273,10 @@ All strings for all 6 apps in `lib/shared/localizations.dart`
 - Conflict detection via `lastModified` timestamps
 - Auto-syncs on app start if remote data is newer
 
-**JSON Structure (v7.0):**
+**JSON Structure (v8.0):**
 ```json
 {
-  "version": "7.0",
+  "version": "8.0",
   "exportDate": "2025-12-02T...",
   "lastModified": "2025-12-02T...",
   "entries": [...],              // 4th step inventory
@@ -283,7 +286,12 @@ All strings for all 6 apps in `lib/shared/localizations.dart`
   "morningRitualEntries": [...], // Morning ritual daily completions
   "reflections": [...],          // Evening ritual
   "gratitude": [...],            // Gratitude
-  "agnosticism": [...]           // Agnosticism barrier/power pairs
+  "agnosticism": [...],          // Agnosticism barrier/power pairs
+  "appSettings": {               // App settings (v8.0+)
+    "morningRitualAutoLoadEnabled": false,
+    "morningRitualStartTime": "05:00:00",
+    "morningRitualEndTime": "09:00:00"
+  }
 }
 ```
 
@@ -293,6 +301,15 @@ All strings for all 6 apps in `lib/shared/localizations.dart`
 3. User can choose to fetch (restore backup) or skip (start fresh)
 4. Sync is automatically enabled after the prompt
 5. This prompt only appears once per installation (controlled by `syncPromptedMobile`/`syncPromptedWindows` flags)
+
+**Morning Ritual Auto-Load:**
+- Configured in Settings → General Settings tab
+- When enabled, forces morning ritual app on first open/resume of the day within time window
+- Settings: toggle, start time, end time (hh:mm:ss format)
+- Check happens AFTER Drive sync in `main.dart` (so restored settings are used)
+- Also checks on app resume in `app_widget.dart` (using `WidgetsBindingObserver`)
+- "Last forced date" is device-specific (not synced) - prevents repeated forcing same day
+- Controlled by `AppSettingsService` in `lib/shared/services/app_settings_service.dart`
 
 **Backward Compatibility:**
 - `gratitude` field also accepts `gratitudeEntries` from older exports

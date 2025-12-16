@@ -1,9 +1,11 @@
 //main.dart - Flutter Modular Integration
 import 'dart:io' show Platform;
+import 'dart:ui' as ui;
 import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_modular/flutter_modular.dart';
 import 'package:hive_flutter/hive_flutter.dart';
+import 'package:window_manager/window_manager.dart';
 
 // Import existing files for initialization
 import 'fourth_step/models/inventory_entry.dart';
@@ -18,6 +20,8 @@ import 'agnosticism/models/barrier_power_pair.dart';
 import 'shared/services/all_apps_drive_service.dart';
 import 'fourth_step/services/i_am_service.dart';
 import 'shared/utils/platform_helper.dart';
+import 'shared/services/app_settings_service.dart';
+import 'shared/services/app_switcher_service.dart';
 
 // Platform-specific imports (only available on mobile - conditional for web)
 import 'shared/services/google_sign_in_wrapper.dart';
@@ -28,6 +32,27 @@ import 'app/app_widget.dart';
 
 void main() async {
   WidgetsFlutterBinding.ensureInitialized();
+
+  // Initialize window manager for desktop platforms
+  if (PlatformHelper.isDesktop) {
+    await windowManager.ensureInitialized();
+    
+    // Get localized window title based on system locale
+    final locale = ui.PlatformDispatcher.instance.locale;
+    final windowTitle = locale.languageCode == 'da' ? 'Tolv Trins app' : 'Twelve Steps app';
+    
+    final windowOptions = WindowOptions(
+      size: const Size(800, 800),
+      minimumSize: const Size(400, 400),
+      center: true,
+      title: windowTitle,
+    );
+    await windowManager.waitUntilReadyToShow(windowOptions, () async {
+      await windowManager.show();
+      await windowManager.focus();
+    });
+  }
+
   await Hive.initFlutter();
 
   Hive.registerAdapter(InventoryEntryAdapter());
@@ -140,6 +165,8 @@ void main() async {
 
   // Initialize I Am definitions with default value
   await IAmService().initializeDefaults();
+
+  // NOTE: Morning ritual check is done AFTER Drive sync to ensure restored settings are used
 
   // Initialize AllAppsDriveService (on web this will be a no-op stub)
   try {
@@ -256,6 +283,14 @@ void main() async {
     }
   } else {
     if (kDebugMode) print('Google Drive sync not available on ${PlatformHelper.platformName}');
+  }
+
+  // Check if we should auto-load morning ritual at app startup (only once per day)
+  // This is done AFTER Drive sync so restored settings from backup are used
+  if (AppSettingsService.shouldForceMorningRitual()) {
+    if (kDebugMode) print('main: Within morning ritual window (first time today), setting morning ritual as selected app');
+    await AppSwitcherService.setSelectedAppId(AvailableApps.morningRitual);
+    await AppSettingsService.markMorningRitualForced();
   }
 
   runApp(ModularApp(module: AppModule(), child: const AppWidget()));

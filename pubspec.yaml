@@ -34,6 +34,7 @@ dependencies:
   vibration: ^2.0.1
   intl: any  # Provided by flutter_localizations
   app_links: ^6.3.2  # Deep link handling for Windows OAuth
+  window_manager: ^0.4.3  # Window size management for desktop
 
 dev_dependencies:
   flutter_test:

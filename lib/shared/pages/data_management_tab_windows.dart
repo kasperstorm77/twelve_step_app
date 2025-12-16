@@ -29,6 +29,7 @@ import '../../morning_ritual/models/ritual_item.dart';
 import '../../morning_ritual/models/morning_ritual_entry.dart';
 import '../localizations.dart';
 import '../services/all_apps_drive_service_impl.dart';
+import '../services/app_settings_service.dart';
 
 class DataManagementTab extends StatefulWidget {
   final Box<InventoryEntry> box;
@@ -622,6 +623,13 @@ class _DataManagementTabState extends State<DataManagementTab> {
         await morningRitualEntriesBox.put(entry.id, entry);
       }
       if (kDebugMode) print('Windows import: Imported ${morningRitualEntriesBox.length} morning ritual entries');
+    }
+
+    // Import app settings (v8.0+)
+    if (data.containsKey('appSettings')) {
+      final appSettingsData = data['appSettings'] as Map<String, dynamic>;
+      await AppSettingsService.importFromSync(appSettingsData);
+      if (kDebugMode) print('Windows import: Imported app settings');
     }
   }
 

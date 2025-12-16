@@ -123,10 +123,10 @@ dart run build_runner build --delete-conflicting-outputs
 - `data_management_tab_mobile.dart` - Android/iOS implementation
 - `data_management_tab_windows.dart` - Windows implementation
 
-**JSON Format v7.0**: Single file contains all app data:
+**JSON Format v8.0**: Single file contains all app data:
 ```json
 {
-  "version": "7.0",
+  "version": "8.0",
   "exportDate": "2025-12-02T...",
   "lastModified": "2025-12-02T...",
   "iAmDefinitions": [...],       // 4th step I Am (imported FIRST)
@@ -136,7 +136,12 @@ dart run build_runner build --delete-conflicting-outputs
   "morningRitualEntries": [...], // Morning ritual daily completions
   "reflections": [...],          // Evening ritual
   "gratitude": [...],            // Gratitude (also accepts 'gratitudeEntries')
-  "agnosticism": [...]           // Agnosticism (also accepts 'agnosticismPapers')
+  "agnosticism": [...],          // Agnosticism (also accepts 'agnosticismPapers')
+  "appSettings": {               // App settings (v8.0+)
+    "morningRitualAutoLoadEnabled": false,
+    "morningRitualStartTime": "05:00:00",
+    "morningRitualEndTime": "09:00:00"
+  }
 }
 ```
 
@@ -145,6 +150,7 @@ dart run build_runner build --delete-conflicting-outputs
 2. Attempt silent sign-in (cached credentials)
 3. If authenticated, check if remote data is newer
 4. Auto-sync if remote is newer
+5. Check morning ritual auto-load (after sync so restored settings are used)
 
 **First-Time Sign-In (Fresh Install)**:
 1. User signs in to Google Drive from Data Management
@@ -258,10 +264,13 @@ import 'package:google_sign_in/google_sign_in.dart'; // Mobile only
 - **Windows OAuth**: `lib/shared/services/google_drive/windows_google_auth_service.dart` (loopback method)
 - **Mobile OAuth**: `lib/shared/services/google_drive/mobile_google_auth_service.dart`
 - **Data Management**: 
+  - `lib/shared/pages/data_management_page.dart` (Settings page with tabs: Data Management, General Settings)
   - `lib/shared/pages/data_management_tab.dart` (platform selector)
   - `lib/shared/pages/data_management_tab_mobile.dart` (Android/iOS)
   - `lib/shared/pages/data_management_tab_windows.dart` (Windows)
 - **App Switching**: `lib/shared/services/app_switcher_service.dart`
+- **App Settings**: `lib/shared/services/app_settings_service.dart` (morning ritual auto-load, etc.)
+- **Morning Ritual Auto-Load**: Controlled by `AppSettingsService`. When enabled, forces morning ritual app on first open/resume within configured time window (once per day). Check happens AFTER Drive sync in `main.dart` and on app resume in `app_widget.dart`.
 - **App Definitions**: `lib/shared/models/app_entry.dart` (AvailableApps class)
 - **Translations**: `lib/shared/localizations.dart` (all apps, EN/DA)
 - **Build Scripts**: `scripts/increment_version.dart`, `scripts/build_windows_release.ps1`

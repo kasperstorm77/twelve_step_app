@@ -365,6 +365,17 @@ final Map<String, Map<String, String>> localizedValues = {
     'help_morning_ritual_items': 'Create your ritual with two types of items:\n• Timers - For meditation or silent prayer (with alarm when complete)\n• Prayers - Display text for prayers like the 3rd Step, 7th Step, or St. Francis Prayer\n\nArrange items in the order you want to perform them.',
     'help_morning_ritual_practice_title': 'Daily Practice',
     'help_morning_ritual_practice': 'Each morning, start your ritual from the Today tab. Complete or skip each item as you go. Your history is tracked on the calendar - green checkmarks for completed items, red X for skipped or missed. Consistency builds spiritual discipline.',
+    
+    // General Settings - Morning Ritual Auto-Load
+    'morning_ritual_settings': 'Morning Ritual Auto-Load',
+    'load_morning_ritual_toggle': 'Load Morning Ritual in the morning',
+    'load_morning_ritual_desc': 'Automatically open Morning Ritual app during the configured time window',
+    'morning_start_time': 'Morning start time',
+    'morning_end_time': 'Morning end time',
+    'morning_time_error': 'Start time must be before end time',
+    'save_settings': 'Save Settings',
+    'settings_saved': 'Settings saved',
+    'unsaved_changes': 'You have unsaved changes',
   },
   'da': {
     'app_title': '4. Trins liste',
@@ -730,6 +741,17 @@ final Map<String, Map<String, String>> localizedValues = {
     'help_morning_ritual_items': 'Opret dit ritual med to typer elementer:\n• Timere - Til meditation eller stille bøn (med alarm når færdig)\n• Bønner - Vis tekst til bønner som 3. trins, 7. trins eller St. Frans bønnen\n\nArranger elementer i den rækkefølge du vil udføre dem.',
     'help_morning_ritual_practice_title': 'Daglig Praksis',
     'help_morning_ritual_practice': 'Hver morgen, start dit ritual fra I dag fanen. Fuldfør eller spring over hvert element. Din historik spores på kalenderen - grønne flueben for fuldførte elementer, rødt X for sprunget over eller misset. Konsistens bygger åndelig disciplin.',
+    
+    // General Settings - Morning Ritual Auto-Load (Danish)
+    'morning_ritual_settings': 'Morgenritual auto-indlæsning',
+    'load_morning_ritual_toggle': 'Indlæs morgenritual om morgenen',
+    'load_morning_ritual_desc': 'Åbn automatisk Morgenritual-appen i det konfigurerede tidsvindue',
+    'morning_start_time': 'Morgen starttid',
+    'morning_end_time': 'Morgen sluttid',
+    'morning_time_error': 'Starttid skal være før sluttid',
+    'save_settings': 'Gem indstillinger',
+    'settings_saved': 'Indstillinger gemt',
+    'unsaved_changes': 'Du har ikke-gemte ændringer',
   },
 };
 

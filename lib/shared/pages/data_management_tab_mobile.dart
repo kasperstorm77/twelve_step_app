@@ -21,6 +21,7 @@ import 'package:flutter_file_dialog/flutter_file_dialog.dart';
 // Services
 import '../services/google_sign_in_wrapper.dart';
 import '../services/all_apps_drive_service.dart';
+import '../services/app_settings_service.dart';
 
 // Google Drive scopes
 const String driveAppdataScope =
@@ -604,6 +605,13 @@ class _DataManagementTabState extends State<DataManagementTab> {
           if (kDebugMode) print('Drive restore: Imported ${morningRitualEntriesBox.length} morning ritual entries');
         }
 
+        // Import app settings if present (v8.0+)
+        if (decoded.containsKey('appSettings')) {
+          final appSettingsData = decoded['appSettings'] as Map<String, dynamic>;
+          await AppSettingsService.importFromSync(appSettingsData);
+          if (kDebugMode) print('Drive restore: Imported app settings');
+        }
+
         // Save the remote timestamp as local timestamp to prevent repeated sync prompts
         if (decoded.containsKey('lastModified')) {
           final remoteTimestamp = DateTime.parse(decoded['lastModified'] as String);
@@ -697,9 +705,12 @@ class _DataManagementTabState extends State<DataManagementTab> {
       final morningRitualEntriesBox = Hive.box<MorningRitualEntry>('morning_ritual_entries');
       final morningRitualEntries = morningRitualEntriesBox.values.map((e) => e.toJson()).toList();
 
+      // Get app settings for export
+      final appSettings = AppSettingsService.exportForSync();
+
       final now = DateTime.now().toUtc();
       final exportData = {
-        'version': '7.0', // Updated version to include morning ritual
+        'version': '8.0', // Updated version to include app settings
         'exportDate': now.toIso8601String(),
         'lastModified': now.toIso8601String(), // For sync conflict detection
         'iAmDefinitions': iAmDefinitions,
@@ -710,6 +721,7 @@ class _DataManagementTabState extends State<DataManagementTab> {
         'agnosticism': agnosticismPairs, // Agnosticism barrier/power pairs
         'morningRitualItems': morningRitualItems, // Morning ritual definitions
         'morningRitualEntries': morningRitualEntries, // Morning ritual daily entries
+        'appSettings': appSettings, // App settings (morning ritual auto-load, etc.)
       };
 
       final jsonString = const JsonEncoder.withIndent('  ').convert(exportData);
@@ -899,6 +911,12 @@ class _DataManagementTabState extends State<DataManagementTab> {
           final entry = MorningRitualEntry.fromJson(entryJson as Map<String, dynamic>);
           await morningRitualEntriesBox.put(entry.id, entry);
         }
+      }
+
+      // Import app settings if present (v8.0+)
+      if (data.containsKey('appSettings')) {
+        final appSettingsData = data['appSettings'] as Map<String, dynamic>;
+        await AppSettingsService.importFromSync(appSettingsData);
       }
 
       // Calculate counts for all app data
