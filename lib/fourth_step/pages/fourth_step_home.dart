@@ -35,6 +35,10 @@ class _ModularInventoryHomeState extends State<ModularInventoryHome>
   final _partController = TextEditingController();
   final _defectController = TextEditingController();
 
+  // Scroll controller for list tab to preserve scroll position
+  final _listScrollController = ScrollController();
+  double? _savedScrollPosition;
+
   int? editingIndex;
   String? selectedIAmId;  // Selected I Am definition ID
   InventoryCategory selectedCategory = InventoryCategory.resentment;  // Selected category
@@ -62,12 +66,17 @@ class _ModularInventoryHomeState extends State<ModularInventoryHome>
     _partController.dispose();
     _defectController.dispose();
     _tabController.dispose();
+    _listScrollController.dispose();
     super.dispose();
   }
 
   void _editEntry(int index) {
     final entry = _inventoryService.getEntryAt(index);
     if (entry != null) {
+      // Save scroll position before switching to form tab
+      if (_listScrollController.hasClients) {
+        _savedScrollPosition = _listScrollController.offset;
+      }
       setState(() {
         editingIndex = index;
         selectedIAmId = entry.iAmId;
@@ -83,6 +92,7 @@ class _ModularInventoryHomeState extends State<ModularInventoryHome>
   }
 
   void _resetForm() {
+    final savedPosition = _savedScrollPosition;
     setState(() {
       editingIndex = null;
       selectedIAmId = null;
@@ -92,8 +102,23 @@ class _ModularInventoryHomeState extends State<ModularInventoryHome>
       _affectController.clear();
       _partController.clear();
       _defectController.clear();
+      _savedScrollPosition = null;
     });
     _tabController.animateTo(1); // Switch to list tab
+    
+    // Restore scroll position after switching to list tab
+    // Use Future.delayed to wait for tab animation and list rebuild
+    if (savedPosition != null) {
+      Future.delayed(const Duration(milliseconds: 350), () {
+        if (mounted && _listScrollController.hasClients) {
+          _listScrollController.animateTo(
+            savedPosition,
+            duration: const Duration(milliseconds: 200),
+            curve: Curves.easeOut,
+          );
+        }
+      });
+    }
   }
 
   Future<void> _saveEntry() async {
@@ -266,6 +291,7 @@ class _ModularInventoryHomeState extends State<ModularInventoryHome>
             box: Hive.box<InventoryEntry>('entries'),
             onEdit: _editEntry,
             onDelete: _deleteEntry,
+            scrollController: _listScrollController,
           ),
             SettingsTab(box: Hive.box<InventoryEntry>('entries')),
           ],

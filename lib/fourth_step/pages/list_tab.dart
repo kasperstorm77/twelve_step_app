@@ -10,6 +10,7 @@ class ListTab extends StatefulWidget {
   final void Function(int index) onEdit;
   final void Function(int index)? onDelete;
   final bool isProcessing;
+  final ScrollController? scrollController;
 
   const ListTab({
     super.key,
@@ -17,6 +18,7 @@ class ListTab extends StatefulWidget {
     required this.onEdit,
     this.onDelete,
     this.isProcessing = false,
+    this.scrollController,
   });
 
   @override
@@ -129,6 +131,8 @@ class _ListTabState extends State<ListTab> {
               final entries = box.values.toList().reversed.toList();
 
               return ListView.builder(
+                  key: const PageStorageKey<String>('fourth_step_list'),
+                  controller: widget.scrollController,
                   padding: EdgeInsets.only(bottom: MediaQuery.of(context).padding.bottom + 16),
                   itemCount: entries.length,
                   itemBuilder: (context, index) {
