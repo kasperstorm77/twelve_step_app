@@ -56,7 +56,12 @@ class WindowsGoogleAuthService {
   GoogleDriveConfig get config => _config;
   
   /// Check if user is signed in
-  bool get isSignedIn => _credentials != null && !_isTokenExpired();
+  bool get isSignedIn {
+    final hasCredentials = _credentials != null;
+    final tokenExpired = _isTokenExpired();
+    if (kDebugMode) print('WindowsGoogleAuthService: isSignedIn check - hasCredentials=$hasCredentials, tokenExpired=$tokenExpired');
+    return hasCredentials && !tokenExpired;
+  }
   
   /// Check if user has cached credentials (even if expired)
   bool get hasCachedCredentials => _credentialsBox.containsKey(_credentialsKey);

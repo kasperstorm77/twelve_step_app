@@ -64,19 +64,25 @@ class WindowsDriveServiceWrapper {
 
   /// Set sync enabled state
   Future<void> setSyncEnabled(bool enabled) async {
+    if (kDebugMode) print('WindowsDriveServiceWrapper: setSyncEnabled($enabled)');
     _syncEnabled = enabled;
     _syncStateController.add(enabled);
   }
 
   /// Schedule an upload with debouncing (700ms delay by default)
   void scheduleUpload(String content) {
-    if (!_syncEnabled || !_driveService.isSignedIn) return;
+    if (kDebugMode) print('WindowsDriveServiceWrapper: scheduleUpload called - syncEnabled=$_syncEnabled, isSignedIn=${_driveService.isSignedIn}');
+    if (!_syncEnabled || !_driveService.isSignedIn) {
+      if (kDebugMode) print('WindowsDriveServiceWrapper: ⚠️ Upload skipped');
+      return;
+    }
 
     // Cancel existing timer
     _uploadTimer?.cancel();
 
     // Schedule new upload
     _uploadTimer = Timer(_uploadDelay, () async {
+      if (kDebugMode) print('WindowsDriveServiceWrapper: Executing scheduled upload');
       await _performUpload(content);
     });
   }

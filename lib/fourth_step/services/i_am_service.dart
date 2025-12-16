@@ -78,26 +78,31 @@ class IAmService {
   }
 
   /// Count how many entries reference a specific I Am definition
+  /// Checks both legacy single iAmId and new iAmIds list
   int getUsageCount(Box<InventoryEntry> entriesBox, String iAmId) {
-    return entriesBox.values.where((entry) => entry.iAmId == iAmId).length;
+    return entriesBox.values.where((entry) => entry.effectiveIAmIds.contains(iAmId)).length;
   }
 
   /// Get all entries that reference a specific I Am definition
+  /// Checks both legacy single iAmId and new iAmIds list
   List<InventoryEntry> getEntriesUsingIAm(Box<InventoryEntry> entriesBox, String iAmId) {
-    return entriesBox.values.where((entry) => entry.iAmId == iAmId).toList();
+    return entriesBox.values.where((entry) => entry.effectiveIAmIds.contains(iAmId)).toList();
   }
 
   /// Check if an I Am definition is in use by any entry
+  /// Checks both legacy single iAmId and new iAmIds list
   bool isInUse(Box<InventoryEntry> entriesBox, String iAmId) {
-    return entriesBox.values.any((entry) => entry.iAmId == iAmId);
+    return entriesBox.values.any((entry) => entry.effectiveIAmIds.contains(iAmId));
   }
 
   /// Find orphaned entries (entries with iAmId that doesn't exist in definitions)
   List<InventoryEntry> findOrphanedEntries(Box<InventoryEntry> entriesBox, Box<IAmDefinition> iAmBox) {
     final validIds = iAmBox.values.map((def) => def.id).toSet();
     return entriesBox.values.where((entry) {
-      if (entry.iAmId == null || entry.iAmId!.isEmpty) return false;
-      return !validIds.contains(entry.iAmId);
+      final ids = entry.effectiveIAmIds;
+      if (ids.isEmpty) return false;
+      // Entry is orphaned if ANY of its iAmIds don't exist
+      return ids.any((id) => !validIds.contains(id));
     }).toList();
   }
 

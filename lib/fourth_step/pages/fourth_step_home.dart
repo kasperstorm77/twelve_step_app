@@ -40,7 +40,7 @@ class _ModularInventoryHomeState extends State<ModularInventoryHome>
   double? _savedScrollPosition;
 
   int? editingIndex;
-  String? selectedIAmId;  // Selected I Am definition ID
+  List<String> selectedIAmIds = [];  // Selected I Am definition IDs (multiple)
   InventoryCategory selectedCategory = InventoryCategory.resentment;  // Selected category
   bool get isEditing => editingIndex != null;
 
@@ -79,7 +79,7 @@ class _ModularInventoryHomeState extends State<ModularInventoryHome>
       }
       setState(() {
         editingIndex = index;
-        selectedIAmId = entry.iAmId;
+        selectedIAmIds = List<String>.from(entry.effectiveIAmIds);
         selectedCategory = entry.effectiveCategory;
         _resentmentController.text = entry.safeResentment;
         _reasonController.text = entry.safeReason;
@@ -95,7 +95,7 @@ class _ModularInventoryHomeState extends State<ModularInventoryHome>
     final savedPosition = _savedScrollPosition;
     setState(() {
       editingIndex = null;
-      selectedIAmId = null;
+      selectedIAmIds = [];
       selectedCategory = InventoryCategory.resentment;
       _resentmentController.clear();
       _reasonController.clear();
@@ -128,7 +128,7 @@ class _ModularInventoryHomeState extends State<ModularInventoryHome>
       _affectController.text,
       _partController.text,
       _defectController.text,
-      iAmId: selectedIAmId,
+      iAmIds: selectedIAmIds.isNotEmpty ? selectedIAmIds : null,
       category: selectedCategory,
     );
     
@@ -272,11 +272,11 @@ class _ModularInventoryHomeState extends State<ModularInventoryHome>
             partController: _partController,
             defectController: _defectController,
             editingIndex: editingIndex,
-            selectedIAmId: selectedIAmId,
+            selectedIAmIds: selectedIAmIds,
             selectedCategory: selectedCategory,
-            onIAmChanged: (String? id) {
+            onIAmIdsChanged: (List<String> ids) {
               setState(() {
-                selectedIAmId = id;
+                selectedIAmIds = ids;
               });
             },
             onCategoryChanged: (InventoryCategory category) {

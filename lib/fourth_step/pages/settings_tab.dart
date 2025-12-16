@@ -316,12 +316,16 @@ class _SettingsTabState extends State<SettingsTab> {
       // Data rows
       for (final entry in entries) {
         final category = entry.effectiveCategory;
-        final iAmName = _iAmService.getNameById(iAmBox, entry.iAmId) ?? '';
+        // Get all I Am names, joined with semicolons for CSV compatibility
+        final iAmNames = entry.effectiveIAmIds
+            .map((id) => _iAmService.getNameById(iAmBox, id))
+            .where((name) => name != null)
+            .join('; ');
         
         buffer.writeln([
           _escapeCsvValue(_getCategoryName(context, category)),
           _escapeCsvValue(entry.resentment),
-          _escapeCsvValue(iAmName),
+          _escapeCsvValue(iAmNames),
           _escapeCsvValue(entry.reason),
           _escapeCsvValue(entry.affect),
           _escapeCsvValue(entry.part),

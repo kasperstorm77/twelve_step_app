@@ -49,10 +49,14 @@ class _ListTabState extends State<ListTab> {
     }
   }
 
-  /// Get the I Am name for display, using the centralized service
-  /// Returns null if iAmId is null/empty or if the I Am definition is not found
-  String? _getIAmName(String? iAmId) {
-    return _iAmService.getNameById(_iAmBox, iAmId);
+  /// Get all I Am names for display (for multiple I Ams)
+  /// Returns list of names, filtering out any not found
+  List<String> _getIAmNames(List<String> iAmIds) {
+    return iAmIds
+        .map((id) => _iAmService.getNameById(_iAmBox, id))
+        .where((name) => name != null)
+        .cast<String>()
+        .toList();
   }
 
   /// Get the localization key for field 1 based on category
@@ -138,7 +142,7 @@ class _ListTabState extends State<ListTab> {
                   itemBuilder: (context, index) {
                     final e = entries[index];
                     final reversedIndex = box.length - 1 - index;
-                    final iAmName = _getIAmName(e.iAmId);
+                    final iAmNames = _getIAmNames(e.effectiveIAmIds);
                     final category = e.effectiveCategory;
 
                     return Card(
@@ -165,13 +169,15 @@ class _ListTabState extends State<ListTab> {
                               ),
                             ),
                             Text("${t(context, _getField1LabelKey(category))}: ${e.safeResentment}"),
-                            if (iAmName != null)
-                              Text("${t(context, 'i_am')}: $iAmName",
+                            // Display all I Am names (stacked if multiple)
+                            if (iAmNames.isNotEmpty)
+                              ...iAmNames.map((name) => Text(
+                                "${t(context, 'i_am')}: $name",
                                 style: TextStyle(
                                   color: Theme.of(context).colorScheme.primary,
                                   fontWeight: FontWeight.w600,
                                 ),
-                              ),
+                              )),
                             Text("${t(context, _getField2LabelKey(category))}: ${e.safeReason}"),
                             Text("${t(context, 'affects_my')}: ${e.safeAffect}"),
                             Text("${t(context, 'my_part')}: ${e.myTake ?? ''}"),

@@ -13,9 +13,9 @@ class FormTab extends StatefulWidget {
   final TextEditingController partController;
   final TextEditingController defectController;
   final int? editingIndex;
-  final String? selectedIAmId;
+  final List<String> selectedIAmIds;  // Multiple I Am IDs
   final InventoryCategory selectedCategory;
-  final ValueChanged<String?>? onIAmChanged;
+  final ValueChanged<List<String>>? onIAmIdsChanged;  // Callback for multiple I Ams
   final ValueChanged<InventoryCategory>? onCategoryChanged;
   final VoidCallback? onSave;
   final VoidCallback? onCancel;
@@ -29,9 +29,9 @@ class FormTab extends StatefulWidget {
     required this.partController,
     required this.defectController,
     this.editingIndex,
-    this.selectedIAmId,
+    this.selectedIAmIds = const [],
     this.selectedCategory = InventoryCategory.resentment,
-    this.onIAmChanged,
+    this.onIAmIdsChanged,
     this.onCategoryChanged,
     this.onSave,
     this.onCancel,
@@ -104,7 +104,12 @@ class _FormTabState extends State<FormTab> {
   Widget build(BuildContext context) {
     final iAmBox = Hive.box<IAmDefinition>('i_am_definitions');
     final iAmService = IAmService();
-    final selectedIAm = iAmService.findById(iAmBox, widget.selectedIAmId);
+    // Get all selected I Am definitions
+    final selectedIAms = widget.selectedIAmIds
+        .map((id) => iAmService.findById(iAmBox, id))
+        .where((def) => def != null)
+        .cast<IAmDefinition>()
+        .toList();
 
     return Padding(
       padding: const EdgeInsets.fromLTRB(16, 16, 16, 0),
@@ -124,11 +129,11 @@ class _FormTabState extends State<FormTab> {
               _getField1LabelKey(widget.selectedCategory),
             ),
             
-            // I Am + Field 2 (Reason/Cause/What did I do)
+            // I Am selections + Field 2 (Reason/Cause/What did I do)
             _buildIAmWithReasonField(
               context, 
               iAmBox, 
-              selectedIAm, 
+              selectedIAms, 
               widget.reasonController,
               _getField2LabelKey(widget.selectedCategory),
             ),
@@ -206,7 +211,7 @@ class _FormTabState extends State<FormTab> {
   Widget _buildIAmWithReasonField(
     BuildContext context, 
     Box<IAmDefinition> iAmBox, 
-    IAmDefinition? selectedIAm, 
+    List<IAmDefinition> selectedIAms, 
     TextEditingController reasonController,
     String labelKey,
   ) {
@@ -215,74 +220,83 @@ class _FormTabState extends State<FormTab> {
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.stretch,
         children: [
-          // Selected I Am display above the field
-          if (selectedIAm != null && selectedIAm.name.isNotEmpty)
-            Container(
-              margin: const EdgeInsets.only(bottom: 8),
-              padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
-              decoration: BoxDecoration(
-                color: Theme.of(context).colorScheme.primaryContainer.withValues(alpha: 0.5),
-                borderRadius: BorderRadius.circular(8),
-                border: Border.all(
-                  color: Theme.of(context).colorScheme.primary.withValues(alpha: 0.3),
-                  width: 1,
+          // Display all selected I Ams above the field (stacked vertically)
+          if (selectedIAms.isNotEmpty)
+            ...selectedIAms.asMap().entries.map((entry) {
+              final index = entry.key;
+              final selectedIAm = entry.value;
+              return Container(
+                margin: const EdgeInsets.only(bottom: 8),
+                padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
+                decoration: BoxDecoration(
+                  color: Theme.of(context).colorScheme.primaryContainer.withValues(alpha: 0.5),
+                  borderRadius: BorderRadius.circular(8),
+                  border: Border.all(
+                    color: Theme.of(context).colorScheme.primary.withValues(alpha: 0.3),
+                    width: 1,
+                  ),
                 ),
-              ),
-              child: Row(
-                children: [
-                  Icon(
-                    Icons.person,
-                    size: 18,
-                    color: Theme.of(context).colorScheme.primary,
-                  ),
-                  const SizedBox(width: 8),
-                  Text(
-                    '${t(context, 'i_am')}: ',
-                    style: Theme.of(context).textTheme.bodySmall?.copyWith(
-                      color: Theme.of(context).colorScheme.onPrimaryContainer,
+                child: Row(
+                  children: [
+                    Icon(
+                      Icons.person,
+                      size: 18,
+                      color: Theme.of(context).colorScheme.primary,
                     ),
-                  ),
-                  Expanded(
-                    child: Text(
-                      selectedIAm.name,
-                      style: Theme.of(context).textTheme.bodyMedium?.copyWith(
-                        fontWeight: FontWeight.w600,
+                    const SizedBox(width: 8),
+                    Text(
+                      '${t(context, 'i_am')}: ',
+                      style: Theme.of(context).textTheme.bodySmall?.copyWith(
                         color: Theme.of(context).colorScheme.onPrimaryContainer,
                       ),
                     ),
-                  ),
-                  if (selectedIAm.reasonToExist != null && selectedIAm.reasonToExist!.isNotEmpty)
+                    Expanded(
+                      child: Text(
+                        selectedIAm.name,
+                        style: Theme.of(context).textTheme.bodyMedium?.copyWith(
+                          fontWeight: FontWeight.w600,
+                          color: Theme.of(context).colorScheme.onPrimaryContainer,
+                        ),
+                      ),
+                    ),
+                    if (selectedIAm.reasonToExist != null && selectedIAm.reasonToExist!.isNotEmpty)
+                      IconButton(
+                        icon: const Icon(Icons.help_outline, size: 18),
+                        tooltip: selectedIAm.reasonToExist,
+                        visualDensity: VisualDensity.compact,
+                        onPressed: () {
+                          showDialog(
+                            context: context,
+                            builder: (context) => AlertDialog(
+                              title: Text(selectedIAm.name),
+                              content: Text(selectedIAm.reasonToExist!),
+                              actions: [
+                                TextButton(
+                                  onPressed: () => Navigator.of(context).pop(),
+                                  child: Text(t(context, 'close')),
+                                ),
+                              ],
+                            ),
+                          );
+                        },
+                      ),
                     IconButton(
-                      icon: const Icon(Icons.help_outline, size: 18),
-                      tooltip: selectedIAm.reasonToExist,
+                      icon: const Icon(Icons.clear, size: 18),
+                      tooltip: t(context, 'remove_i_am'),
                       visualDensity: VisualDensity.compact,
                       onPressed: () {
-                        showDialog(
-                          context: context,
-                          builder: (context) => AlertDialog(
-                            title: Text(selectedIAm.name),
-                            content: Text(selectedIAm.reasonToExist!),
-                            actions: [
-                              TextButton(
-                                onPressed: () => Navigator.of(context).pop(),
-                                child: Text(t(context, 'close')),
-                              ),
-                            ],
-                          ),
-                        );
+                        // Remove this specific I Am from the list
+                        final newIds = List<String>.from(widget.selectedIAmIds);
+                        newIds.removeAt(index);
+                        widget.onIAmIdsChanged?.call(newIds);
                       },
                     ),
-                  IconButton(
-                    icon: const Icon(Icons.clear, size: 18),
-                    tooltip: t(context, 'no_i_am_selected'),
-                    visualDensity: VisualDensity.compact,
-                    onPressed: () => widget.onIAmChanged?.call(null),
-                  ),
-                ],
-              ),
-            ),
+                  ],
+                ),
+              );
+            }),
           
-          // Reason field with person icon
+          // Reason field with person icon to add more I Ams
           TextField(
             controller: reasonController,
             minLines: 1,
@@ -294,8 +308,8 @@ class _FormTabState extends State<FormTab> {
               alignLabelWithHint: true,
               prefixIcon: IconButton(
                 icon: Icon(
-                  selectedIAm == null ? Icons.person_add_outlined : Icons.person,
-                  color: selectedIAm == null 
+                  selectedIAms.isEmpty ? Icons.person_add_outlined : Icons.person_add,
+                  color: selectedIAms.isEmpty 
                     ? Theme.of(context).colorScheme.primary.withValues(alpha: 0.6)
                     : Theme.of(context).colorScheme.primary,
                 ),
@@ -349,7 +363,7 @@ class _FormTabState extends State<FormTab> {
                   Expanded(
                     child: ListView.builder(
                       shrinkWrap: true,
-                      itemCount: filteredDefinitions.length + 2, // +2 for "None" and "Add new" options
+                      itemCount: filteredDefinitions.length + 1, // +1 for "Add new" option
                       itemBuilder: (context, index) {
                         if (index == 0) {
                           // "Add new I Am" option
@@ -371,42 +385,25 @@ class _FormTabState extends State<FormTab> {
                             ),
                           );
                         }
-                        
-                        if (index == 1) {
-                          // "None" option
-                          return Card(
-                            child: ListTile(
-                              leading: Icon(Icons.clear, color: Theme.of(context).colorScheme.error),
-                              title: Text(
-                                t(context, 'no_i_am_selected'),
-                                style: TextStyle(color: Theme.of(context).colorScheme.error),
-                              ),
-                              onTap: () {
-                                widget.onIAmChanged?.call(null);
-                                Navigator.of(dialogContext).pop();
-                              },
-                            ),
-                          );
-                        }
 
-                        final definition = filteredDefinitions[index - 2];
-                        final isSelected = widget.selectedIAmId == definition.id;
+                        final definition = filteredDefinitions[index - 1];
+                        final isAlreadySelected = widget.selectedIAmIds.contains(definition.id);
                         
                         return Card(
-                          color: isSelected 
+                          color: isAlreadySelected 
                             ? Theme.of(context).colorScheme.primaryContainer 
                             : null,
                           child: ListTile(
                             leading: Icon(
-                              Icons.person,
-                              color: isSelected 
+                              isAlreadySelected ? Icons.check_circle : Icons.person,
+                              color: isAlreadySelected 
                                 ? Theme.of(context).colorScheme.primary 
                                 : null,
                             ),
                             title: Text(
                               definition.name,
                               style: TextStyle(
-                                fontWeight: isSelected ? FontWeight.bold : null,
+                                fontWeight: isAlreadySelected ? FontWeight.bold : null,
                               ),
                             ),
                             subtitle: definition.reasonToExist != null &&
@@ -417,11 +414,22 @@ class _FormTabState extends State<FormTab> {
                                     overflow: TextOverflow.ellipsis,
                                   )
                                 : null,
-                            trailing: isSelected 
-                              ? Icon(Icons.check_circle, color: Theme.of(context).colorScheme.primary)
+                            trailing: isAlreadySelected 
+                              ? Text(
+                                  t(context, 'already_added'),
+                                  style: TextStyle(
+                                    color: Theme.of(context).colorScheme.primary,
+                                    fontSize: 12,
+                                  ),
+                                )
                               : null,
                             onTap: () {
-                              widget.onIAmChanged?.call(definition.id);
+                              if (!isAlreadySelected) {
+                                // Add to selection and close dialog
+                                final newIds = List<String>.from(widget.selectedIAmIds);
+                                newIds.add(definition.id);
+                                widget.onIAmIdsChanged?.call(newIds);
+                              }
                               Navigator.of(dialogContext).pop();
                             },
                           ),
@@ -503,8 +511,10 @@ class _FormTabState extends State<FormTab> {
 
               await iAmService.addDefinition(iAmBox, newDefinition);
               
-              // Auto-select the newly created I Am
-              widget.onIAmChanged?.call(newId);
+              // Auto-add the newly created I Am to selection
+              final newIds = List<String>.from(widget.selectedIAmIds);
+              newIds.add(newId);
+              widget.onIAmIdsChanged?.call(newIds);
               
               if (dialogContext.mounted) {
                 Navigator.of(dialogContext).pop();
