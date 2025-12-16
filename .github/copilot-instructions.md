@@ -146,6 +146,14 @@ dart run build_runner build --delete-conflicting-outputs
 3. If authenticated, check if remote data is newer
 4. Auto-sync if remote is newer
 
+**First-Time Sign-In (Fresh Install)**:
+1. User signs in to Google Drive from Data Management
+2. Prompt appears asking to fetch data from Drive (if Drive has data)
+3. User can Fetch (restore) or Cancel (start fresh)
+4. Sync is enabled after prompt regardless of choice
+5. Prompt controlled by `syncPromptedMobile`/`syncPromptedWindows` flags in Hive `settings` box
+6. `syncEnabled` defaults to `false` so prompt shows for new installs
+
 **Debounced Upload**: Schedule uploads with 700ms debounce to coalesce rapid changes. See `scheduleUploadFromBox()` in `AllAppsDriveService`.
 
 ## Localization System

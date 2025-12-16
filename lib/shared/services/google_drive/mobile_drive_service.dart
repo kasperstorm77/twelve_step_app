@@ -147,54 +147,111 @@ class MobileDriveService {
   /// Clean up backups: keep last 7 days, but only one backup per day for previous days
   /// Current day can have multiple backups until the day rolls over
   Future<void> _cleanupOldBackups() async {
+    await _cleanupOldBackupsInternal();
+  }
+
+  /// Internal cleanup that fetches files directly (used by both upload and listAvailableBackups)
+  Future<void> _cleanupOldBackupsInternal() async {
+    if (_driveClient == null) return;
+    
     try {
-      final backups = await listAvailableBackups();
-      if (backups.isEmpty) return;
+      // Fetch files directly to avoid recursion with listAvailableBackups
+      final baseName = _authService.config.fileName.replaceAll('.json', '');
+      final pattern = '${baseName}_*.json';
+      final files = await _driveClient!.findBackupFiles(pattern);
+      if (files.isEmpty) return;
       
-      final now = DateTime.now();
-      final today = DateTime(now.year, now.month, now.day);
-      final cutoffDate = today.subtract(const Duration(days: 7));
-      
-      // Group backups by date
-      final backupsByDate = <DateTime, List<Map<String, dynamic>>>{};
-      for (final backup in backups) {
-        if (backup['date'] != null) {
-          final backupDate = backup['date'] as DateTime;
-          final dateOnly = DateTime(backupDate.year, backupDate.month, backupDate.day);
-          
-          if (!backupsByDate.containsKey(dateOnly)) {
-            backupsByDate[dateOnly] = [];
+      // Parse files into backup info
+      final backups = <Map<String, dynamic>>[];
+      for (final file in files) {
+        final regex = RegExp(r'(\d{4})-(\d{2})-(\d{2})(?:_(\d{2})-(\d{2})-(\d{2}))?');
+        final match = regex.firstMatch(file.name ?? '');
+        if (match != null) {
+          final year = int.parse(match.group(1)!);
+          final month = int.parse(match.group(2)!);
+          final day = int.parse(match.group(3)!);
+          int hour = 0, minute = 0, second = 0;
+          if (match.group(4) != null) {
+            hour = int.parse(match.group(4)!);
+            minute = int.parse(match.group(5)!);
+            second = int.parse(match.group(6)!);
           }
-          backupsByDate[dateOnly]!.add(backup);
+          final date = DateTime(year, month, day, hour, minute, second);
+          backups.add({'fileName': file.name, 'date': date});
         }
       }
       
-      // Process each date
+      final now = DateTime.now();
+      final today = DateTime(now.year, now.month, now.day);
+      final weekCutoff = today.subtract(const Duration(days: 7));
+      final yearCutoff = DateTime(now.year - 1, now.month, now.day);
+      
+      // Group backups by date (for daily) and by month (for monthly)
+      final backupsByDate = <DateTime, List<Map<String, dynamic>>>{};
+      final backupsByMonth = <String, List<Map<String, dynamic>>>{};
+      
+      for (final backup in backups) {
+        final backupDate = backup['date'] as DateTime;
+        final dateOnly = DateTime(backupDate.year, backupDate.month, backupDate.day);
+        final monthKey = '${backupDate.year}-${backupDate.month.toString().padLeft(2, '0')}';
+        
+        if (!backupsByDate.containsKey(dateOnly)) {
+          backupsByDate[dateOnly] = [];
+        }
+        backupsByDate[dateOnly]!.add(backup);
+        
+        if (!backupsByMonth.containsKey(monthKey)) {
+          backupsByMonth[monthKey] = [];
+        }
+        backupsByMonth[monthKey]!.add(backup);
+      }
+      
+      // Track which backups to keep (by fileName)
+      final backupsToKeep = <String>{};
+      
+      // Process daily backups (today and last 7 days)
       for (final entry in backupsByDate.entries) {
         final date = entry.key;
         final dateBackups = entry.value;
         
-        // Delete backups older than 7 days
-        if (date.isBefore(cutoffDate)) {
+        if (date.isAtSameMomentAs(today) || date.isAfter(today)) {
+          // Today: keep all
           for (final backup in dateBackups) {
-            await _deleteBackup(backup['fileName'] as String);
+            backupsToKeep.add(backup['fileName'] as String);
           }
+        } else if (date.isAfter(weekCutoff) || date.isAtSameMomentAs(weekCutoff)) {
+          // Last 7 days: keep only the latest per day
+          dateBackups.sort((a, b) => (b['date'] as DateTime).compareTo(a['date'] as DateTime));
+          backupsToKeep.add(dateBackups.first['fileName'] as String);
         }
-        // For previous days (not today), keep only the most recent backup
-        else if (date.isBefore(today) && dateBackups.length > 1) {
-          // Sort by creation time (newest first)
-          dateBackups.sort((a, b) {
-            final dateA = a['date'] as DateTime;
-            final dateB = b['date'] as DateTime;
-            return dateB.compareTo(dateA);
-          });
-          
-          // Keep the first (newest), delete the rest
-          for (int i = 1; i < dateBackups.length; i++) {
-            await _deleteBackup(dateBackups[i]['fileName'] as String);
-          }
+        // Older than 7 days: handled by monthly logic below
+      }
+      
+      // Process monthly backups (for dates older than 7 days but within last year)
+      for (final entry in backupsByMonth.entries) {
+        final monthBackups = entry.value;
+        
+        // Filter to only backups older than 7 days and within the last year
+        final eligibleBackups = monthBackups.where((backup) {
+          final backupDate = backup['date'] as DateTime;
+          final dateOnly = DateTime(backupDate.year, backupDate.month, backupDate.day);
+          return dateOnly.isBefore(weekCutoff) && 
+                 (dateOnly.isAfter(yearCutoff) || dateOnly.isAtSameMomentAs(yearCutoff));
+        }).toList();
+        
+        if (eligibleBackups.isNotEmpty) {
+          // Keep only the latest backup for this month
+          eligibleBackups.sort((a, b) => (b['date'] as DateTime).compareTo(a['date'] as DateTime));
+          backupsToKeep.add(eligibleBackups.first['fileName'] as String);
         }
-        // For today, keep all backups (no cleanup)
+      }
+      
+      // Delete all backups not in the keep set
+      for (final backup in backups) {
+        final fileName = backup['fileName'] as String;
+        if (!backupsToKeep.contains(fileName)) {
+          await _deleteBackup(fileName);
+        }
       }
     } catch (e) {
       if (kDebugMode) print('Failed to cleanup old backups: $e');
@@ -254,6 +311,9 @@ class MobileDriveService {
     }
 
     try {
+      // Run cleanup first to enforce retention policy
+      await _cleanupOldBackupsInternal();
+      
       // Find all backup files matching pattern
       final baseName = _authService.config.fileName.replaceAll('.json', '');
       final pattern = '${baseName}_*.json';

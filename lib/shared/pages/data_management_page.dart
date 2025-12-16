@@ -9,13 +9,31 @@ class DataManagementPage extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final box = Hive.box<InventoryEntry>('entries');
-    
-    return Scaffold(
-      appBar: AppBar(
-        title: Text(t(context, 'data_management')),
+    return DefaultTabController(
+      length: 2,
+      child: Scaffold(
+        appBar: AppBar(
+          title: Text(t(context, 'settings_title')),
+          bottom: TabBar(
+            tabs: [
+              Tab(text: t(context, 'general_settings')),
+              Tab(text: t(context, 'data_management')),
+            ],
+          ),
+        ),
+        body: TabBarView(
+          children: [
+            _buildGeneralSettingsTab(context),
+            DataManagementTab(box: Hive.box<InventoryEntry>('entries')),
+          ],
+        ),
       ),
-      body: DataManagementTab(box: box),
+    );
+  }
+
+  Widget _buildGeneralSettingsTab(BuildContext context) {
+    return const Center(
+      child: Text(''),
     );
   }
 }

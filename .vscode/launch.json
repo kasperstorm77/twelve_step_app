@@ -2,15 +2,7 @@
   "version": "0.2.0",
   "configurations": [
     {
-      "name": "Debug with Auto Version Increment",
-      "type": "dart",
-      "request": "launch",
-      "program": "lib/main.dart",
-      "preLaunchTask": "increment-version",
-      "console": "debugConsole"
-    },
-    {
-      "name": "Debug (Standard)",
+      "name": "Debug",
       "type": "dart", 
       "request": "launch",
       "program": "lib/main.dart",

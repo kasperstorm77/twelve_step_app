@@ -152,8 +152,13 @@ class _DataManagementTabState extends State<DataManagementTab> {
           // Load available backups after sign-in
           _loadAvailableBackups();
           
-          // Ask if user wants to enable sync
-          _showSyncEnableDialog();
+          // Only show sync enable dialog if user hasn't already configured sync
+          // Check if they've ever been prompted (syncPrompted flag) or if sync is already enabled
+          final settingsBox = Hive.box('settings');
+          final alreadyPrompted = settingsBox.get('syncPromptedWindows', defaultValue: false);
+          if (!alreadyPrompted && !_syncEnabled) {
+            _showSyncEnableDialog();
+          }
         }
       } else {
         if (mounted) {
@@ -173,11 +178,17 @@ class _DataManagementTabState extends State<DataManagementTab> {
         content: Text(t(context, 'enable_sync_prompt')),
         actions: [
           TextButton(
-            onPressed: () => Navigator.pop(context),
+            onPressed: () {
+              // Mark as prompted so we don't show again
+              Hive.box('settings').put('syncPromptedWindows', true);
+              Navigator.pop(context);
+            },
             child: Text(t(context, 'not_now')),
           ),
           ElevatedButton(
             onPressed: () {
+              // Mark as prompted so we don't show again
+              Hive.box('settings').put('syncPromptedWindows', true);
               _toggleSync(true);
               Navigator.pop(context);
             },

@@ -287,9 +287,17 @@ All strings for all 6 apps in `lib/shared/localizations.dart`
 }
 ```
 
+**First-Time Sign-In Flow (Fresh Install):**
+1. User signs into Google Drive from Data Management
+2. Prompt appears: "Fetch data from Google Drive?"
+3. User can choose to fetch (restore backup) or skip (start fresh)
+4. Sync is automatically enabled after the prompt
+5. This prompt only appears once per installation (controlled by `syncPromptedMobile`/`syncPromptedWindows` flags)
+
 **Backward Compatibility:**
 - `gratitude` field also accepts `gratitudeEntries` from older exports
 - `agnosticism` field also accepts `agnosticismPapers` from older exports
+- Existing users with `syncEnabled=true` won't see the fetch prompt (already configured)
 
 **Shared Drive Infrastructure** (`lib/shared/services/google_drive/`):
 - **Mobile**: `MobileGoogleAuthService` + `MobileDriveService` (Android/iOS)

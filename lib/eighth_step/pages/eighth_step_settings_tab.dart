@@ -217,7 +217,7 @@ class _PersonEditDialogState extends State<PersonEditDialog> {
               ),
               const SizedBox(height: 16),
               DropdownButtonFormField<ColumnType>(
-                value: _column,
+                initialValue: _column,
                 decoration: InputDecoration(labelText: t(context, 'column')),
                 items: ColumnType.values.map((column) {
                   String label;

@@ -180,7 +180,8 @@ class _DataManagementTabState extends State<DataManagementTab> {
     if (!Hive.isBoxOpen('settings')) await Hive.openBox('settings');
     final settingsBox = Hive.box('settings');
     setState(() {
-      _syncEnabled = settingsBox.get('syncEnabled', defaultValue: true);
+      // Default to false so fresh installs show the fetch prompt on first sign-in
+      _syncEnabled = settingsBox.get('syncEnabled', defaultValue: false);
     });
   }
 
@@ -249,12 +250,10 @@ class _DataManagementTabState extends State<DataManagementTab> {
       
       if (account != null) {
         // Manually update the current user since we blocked the listener
+        // Don't auto-enable sync yet - let the prompt handler decide
         setState(() {
           _currentUser = account;
-          // Auto-enable sync on successful sign-in
-          _syncEnabled = true;
         });
-        Hive.box('settings').put('syncEnabled', true);
         
         await _initializeDriveClient(account);
         // Schedule the prompt; this is resilient to the ordering of
@@ -274,7 +273,12 @@ class _DataManagementTabState extends State<DataManagementTab> {
   Future<void> _maybePromptFetchAfterInteractiveSignIn(GoogleSignInAccount account) async {
   // Prompt can happen either from interactive sign-in OR from silent sign-in
   // (when the user navigates to Settings tab and we detect an existing account).
-  // The key is just not to prompt the same account twice in the same session.
+  // Only prompt once ever (permanent flag) - user can manually fetch from settings anytime.
+  // Also skip if sync is already enabled (backward compat for existing users).
+  final settingsBox = Hive.box('settings');
+  final alreadyPrompted = settingsBox.get('syncPromptedMobile', defaultValue: false);
+  if (alreadyPrompted) return;
+  if (_syncEnabled) return;  // Backward compatibility: don't prompt if sync already configured
   if (_lastPromptedAccountId == account.id) return;
   if (!mounted) return;
 
@@ -309,6 +313,15 @@ class _DataManagementTabState extends State<DataManagementTab> {
       // repeatedly during the same session. We do this after the dialog so
       // that errors thrown while showing it don't block future attempts.
       _lastPromptedAccountId = account.id;
+      // Also set permanent flag so we never prompt again
+      Hive.box('settings').put('syncPromptedMobile', true);
+      
+      // Enable sync regardless of user choice (they can disable manually if needed)
+      // This ensures data gets synced after they've been prompted
+      final settingsBox = Hive.box('settings');
+      settingsBox.put('syncEnabled', true);
+      if (mounted) setState(() => _syncEnabled = true);
+      await AllAppsDriveService.instance.setSyncEnabled(true);
 
       if (shouldFetch ?? false) {
         // Show loading indicator
@@ -323,10 +336,6 @@ class _DataManagementTabState extends State<DataManagementTab> {
         
         try {
           await _fetchFromGoogle();
-          final settingsBox = Hive.box('settings');
-          settingsBox.put('syncEnabled', true);
-          if (mounted) setState(() => _syncEnabled = true);
-          await AllAppsDriveService.instance.setSyncEnabled(true);
           if (mounted) {
             ScaffoldMessenger.of(context).showSnackBar(
               SnackBar(content: Text(t(context, 'drive_upload_success').replaceFirst('%s', widget.box.length.toString()))),
