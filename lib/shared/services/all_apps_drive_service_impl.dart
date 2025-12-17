@@ -491,6 +491,8 @@ class AllAppsDriveService {
   }
 
   /// Check if remote data is newer than local and auto-sync if needed
+  /// SAFETY: Only syncs if local has NO data (fresh install) AND remote has data.
+  /// If local has data, NEVER auto-overwrite - user must explicitly fetch.
   Future<bool> checkAndSyncIfNeeded() async {
     if (kDebugMode) print('AllAppsDriveService: Checking for remote updates...');
     
@@ -505,6 +507,45 @@ class AllAppsDriveService {
     }
 
     try {
+      // SAFETY CHECK: Count local entries across all apps
+      // If ANY app has data, DO NOT auto-sync from remote (prevents data loss)
+      final entriesBox = Hive.box<InventoryEntry>('entries');
+      final iAmBox = Hive.box<IAmDefinition>('i_am_definitions');
+      final peopleBox = Hive.box<Person>('people_box');
+      final reflectionsBox = Hive.box<ReflectionEntry>('reflections_box');
+      final gratitudeBox = Hive.box<GratitudeEntry>('gratitude_box');
+      final agnosticismBox = Hive.box<BarrierPowerPair>('agnosticism_pairs');
+      final morningRitualItemsBox = Hive.box<RitualItem>('morning_ritual_items');
+      final morningRitualEntriesBox = Hive.box<MorningRitualEntry>('morning_ritual_entries');
+      
+      // Count I Am definitions excluding the default "Not Set" entry
+      final iAmCount = iAmBox.values.where((def) => def.id != 'not_set').length;
+      
+      final localDataCount = entriesBox.length + 
+                             iAmCount + 
+                             peopleBox.length + 
+                             reflectionsBox.length + 
+                             gratitudeBox.length + 
+                             agnosticismBox.length +
+                             morningRitualItemsBox.length +
+                             morningRitualEntriesBox.length;
+      
+      if (localDataCount > 0) {
+        if (kDebugMode) {
+          print('AllAppsDriveService: ⚠️ LOCAL DATA EXISTS ($localDataCount items) - skipping auto-sync');
+          print('AllAppsDriveService: User must explicitly fetch from Data Management if they want remote data');
+        }
+        // CRITICAL: DO NOT overwrite local data automatically
+        // Instead, just update lastModified to current time to enable future uploads
+        final localTimestamp = await _getLocalLastModified();
+        if (localTimestamp == null) {
+          // No timestamp but has data - set timestamp to now to enable uploads
+          await _saveLastModified(DateTime.now().toUtc());
+          if (kDebugMode) print('AllAppsDriveService: Set lastModified to now (local data exists but no timestamp)');
+        }
+        return false;
+      }
+
       // Download remote content
       if (kDebugMode) print('AllAppsDriveService: Downloading remote file...');
       final String? content;
@@ -529,129 +570,118 @@ class AllAppsDriveService {
       }
 
       final remoteTimestamp = DateTime.parse(remoteTimestampStr);
-      final localTimestamp = await _getLocalLastModified();
-
-      // If local timestamp is null or remote is newer, sync down
-      if (localTimestamp == null || remoteTimestamp.isAfter(localTimestamp)) {
-        if (kDebugMode) {
-          print('AllAppsDriveService: ⚠️ Remote data is NEWER - syncing down');
-          print('  Local:  ${localTimestamp?.toIso8601String() ?? "never synced"}');
-          print('  Remote: ${remoteTimestamp.toIso8601String()}');
-        }
-
-        // Parse and apply the data
-        final entries = await _parseInventoryContent(content);
-        final iAmDefinitions = decoded['iAmDefinitions'] as List<dynamic>?;
-        final people = decoded['people'] as List<dynamic>?; // Get people data
-        final reflections = decoded['reflections'] as List<dynamic>?; // Get reflections data
-        // Handle both old ('gratitudeEntries') and new ('gratitude') field names
-        final gratitudeData = (decoded['gratitude'] ?? decoded['gratitudeEntries']) as List<dynamic>?; 
-        // Handle both old ('agnosticismPapers') and new ('agnosticism') field names
-        final agnosticismData = (decoded['agnosticism'] ?? decoded['agnosticismPapers']) as List<dynamic>?;
-        // Get morning ritual data
-        final morningRitualItemsData = decoded['morningRitualItems'] as List<dynamic>?;
-        final morningRitualEntriesData = decoded['morningRitualEntries'] as List<dynamic>?;
-        // Get app settings
-        final appSettingsData = decoded['appSettings'] as Map<String, dynamic>?;
-
-        // Update I Am definitions first
-        if (iAmDefinitions != null) {
-          final iAmBox = Hive.box<IAmDefinition>('i_am_definitions');
-          await iAmBox.clear();
-          if (kDebugMode) print('AllAppsDriveService: Clearing I Am definitions box...');
-          for (final def in iAmDefinitions) {
-            final id = def['id'] as String;
-            final name = def['name'] as String;
-            final reasonToExist = def['reasonToExist'] as String?;
-            await iAmBox.add(IAmDefinition(id: id, name: name, reasonToExist: reasonToExist));
-            if (kDebugMode) print('AllAppsDriveService: Added I Am definition: $name (id: $id)');
-          }
-          if (kDebugMode) print('AllAppsDriveService: ✓ Imported ${iAmDefinitions.length} I Am definitions');
-        }
-
-        // Update entries
-        final entriesBox = Hive.box<InventoryEntry>('entries');
-        await entriesBox.clear();
-        await entriesBox.addAll(entries);
-
-        // Update 8th step people (if present in remote data)
-        if (people != null) {
-          final peopleBox = Hive.box<Person>('people_box');
-          await peopleBox.clear();
-          for (final personData in people) {
-            final person = Person.fromJson(personData as Map<String, dynamic>);
-            await peopleBox.put(person.internalId, person);
-          }
-        }
-
-        // Update evening reflections (if present in remote data)
-        if (reflections != null) {
-          final reflectionsBox = Hive.box<ReflectionEntry>('reflections_box');
-          await reflectionsBox.clear();
-          for (final reflectionData in reflections) {
-            final reflection = ReflectionEntry.fromJson(reflectionData as Map<String, dynamic>);
-            await reflectionsBox.put(reflection.internalId, reflection);
-          }
-        }
-
-        // Update gratitude entries (if present in remote data)
-        if (gratitudeData != null) {
-          final gratitudeBox = Hive.box<GratitudeEntry>('gratitude_box');
-          await gratitudeBox.clear();
-          for (final gratitudeJson in gratitudeData) {
-            final gratitude = GratitudeEntry.fromJson(gratitudeJson as Map<String, dynamic>);
-            await gratitudeBox.add(gratitude);
-          }
-        }
-
-        // Update agnosticism barrier/power pairs (if present in remote data)
-        if (agnosticismData != null) {
-          final agnosticismBox = Hive.box<BarrierPowerPair>('agnosticism_pairs');
-          await agnosticismBox.clear();
-          for (final pairJson in agnosticismData) {
-            final pair = BarrierPowerPair.fromJson(pairJson as Map<String, dynamic>);
-            await agnosticismBox.put(pair.id, pair);
-          }
-        }
-
-        // Update morning ritual items (definitions) (if present in remote data)
-        if (morningRitualItemsData != null) {
-          final morningRitualItemsBox = Hive.box<RitualItem>('morning_ritual_items');
-          await morningRitualItemsBox.clear();
-          for (final itemJson in morningRitualItemsData) {
-            final item = RitualItem.fromJson(itemJson as Map<String, dynamic>);
-            await morningRitualItemsBox.put(item.id, item);
-          }
-        }
-
-        // Update morning ritual entries (daily completions) (if present in remote data)
-        if (morningRitualEntriesData != null) {
-          final morningRitualEntriesBox = Hive.box<MorningRitualEntry>('morning_ritual_entries');
-          await morningRitualEntriesBox.clear();
-          for (final entryJson in morningRitualEntriesData) {
-            final entry = MorningRitualEntry.fromJson(entryJson as Map<String, dynamic>);
-            await morningRitualEntriesBox.put(entry.id, entry);
-          }
-        }
-
-        // Update app settings (if present in remote data)
-        if (appSettingsData != null) {
-          await AppSettingsService.importFromSync(appSettingsData);
-        }
-
-        // Save the remote timestamp as our new local timestamp
-        await _saveLastModified(remoteTimestamp);
-
-        if (kDebugMode) print('AllAppsDriveService: ✓ Auto-sync complete (${entries.length} entries, ${iAmDefinitions?.length ?? 0} I Ams, ${people?.length ?? 0} people, ${reflections?.length ?? 0} reflections, ${gratitudeData?.length ?? 0} gratitude, ${agnosticismData?.length ?? 0} agnosticism, ${morningRitualItemsData?.length ?? 0} morning ritual items, ${morningRitualEntriesData?.length ?? 0} morning ritual entries)');
-        return true;
-      } else {
-        if (kDebugMode) {
-          print('AllAppsDriveService: ✓ Local data is up to date');
-          print('  Local:  ${localTimestamp.toIso8601String()}');
-          print('  Remote: ${remoteTimestamp.toIso8601String()}');
-        }
-        return false;
+      
+      // SAFE: Local has NO data, so we can restore from remote
+      if (kDebugMode) {
+        print('AllAppsDriveService: Local is empty, restoring from remote backup');
+        print('  Remote: ${remoteTimestamp.toIso8601String()}');
       }
+
+      // Parse and apply the data
+      final entries = await _parseInventoryContent(content);
+      final iAmDefinitions = decoded['iAmDefinitions'] as List<dynamic>?;
+      final people = decoded['people'] as List<dynamic>?; // Get people data
+      final reflections = decoded['reflections'] as List<dynamic>?; // Get reflections data
+      // Handle both old ('gratitudeEntries') and new ('gratitude') field names
+      final gratitudeData = (decoded['gratitude'] ?? decoded['gratitudeEntries']) as List<dynamic>?; 
+      // Handle both old ('agnosticismPapers') and new ('agnosticism') field names
+      final agnosticismData = (decoded['agnosticism'] ?? decoded['agnosticismPapers']) as List<dynamic>?;
+      // Get morning ritual data
+      final morningRitualItemsData = decoded['morningRitualItems'] as List<dynamic>?;
+      final morningRitualEntriesData = decoded['morningRitualEntries'] as List<dynamic>?;
+      // Get app settings
+      final appSettingsData = decoded['appSettings'] as Map<String, dynamic>?;
+
+      // Update I Am definitions first (need to reopen boxes since we checked them earlier)
+      if (iAmDefinitions != null) {
+        final iAmBoxRestore = Hive.box<IAmDefinition>('i_am_definitions');
+        await iAmBoxRestore.clear();
+        if (kDebugMode) print('AllAppsDriveService: Clearing I Am definitions box...');
+        for (final def in iAmDefinitions) {
+          final id = def['id'] as String;
+          final name = def['name'] as String;
+          final reasonToExist = def['reasonToExist'] as String?;
+          await iAmBoxRestore.add(IAmDefinition(id: id, name: name, reasonToExist: reasonToExist));
+          if (kDebugMode) print('AllAppsDriveService: Added I Am definition: $name (id: $id)');
+        }
+        if (kDebugMode) print('AllAppsDriveService: ✓ Imported ${iAmDefinitions.length} I Am definitions');
+      }
+
+      // Update entries
+      final entriesBoxRestore = Hive.box<InventoryEntry>('entries');
+      await entriesBoxRestore.clear();
+      await entriesBoxRestore.addAll(entries);
+
+      // Update 8th step people (if present in remote data)
+      if (people != null) {
+        final peopleBoxRestore = Hive.box<Person>('people_box');
+        await peopleBoxRestore.clear();
+        for (final personData in people) {
+          final person = Person.fromJson(personData as Map<String, dynamic>);
+          await peopleBoxRestore.put(person.internalId, person);
+        }
+      }
+
+      // Update evening reflections (if present in remote data)
+      if (reflections != null) {
+        final reflectionsBoxRestore = Hive.box<ReflectionEntry>('reflections_box');
+        await reflectionsBoxRestore.clear();
+        for (final reflectionData in reflections) {
+          final reflection = ReflectionEntry.fromJson(reflectionData as Map<String, dynamic>);
+          await reflectionsBoxRestore.put(reflection.internalId, reflection);
+        }
+      }
+
+      // Update gratitude entries (if present in remote data)
+      if (gratitudeData != null) {
+        final gratitudeBoxRestore = Hive.box<GratitudeEntry>('gratitude_box');
+        await gratitudeBoxRestore.clear();
+        for (final gratitudeJson in gratitudeData) {
+          final gratitude = GratitudeEntry.fromJson(gratitudeJson as Map<String, dynamic>);
+          await gratitudeBoxRestore.add(gratitude);
+        }
+      }
+
+      // Update agnosticism barrier/power pairs (if present in remote data)
+      if (agnosticismData != null) {
+        final agnosticismBoxRestore = Hive.box<BarrierPowerPair>('agnosticism_pairs');
+        await agnosticismBoxRestore.clear();
+        for (final pairJson in agnosticismData) {
+          final pair = BarrierPowerPair.fromJson(pairJson as Map<String, dynamic>);
+          await agnosticismBoxRestore.put(pair.id, pair);
+        }
+      }
+
+      // Update morning ritual items (definitions) (if present in remote data)
+      if (morningRitualItemsData != null) {
+        final morningRitualItemsBoxRestore = Hive.box<RitualItem>('morning_ritual_items');
+        await morningRitualItemsBoxRestore.clear();
+        for (final itemJson in morningRitualItemsData) {
+          final item = RitualItem.fromJson(itemJson as Map<String, dynamic>);
+          await morningRitualItemsBoxRestore.put(item.id, item);
+        }
+      }
+
+      // Update morning ritual entries (daily completions) (if present in remote data)
+      if (morningRitualEntriesData != null) {
+        final morningRitualEntriesBoxRestore = Hive.box<MorningRitualEntry>('morning_ritual_entries');
+        await morningRitualEntriesBoxRestore.clear();
+        for (final entryJson in morningRitualEntriesData) {
+          final entry = MorningRitualEntry.fromJson(entryJson as Map<String, dynamic>);
+          await morningRitualEntriesBoxRestore.put(entry.id, entry);
+        }
+      }
+
+      // Update app settings (if present in remote data)
+      if (appSettingsData != null) {
+        await AppSettingsService.importFromSync(appSettingsData);
+      }
+
+      // Save the remote timestamp as our new local timestamp
+      await _saveLastModified(remoteTimestamp);
+
+      if (kDebugMode) print('AllAppsDriveService: ✓ Auto-sync complete (${entries.length} entries, ${iAmDefinitions?.length ?? 0} I Ams, ${people?.length ?? 0} people, ${reflections?.length ?? 0} reflections, ${gratitudeData?.length ?? 0} gratitude, ${agnosticismData?.length ?? 0} agnosticism, ${morningRitualItemsData?.length ?? 0} morning ritual items, ${morningRitualEntriesData?.length ?? 0} morning ritual entries)');
+      return true;
     } catch (e) {
       if (kDebugMode) print('AllAppsDriveService: ❌ Auto-sync check failed - $e');
       return false;
