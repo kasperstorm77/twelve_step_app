@@ -142,9 +142,17 @@ class AppHelpService {
             Icon(
               Icons.help_outline,
               color: Theme.of(context).colorScheme.primary,
+              size: 20,
             ),
             const SizedBox(width: 8),
-            Expanded(child: Text(helpContent.title)),
+            Expanded(
+              child: Text(
+                helpContent.title,
+                style: Theme.of(context).textTheme.titleMedium?.copyWith(
+                  fontWeight: FontWeight.bold,
+                ),
+              ),
+            ),
           ],
         ),
         content: SingleChildScrollView(
@@ -159,12 +167,12 @@ class AppHelpService {
                   children: [
                     Text(
                       section.title,
-                      style: Theme.of(context).textTheme.titleMedium?.copyWith(
-                            fontWeight: FontWeight.bold,
-                            color: Theme.of(context).colorScheme.primary,
-                          ),
+                      style: TextStyle(
+                        color: Theme.of(context).colorScheme.primary,
+                        fontWeight: FontWeight.w600,
+                      ),
                     ),
-                    const SizedBox(height: 8),
+                    const SizedBox(height: 4),
                     Text(
                       section.content,
                       style: Theme.of(context).textTheme.bodyMedium,

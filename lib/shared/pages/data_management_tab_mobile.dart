@@ -387,7 +387,12 @@ class _DataManagementTabState extends State<DataManagementTab> {
         context: context,
         barrierDismissible: false,
         builder: (dialogContext) => AlertDialog(
-          title: Text(t(context, 'googlefetch')),
+          title: Text(
+            t(context, 'googlefetch'),
+            style: Theme.of(context).textTheme.titleMedium?.copyWith(
+              fontWeight: FontWeight.bold,
+            ),
+          ),
           content: Text(t(context, 'confirm_google_fetch')),
           actions: [
             TextButton(
@@ -515,7 +520,12 @@ class _DataManagementTabState extends State<DataManagementTab> {
     final confirmed = await showDialog<bool>(
       context: context,
       builder: (context) => AlertDialog(
-        title: Text(t(context, 'delete_all_backups')),
+        title: Text(
+          t(context, 'delete_all_backups'),
+          style: Theme.of(context).textTheme.titleMedium?.copyWith(
+            fontWeight: FontWeight.bold,
+          ),
+        ),
         content: Text(t(context, 'confirm_delete_all_backups')),
         actions: [
           TextButton(
@@ -560,7 +570,12 @@ class _DataManagementTabState extends State<DataManagementTab> {
     final confirmed = await showDialog<bool>(
       context: context,
       builder: (context) => AlertDialog(
-        title: Text(t(context, 'warning')),
+        title: Text(
+          t(context, 'warning'),
+          style: Theme.of(context).textTheme.titleMedium?.copyWith(
+            fontWeight: FontWeight.bold,
+          ),
+        ),
         content: Text(t(context, 'import_warning')),
         actions: [
           TextButton(
@@ -901,7 +916,12 @@ class _DataManagementTabState extends State<DataManagementTab> {
       final confirmImport = await showDialog<bool>(
         context: context,
         builder: (dialogContext) => AlertDialog(
-          title: Text(t(context, 'import_json')),
+          title: Text(
+            t(context, 'import_json'),
+            style: Theme.of(context).textTheme.titleMedium?.copyWith(
+              fontWeight: FontWeight.bold,
+            ),
+          ),
           content: Text(t(context, 'import_warning')),
           actions: [
             TextButton(
@@ -1086,7 +1106,12 @@ class _DataManagementTabState extends State<DataManagementTab> {
     final confirm = await showDialog<bool>(
       context: context,
       builder: (context) => AlertDialog(
-        title: Text(t(context, 'confirm_clear')),
+        title: Text(
+          t(context, 'confirm_clear'),
+          style: Theme.of(context).textTheme.titleMedium?.copyWith(
+            fontWeight: FontWeight.bold,
+          ),
+        ),
         content: Text(t(context, 'clear_warning')),
         actions: [
           TextButton(onPressed: () => Navigator.pop(context, false), child: Text(t(context, 'cancel'))),
@@ -1195,7 +1220,10 @@ class _DataManagementTabState extends State<DataManagementTab> {
                         const SizedBox(width: 8),
                         Text(
                           t(context, 'select_restore_point'),
-                          style: Theme.of(context).textTheme.titleMedium,
+                          style: TextStyle(
+                            color: Theme.of(context).colorScheme.primary,
+                            fontWeight: FontWeight.w600,
+                          ),
                         ),
                         const Spacer(),
                         if (_loadingBackups)

@@ -237,7 +237,12 @@ class _DataManagementTabState extends State<DataManagementTab> {
         context: context,
         barrierDismissible: false, // User must make a choice
         builder: (dialogContext) => AlertDialog(
-          title: Text(t(context, 'newer_data_available')),
+          title: Text(
+            t(context, 'newer_data_available'),
+            style: Theme.of(context).textTheme.titleMedium?.copyWith(
+              fontWeight: FontWeight.bold,
+            ),
+          ),
           content: Text(t(context, 'newer_data_prompt')),
           actions: [
             TextButton(
@@ -272,7 +277,12 @@ class _DataManagementTabState extends State<DataManagementTab> {
     showDialog(
       context: context,
       builder: (dialogContext) => AlertDialog(
-        title: Text(t(context, 'enable_sync')),
+        title: Text(
+          t(context, 'enable_sync'),
+          style: Theme.of(context).textTheme.titleMedium?.copyWith(
+            fontWeight: FontWeight.bold,
+          ),
+        ),
         content: Text(t(context, 'enable_sync_prompt')),
         actions: [
           TextButton(
@@ -312,7 +322,12 @@ class _DataManagementTabState extends State<DataManagementTab> {
       context: context,
       barrierDismissible: false,
       builder: (dialogContext) => AlertDialog(
-        title: Text(t(context, 'data_found_on_drive')),
+        title: Text(
+          t(context, 'data_found_on_drive'),
+          style: Theme.of(context).textTheme.titleMedium?.copyWith(
+            fontWeight: FontWeight.bold,
+          ),
+        ),
         content: Text(t(context, 'fetch_existing_data_prompt')),
         actions: [
           TextButton(
@@ -655,7 +670,12 @@ class _DataManagementTabState extends State<DataManagementTab> {
     final confirmed = await showDialog<bool>(
       context: context,
       builder: (context) => AlertDialog(
-        title: Text(t(context, 'warning')),
+        title: Text(
+          t(context, 'warning'),
+          style: Theme.of(context).textTheme.titleMedium?.copyWith(
+            fontWeight: FontWeight.bold,
+          ),
+        ),
         content: Text(t(context, 'import_warning')),
         actions: [
           TextButton(
@@ -866,7 +886,7 @@ class _DataManagementTabState extends State<DataManagementTab> {
           children: [
             Text(
               t(context, 'sync_google_drive'),
-              style: Theme.of(context).textTheme.titleMedium,
+              style: Theme.of(context).textTheme.bodyMedium,
             ),
             Tooltip(
               message: _isSignedIn ? '' : t(context, 'sign_in_to_enable_sync'),
@@ -885,7 +905,10 @@ class _DataManagementTabState extends State<DataManagementTab> {
         // JSON Export/Import
         Text(
           t(context, 'offline_backups'),
-          style: Theme.of(context).textTheme.titleMedium,
+          style: TextStyle(
+            color: Theme.of(context).colorScheme.primary,
+            fontWeight: FontWeight.w600,
+          ),
         ),
         const SizedBox(height: 12),
         
@@ -916,7 +939,10 @@ class _DataManagementTabState extends State<DataManagementTab> {
                       const SizedBox(width: 8),
                       Text(
                         t(context, 'select_restore_point'),
-                        style: Theme.of(context).textTheme.titleMedium,
+                        style: TextStyle(
+                          color: Theme.of(context).colorScheme.primary,
+                          fontWeight: FontWeight.w600,
+                        ),
                       ),
                       const Spacer(),
                       if (_loadingBackups)
@@ -1031,7 +1057,12 @@ class _DataManagementTabState extends State<DataManagementTab> {
     final confirmed = await showDialog<bool>(
       context: context,
       builder: (dialogContext) => AlertDialog(
-        title: Text(t(context, 'confirm_clear')),
+        title: Text(
+          t(context, 'confirm_clear'),
+          style: Theme.of(context).textTheme.titleMedium?.copyWith(
+            fontWeight: FontWeight.bold,
+          ),
+        ),
         content: Text(t(context, 'clear_warning')),
         actions: [
           TextButton(

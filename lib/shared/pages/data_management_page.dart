@@ -148,8 +148,9 @@ class _GeneralSettingsTabState extends State<GeneralSettingsTab> {
                 children: [
                   Text(
                     t(context, 'morning_ritual_settings'),
-                    style: Theme.of(context).textTheme.titleMedium?.copyWith(
-                      fontWeight: FontWeight.bold,
+                    style: TextStyle(
+                      color: Theme.of(context).colorScheme.primary,
+                      fontWeight: FontWeight.w600,
                     ),
                   ),
                   const SizedBox(height: 16),
@@ -157,7 +158,6 @@ class _GeneralSettingsTabState extends State<GeneralSettingsTab> {
                   // Toggle
                   SwitchListTile(
                     title: Text(t(context, 'load_morning_ritual_toggle')),
-                    subtitle: Text(t(context, 'load_morning_ritual_desc')),
                     value: _loadMorningRitualEnabled,
                     onChanged: (value) {
                       setState(() {

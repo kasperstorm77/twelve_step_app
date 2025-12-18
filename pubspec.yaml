@@ -2,7 +2,7 @@ name: twelvestepsapp
 description: "12 Steps App - AA Inventory & Recovery Tools"
 publish_to: 'none'
 
-version: 2.1.7+80
+version: 2.1.8+81
 
 environment:
   sdk: ^3.9.2

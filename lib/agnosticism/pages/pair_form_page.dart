@@ -69,7 +69,12 @@ class _PairFormPageState extends State<PairFormPage> {
     final confirmed = await showDialog<bool>(
       context: context,
       builder: (context) => AlertDialog(
-        title: Text(t(context, 'agnosticism_archive_title')),
+        title: Text(
+          t(context, 'agnosticism_archive_title'),
+          style: Theme.of(context).textTheme.titleMedium?.copyWith(
+            fontWeight: FontWeight.bold,
+          ),
+        ),
         content: Text(t(context, 'agnosticism_archive_confirm')),
         actions: [
           TextButton(
@@ -115,9 +120,9 @@ class _PairFormPageState extends State<PairFormPage> {
             // Barrier field
             Text(
               t(context, 'agnosticism_barrier'),
-              style: Theme.of(context).textTheme.titleMedium?.copyWith(
+              style: TextStyle(
                 color: colorScheme.error,
-                fontWeight: FontWeight.bold,
+                fontWeight: FontWeight.w600,
               ),
             ),
             const SizedBox(height: 8),
@@ -144,9 +149,9 @@ class _PairFormPageState extends State<PairFormPage> {
             // Power field
             Text(
               t(context, 'agnosticism_power'),
-              style: Theme.of(context).textTheme.titleMedium?.copyWith(
+              style: TextStyle(
                 color: colorScheme.primary,
-                fontWeight: FontWeight.bold,
+                fontWeight: FontWeight.w600,
               ),
             ),
             const SizedBox(height: 8),

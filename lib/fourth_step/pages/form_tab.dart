@@ -317,7 +317,7 @@ class _FormTabState extends State<FormTab> {
           TextField(
             controller: reasonController,
             minLines: 1,
-            maxLines: 5,
+            maxLines: null,
             keyboardType: TextInputType.multiline,
             decoration: InputDecoration(
               labelText: t(context, labelKey),
@@ -497,7 +497,9 @@ class _FormTabState extends State<FormTab> {
                   labelText: t(context, 'reason_to_exist_optional'),
                   border: const OutlineInputBorder(),
                 ),
-                maxLines: 3,
+                minLines: 1,
+                maxLines: null,
+                keyboardType: TextInputType.multiline,
               ),
             ],
           ),
@@ -551,7 +553,7 @@ class _FormTabState extends State<FormTab> {
       child: TextField(
         controller: controller,
         minLines: 1,
-        maxLines: 5,
+        maxLines: null,
         keyboardType: TextInputType.multiline,
         decoration: InputDecoration(
           labelText: t(context, key),

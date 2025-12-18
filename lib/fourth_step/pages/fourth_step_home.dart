@@ -180,33 +180,56 @@ class _ModularInventoryHomeState extends State<ModularInventoryHome>
     await showDialog(
       context: context,
       builder: (dialogContext) => AlertDialog(
-        title: Text(t(context, 'select_app')),
-        content: Column(
-          mainAxisSize: MainAxisSize.min,
-          children: apps.map((app) {
-            final isSelected = app.id == currentAppId;
-            return ListTile(
-              leading: Icon(
-                isSelected ? Icons.radio_button_checked : Icons.radio_button_unchecked,
-                color: isSelected ? Theme.of(context).colorScheme.primary : null,
-              ),
-              title: Text(app.name),
-              selected: isSelected,
-              onTap: () async {
-                if (app.id != currentAppId) {
-                  await AppSwitcherService.setSelectedAppId(app.id);
-                  if (!mounted) return;
-                  
-                  // Trigger callback to refresh parent AppRouter
-                  if (widget.onAppSwitched != null) {
-                    widget.onAppSwitched!();
+        title: Text(
+          t(context, 'select_app'),
+          style: Theme.of(context).textTheme.titleMedium?.copyWith(
+            fontWeight: FontWeight.bold,
+          ),
+        ),
+        content: SingleChildScrollView(
+          child: Column(
+            mainAxisSize: MainAxisSize.min,
+            children: apps.map((app) {
+              final isSelected = app.id == currentAppId;
+              return InkWell(
+                onTap: () async {
+                  if (app.id != currentAppId) {
+                    await AppSwitcherService.setSelectedAppId(app.id);
+                    if (!mounted) return;
+                    
+                    // Trigger callback to refresh parent AppRouter
+                    if (widget.onAppSwitched != null) {
+                      widget.onAppSwitched!();
+                    }
                   }
-                }
-                if (!dialogContext.mounted) return;
-                Navigator.of(dialogContext).pop();
-              },
-            );
-          }).toList(),
+                  if (!dialogContext.mounted) return;
+                  Navigator.of(dialogContext).pop();
+                },
+                child: Padding(
+                  padding: const EdgeInsets.symmetric(vertical: 10),
+                  child: Row(
+                    children: [
+                      Icon(
+                        isSelected ? Icons.radio_button_checked : Icons.radio_button_unchecked,
+                        color: isSelected ? Theme.of(context).colorScheme.primary : null,
+                        size: 20,
+                      ),
+                      const SizedBox(width: 12),
+                      Expanded(
+                        child: Text(
+                          app.name,
+                          style: Theme.of(context).textTheme.bodyMedium?.copyWith(
+                            fontWeight: isSelected ? FontWeight.w600 : null,
+                            color: isSelected ? Theme.of(context).colorScheme.primary : null,
+                          ),
+                        ),
+                      ),
+                    ],
+                  ),
+                ),
+              );
+            }).toList(),
+          ),
         ),
         actions: [
           TextButton(
