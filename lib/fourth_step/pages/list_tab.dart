@@ -45,6 +45,30 @@ class _ListTabState extends State<ListTab> {
     _filterText = widget.filterController?.text ?? '';
   }
 
+  /// Builds a heading + value pair where the heading uses the same blue,
+  /// bold styling used for I Am names and the value is on a new line.
+  /// Returns an empty SizedBox if value is empty to avoid wasted space.
+  Widget _buildHeadingValue(BuildContext context, String headingKey, String value) {
+    if (value.isEmpty) return const SizedBox.shrink();
+    final theme = Theme.of(context);
+    return Padding(
+      padding: const EdgeInsets.only(top: 4),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Text(
+            t(context, headingKey),
+            style: TextStyle(
+              color: theme.colorScheme.primary,
+              fontWeight: FontWeight.w600,
+            ),
+          ),
+          Text(value, style: theme.textTheme.bodyMedium),
+        ],
+      ),
+    );
+  }
+
   @override
   void dispose() {
     _iAmBox.listenable().removeListener(_onIAmChanged);
@@ -240,20 +264,19 @@ class _ListTabState extends State<ListTab> {
                           // Category chip and drag handle row
                           Row(
                             children: [
-                              Expanded(
-                                child: Chip(
-                                  avatar: Icon(
-                                    _getCategoryIcon(category),
-                                    size: 16,
-                                  ),
-                                  label: Text(
-                                    t(context, _getCategoryLabelKey(category)),
-                                    style: const TextStyle(fontSize: 12),
-                                  ),
-                                  visualDensity: VisualDensity.compact,
-                                  padding: EdgeInsets.zero,
+                              Chip(
+                                avatar: Icon(
+                                  _getCategoryIcon(category),
+                                  size: 16,
                                 ),
+                                label: Text(
+                                  t(context, _getCategoryLabelKey(category)),
+                                  style: const TextStyle(fontSize: 12),
+                                ),
+                                visualDensity: VisualDensity.compact,
+                                padding: EdgeInsets.zero,
                               ),
+                              const Spacer(),
                               ReorderableDragStartListener(
                                 index: index,
                                 child: Padding(
@@ -266,21 +289,29 @@ class _ListTabState extends State<ListTab> {
                               ),
                             ],
                           ),
-                          const SizedBox(height: 4),
-                          Text("${t(context, _getField1LabelKey(category))}: ${e.safeResentment}"),
+                          _buildHeadingValue(context, _getField1LabelKey(category), e.safeResentment),
                           // Display all I Am names (stacked if multiple)
                           if (iAmNames.isNotEmpty)
-                            ...iAmNames.map((name) => Text(
-                              "${t(context, 'i_am')}: $name",
-                              style: TextStyle(
-                                color: Theme.of(context).colorScheme.primary,
-                                fontWeight: FontWeight.w600,
+                            ...iAmNames.map((name) => Padding(
+                              padding: const EdgeInsets.only(top: 4),
+                              child: Column(
+                                crossAxisAlignment: CrossAxisAlignment.start,
+                                children: [
+                                  Text(
+                                    t(context, 'i_am'),
+                                    style: TextStyle(
+                                      color: Theme.of(context).colorScheme.primary,
+                                      fontWeight: FontWeight.w600,
+                                    ),
+                                  ),
+                                  Text(name, style: theme.textTheme.bodyMedium),
+                                ],
                               ),
                             )),
-                          Text("${t(context, _getField2LabelKey(category))}: ${e.safeReason}"),
-                          Text("${t(context, 'affects_my')}: ${e.safeAffect}"),
-                          Text("${t(context, 'my_part')}: ${e.myTake ?? ''}"),
-                          Text("${t(context, 'shortcoming_field')}: ${e.shortcomings ?? ''}"),
+                          _buildHeadingValue(context, _getField2LabelKey(category), e.safeReason),
+                          _buildHeadingValue(context, 'affects_my', e.safeAffect),
+                          _buildHeadingValue(context, 'my_part', e.myTake ?? ''),
+                          _buildHeadingValue(context, 'shortcoming_field', e.shortcomings ?? ''),
                           Row(
                             mainAxisAlignment: MainAxisAlignment.end,
                             children: [

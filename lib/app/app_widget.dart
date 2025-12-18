@@ -1,3 +1,8 @@
+// ignore_for_file: use_build_context_synchronously
+// The above ignore is intentional - this file uses Modular's navigator context
+// which is freshly fetched from Modular.routerDelegate.navigatorKey.currentContext,
+// not the widget's stale context. The analyzer cannot distinguish this case.
+
 import 'dart:convert';
 import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
@@ -103,13 +108,13 @@ class _AppWidgetState extends State<AppWidget> with WidgetsBindingObserver {
     if (kDebugMode) print('AppWidget: Uploads are blocked - showing newer data prompt');
     
     // Get a valid context for showing the dialog
-    final navigatorContext = Modular.routerDelegate.navigatorKey.currentContext;
+    var navigatorContext = Modular.routerDelegate.navigatorKey.currentContext;
     if (navigatorContext == null) {
       if (kDebugMode) print('AppWidget: No navigator context available');
       return;
     }
     
-    // Show prompt to user
+    // Show prompt to user (navigatorContext is freshly fetched from Modular, not the widget's context)
     final shouldFetch = await showDialog<bool>(
       context: navigatorContext,
       barrierDismissible: false, // User must make a choice
@@ -130,6 +135,13 @@ class _AppWidgetState extends State<AppWidget> with WidgetsBindingObserver {
     );
     
     if (shouldFetch == true) {
+      // Re-fetch context after async gap
+      navigatorContext = Modular.routerDelegate.navigatorKey.currentContext;
+      if (navigatorContext == null) {
+        if (kDebugMode) print('AppWidget: No navigator context after dialog');
+        AllAppsDriveService.instance.unblockUploads();
+        return;
+      }
       // User wants to fetch - perform restore directly
       await _performRestore(navigatorContext);
     } else {
@@ -141,25 +153,29 @@ class _AppWidgetState extends State<AppWidget> with WidgetsBindingObserver {
 
   /// Perform restore from Google Drive (most recent backup)
   Future<void> _performRestore(BuildContext ctx) async {
+    // Capture ScaffoldMessenger and localized strings before any async gaps
+    // to avoid use_build_context_synchronously warnings
+    final messenger = ScaffoldMessenger.of(ctx);
+    final fetchingText = t(ctx, 'fetching_data');
+    final noBackupText = t(ctx, 'no_backup_found');
+    final fetchFailedText = t(ctx, 'fetch_failed');
+    final fetchSuccessText = t(ctx, 'fetch_success');
+
     try {
       // Show loading indicator
-      if (ctx.mounted) {
-        ScaffoldMessenger.of(ctx).showSnackBar(
-          SnackBar(
-            content: Text(t(ctx, 'fetching_data')),
-            duration: const Duration(seconds: 2),
-          ),
-        );
-      }
+      messenger.showSnackBar(
+        SnackBar(
+          content: Text(fetchingText),
+          duration: const Duration(seconds: 2),
+        ),
+      );
       
       // Get most recent backup
       final backups = await AllAppsDriveService.instance.listAvailableBackups();
       if (backups.isEmpty) {
-        if (ctx.mounted) {
-          ScaffoldMessenger.of(ctx).showSnackBar(
-            SnackBar(content: Text(t(ctx, 'no_backup_found'))),
-          );
-        }
+        messenger.showSnackBar(
+          SnackBar(content: Text(noBackupText)),
+        );
         AllAppsDriveService.instance.unblockUploads();
         return;
       }
@@ -168,11 +184,9 @@ class _AppWidgetState extends State<AppWidget> with WidgetsBindingObserver {
       final content = await AllAppsDriveService.instance.downloadBackupContent(backupFileName);
       
       if (content == null) {
-        if (ctx.mounted) {
-          ScaffoldMessenger.of(ctx).showSnackBar(
-            SnackBar(content: Text(t(ctx, 'fetch_failed'))),
-          );
-        }
+        messenger.showSnackBar(
+          SnackBar(content: Text(fetchFailedText)),
+        );
         AllAppsDriveService.instance.unblockUploads();
         return;
       }
@@ -183,22 +197,18 @@ class _AppWidgetState extends State<AppWidget> with WidgetsBindingObserver {
       // Success - unblock uploads
       AllAppsDriveService.instance.unblockUploads();
       
-      if (ctx.mounted) {
-        ScaffoldMessenger.of(ctx).showSnackBar(
-          SnackBar(content: Text(t(ctx, 'fetch_success'))),
-        );
-      }
+      messenger.showSnackBar(
+        SnackBar(content: Text(fetchSuccessText)),
+      );
       
       // Trigger UI rebuild to show restored data
-      setState(() {});
+      if (mounted) setState(() {});
       
     } catch (e) {
       if (kDebugMode) print('AppWidget: Restore failed: $e');
-      if (ctx.mounted) {
-        ScaffoldMessenger.of(ctx).showSnackBar(
-          SnackBar(content: Text('${t(ctx, 'fetch_failed')}: $e')),
-        );
-      }
+      messenger.showSnackBar(
+        SnackBar(content: Text('$fetchFailedText: $e')),
+      );
       // Unblock on error to avoid permanently blocking
       AllAppsDriveService.instance.unblockUploads();
     }
