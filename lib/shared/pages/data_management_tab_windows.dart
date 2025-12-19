@@ -765,6 +765,7 @@ class _DataManagementTabState extends State<DataManagementTab> {
     final agnosticismBox = Hive.box<BarrierPowerPair>('agnosticism_pairs');
     final morningRitualItemsBox = Hive.box<RitualItem>('morning_ritual_items');
     final morningRitualEntriesBox = Hive.box<MorningRitualEntry>('morning_ritual_entries');
+    final notificationsBox = Hive.box<AppNotification>(NotificationsService.notificationsBoxName);
 
     // Import I Am definitions first (matches format from export)
     if (data.containsKey('iAmDefinitions')) {
@@ -853,6 +854,16 @@ class _DataManagementTabState extends State<DataManagementTab> {
         await morningRitualEntriesBox.put(entry.id, entry);
       }
       if (kDebugMode) print('Windows import: Imported ${morningRitualEntriesBox.length} morning ritual entries');
+    }
+
+    // Import notifications
+    if (data.containsKey('notifications')) {
+      await notificationsBox.clear();
+      for (final nJson in data['notifications'] as List) {
+        final n = AppNotification.fromJson(nJson as Map<String, dynamic>);
+        await notificationsBox.put(n.id, n);
+      }
+      if (kDebugMode) print('Windows import: Imported ${notificationsBox.length} notifications');
     }
 
     // Import app settings (v8.0+)
