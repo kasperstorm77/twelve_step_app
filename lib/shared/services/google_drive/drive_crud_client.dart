@@ -1,4 +1,5 @@
 import 'dart:async';
+import 'dart:convert';
 import 'package:googleapis/drive/v3.dart' as drive_api;
 import 'package:googleapis_auth/googleapis_auth.dart' as auth;
 import 'package:http/http.dart' as http;
@@ -13,8 +14,9 @@ import 'drive_config.dart';
 class GoogleDriveCrudClient {
   final drive_api.DriveApi _driveApi;
   final GoogleDriveConfig _config;
+  final auth.AuthClient _authClient;
 
-  GoogleDriveCrudClient._(this._driveApi, this._config);
+  GoogleDriveCrudClient._(this._driveApi, this._config, this._authClient);
 
   /// Create a new Google Drive client with authentication
   static Future<GoogleDriveCrudClient> create({
@@ -35,7 +37,7 @@ class GoogleDriveCrudClient {
     );
 
     final driveApi = drive_api.DriveApi(authClient);
-    return GoogleDriveCrudClient._(driveApi, config);
+    return GoogleDriveCrudClient._(driveApi, config, authClient);
   }
 
   /// Find file by name in the configured location
@@ -63,6 +65,30 @@ class GoogleDriveCrudClient {
       final bytes = await media.stream.expand((chunk) => chunk).toList();
       return String.fromCharCodes(bytes);
     }
+    return null;
+  }
+
+  /// Read only the first part of a file using an HTTP Range request.
+  ///
+  /// Useful for extracting small metadata fields from JSON (e.g., `lastModified`)
+  /// without downloading the full backup file.
+  Future<String?> readFilePrefix(String fileId, {int maxBytes = 8192}) async {
+    if (maxBytes <= 0) return '';
+
+    final end = maxBytes - 1;
+    final uri = Uri.parse('https://www.googleapis.com/drive/v3/files/$fileId?alt=media');
+    final response = await _authClient.get(
+      uri,
+      headers: {
+        'Range': 'bytes=0-$end',
+      },
+    );
+
+    if (response.statusCode == 206 || response.statusCode == 200) {
+      // The JSON is ASCII/UTF-8; if we cut mid-codepoint, allow malformed.
+      return utf8.decode(response.bodyBytes, allowMalformed: true);
+    }
+
     return null;
   }
 

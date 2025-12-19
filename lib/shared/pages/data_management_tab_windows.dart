@@ -16,6 +16,7 @@
 import 'dart:convert';
 import 'dart:io';
 import 'package:flutter/material.dart';
+import 'package:flutter_modular/flutter_modular.dart';
 import 'package:hive_flutter/hive_flutter.dart';
 import 'package:file_picker/file_picker.dart';
 import 'package:flutter/foundation.dart';
@@ -31,6 +32,7 @@ import '../../fourth_step/services/inventory_service.dart';
 import '../localizations.dart';
 import '../services/all_apps_drive_service_impl.dart';
 import '../services/app_settings_service.dart';
+import '../services/data_refresh_service.dart';
 
 class DataManagementTab extends StatefulWidget {
   final Box<InventoryEntry> box;
@@ -851,6 +853,8 @@ class _DataManagementTabState extends State<DataManagementTab> {
       await AppSettingsService.importFromSync(appSettingsData);
       if (kDebugMode) print('Windows import: Imported app settings');
     }
+
+    Modular.get<DataRefreshService>().notifyDataRestored();
   }
 
   @override

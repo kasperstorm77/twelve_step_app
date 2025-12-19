@@ -5,6 +5,7 @@ import '../../fourth_step/models/i_am_definition.dart';
 import '../../fourth_step/services/i_am_service.dart';
 import '../../fourth_step/services/inventory_service.dart';
 import '../../shared/localizations.dart';
+import '../../shared/services/app_settings_service.dart';
 
 class ListTab extends StatefulWidget {
   final Box<InventoryEntry> box;
@@ -33,6 +34,8 @@ class _ListTabState extends State<ListTab> {
   final _iAmService = IAmService();
   final _inventoryService = InventoryService();
   String _filterText = '';
+
+  final Set<String> _expandedEntryIds = {};
   
   // Category filter - all enabled by default
   final Set<InventoryCategory> _selectedCategories = {
@@ -109,6 +112,32 @@ class _ListTabState extends State<ListTab> {
         .toList();
   }
 
+  String _getCompactField1PrefixKey(InventoryCategory category) {
+    switch (category) {
+      case InventoryCategory.resentment:
+        return 'compact_prefix_resentment';
+      case InventoryCategory.fear:
+        return 'compact_prefix_fear';
+      case InventoryCategory.harms:
+        return 'compact_prefix_harms';
+      case InventoryCategory.sexualHarms:
+        return 'compact_prefix_sexual_harms';
+    }
+  }
+
+  String _getCompactField2PrefixKey(InventoryCategory category) {
+    switch (category) {
+      case InventoryCategory.resentment:
+        return 'compact_prefix_cause';
+      case InventoryCategory.fear:
+        return 'compact_prefix_why';
+      case InventoryCategory.harms:
+        return 'compact_prefix_what';
+      case InventoryCategory.sexualHarms:
+        return 'compact_prefix_what';
+    }
+  }
+
   /// Get the localization key for field 1 based on category
   String _getField1LabelKey(InventoryCategory category) {
     switch (category) {
@@ -165,9 +194,51 @@ class _ListTabState extends State<ListTab> {
     }
   }
 
+  Widget _buildCompactLine(
+    BuildContext context, {
+    required String headingKey,
+    required String value,
+    required bool faded,
+  }) {
+    final theme = Theme.of(context);
+    final v = value.trim();
+
+    if (v.isEmpty) return const SizedBox.shrink();
+
+    final header = t(context, headingKey).trim();
+
+    return Padding(
+      padding: const EdgeInsets.only(top: 4),
+      child: Row(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Text(
+            header,
+            style: TextStyle(
+              color: theme.colorScheme.primary,
+              fontWeight: FontWeight.w600,
+            ),
+          ),
+          const SizedBox(width: 6),
+          Expanded(
+            child: faded
+                ? _FadedOverflowText(v, style: theme.textTheme.bodyMedium)
+                : Text(
+                    v,
+                    style: theme.textTheme.bodyMedium,
+                    maxLines: 1,
+                    overflow: TextOverflow.ellipsis,
+                  ),
+          ),
+        ],
+      ),
+    );
+  }
+
   @override
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
+    final settingsBox = Hive.box('settings');
 
     return Column(
       children: [
@@ -252,183 +323,388 @@ class _ListTabState extends State<ListTab> {
           child: Padding(
             padding: const EdgeInsets.symmetric(horizontal: 12),
             child: ValueListenableBuilder(
-              valueListenable: widget.box.listenable(),
-              builder: (context, Box<InventoryEntry> box, _) {
-                // Also listen to I Am box changes for name lookups
+              valueListenable: settingsBox.listenable(),
+              builder: (context, _, __) {
+                final compactViewEnabled =
+                    AppSettingsService.getFourthStepCompactViewEnabled();
+
                 return ValueListenableBuilder(
-                  valueListenable: _iAmBox.listenable(),
-                  builder: (context, Box<IAmDefinition> iAmBox, _) {
-                    if (box.isEmpty) {
-                      return Center(child: Text(t(context, 'no_entries')));
-                    }
-
-                    // Get entries sorted by order (highest first)
-                    var entries = _inventoryService.getAllEntries();
-                    
-                    // Apply category filter
-                    entries = entries.where((e) => 
-                      _selectedCategories.contains(e.effectiveCategory)
-                    ).toList();
-                    
-                    // Apply text filter if 2+ characters entered (wildcard on resentment field)
-                    if (_filterText.length >= 2) {
-                      final filterLower = _filterText.toLowerCase();
-                      entries = entries.where((e) => 
-                        e.safeResentment.toLowerCase().contains(filterLower)
-                      ).toList();
-                    }
-                    
-                    if (entries.isEmpty) {
-                      return Center(child: Text(t(context, 'no_matching_entries')));
-                    }
-
-                    return ReorderableListView.builder(
-                      key: const PageStorageKey<String>('fourth_step_list'),
-                      scrollController: widget.scrollController,
-                      buildDefaultDragHandles: false,
-                      padding: EdgeInsets.only(bottom: MediaQuery.of(context).padding.bottom + 16),
-                      itemCount: entries.length,
-                      onReorder: (oldIndex, newIndex) {
-                        // Adjust newIndex for the removal
-                        if (newIndex > oldIndex) {
-                          newIndex -= 1;
+                  valueListenable: widget.box.listenable(),
+                  builder: (context, Box<InventoryEntry> box, _) {
+                    // Also listen to I Am box changes for name lookups
+                    return ValueListenableBuilder(
+                      valueListenable: _iAmBox.listenable(),
+                      builder: (context, Box<IAmDefinition> iAmBox, _) {
+                        if (box.isEmpty) {
+                          return Center(child: Text(t(context, 'no_entries')));
                         }
-                        _inventoryService.reorderEntries(oldIndex, newIndex);
-                      },
-                      proxyDecorator: (child, index, animation) {
-                        return AnimatedBuilder(
-                          animation: animation,
-                          builder: (context, child) {
-                            final elevation = Tween<double>(begin: 0, end: 6).evaluate(animation);
-                            return Material(
-                              elevation: elevation,
-                              borderRadius: BorderRadius.circular(12),
+
+                        // Get entries sorted by order (highest first)
+                        var entries = _inventoryService.getAllEntries();
+
+                        // Apply category filter
+                        entries = entries
+                            .where((e) =>
+                                _selectedCategories.contains(e.effectiveCategory))
+                            .toList();
+
+                        // Apply text filter if 2+ characters entered (wildcard on resentment field)
+                        if (_filterText.length >= 2) {
+                          final filterLower = _filterText.toLowerCase();
+                          entries = entries
+                              .where((e) =>
+                                  e.safeResentment.toLowerCase().contains(filterLower))
+                              .toList();
+                        }
+
+                        if (entries.isEmpty) {
+                          return Center(
+                              child: Text(t(context, 'no_matching_entries')));
+                        }
+
+                        return ReorderableListView.builder(
+                          key: const PageStorageKey<String>('fourth_step_list'),
+                          scrollController: widget.scrollController,
+                          buildDefaultDragHandles: false,
+                          padding: EdgeInsets.only(
+                              bottom: MediaQuery.of(context).padding.bottom + 16),
+                          itemCount: entries.length,
+                          onReorder: (oldIndex, newIndex) async {
+                            // Adjust newIndex for the removal
+                            if (newIndex > oldIndex) {
+                              newIndex -= 1;
+                            }
+                            await _inventoryService.reorderEntries(oldIndex, newIndex);
+                          },
+                          proxyDecorator: (child, index, animation) {
+                            return AnimatedBuilder(
+                              animation: animation,
+                              builder: (context, child) {
+                                final elevation = Tween<double>(begin: 0, end: 6)
+                                    .evaluate(animation);
+                                return Material(
+                                  elevation: elevation,
+                                  borderRadius: BorderRadius.circular(12),
+                                  child: child,
+                                );
+                              },
                               child: child,
                             );
                           },
-                          child: child,
-                        );
-                      },
-                itemBuilder: (context, index) {
-                  final e = entries[index];
-                  final iAmNames = _getIAmNames(e.effectiveIAmIds);
-                  final category = e.effectiveCategory;
+                          itemBuilder: (context, index) {
+                            final e = entries[index];
+                            final category = e.effectiveCategory;
 
-                  return Card(
-                    key: ValueKey(e.id), // Use unique ID as key for reordering
-                    margin: const EdgeInsets.symmetric(vertical: 6),
-                    child: Padding(
-                      padding: const EdgeInsets.all(12),
-                      child: Column(
-                        crossAxisAlignment: CrossAxisAlignment.start,
-                        children: [
-                          // Category chip and drag handle row
-                          Row(
-                            children: [
-                              Chip(
-                                avatar: Icon(
-                                  _getCategoryIcon(category),
-                                  size: 16,
-                                ),
-                                label: Text(
-                                  t(context, _getCategoryLabelKey(category)),
-                                  style: const TextStyle(fontSize: 12),
-                                ),
-                                visualDensity: VisualDensity.compact,
-                                padding: EdgeInsets.zero,
-                              ),
-                              const Spacer(),
-                              ReorderableDragStartListener(
-                                index: index,
+                            if (!compactViewEnabled) {
+                              final iAmNames = _getIAmNames(e.effectiveIAmIds);
+                              // Existing layout (default)
+                              return Card(
+                                key: ValueKey(e.id),
+                                margin: const EdgeInsets.symmetric(vertical: 6),
                                 child: Padding(
-                                  padding: const EdgeInsets.all(8.0),
-                                  child: Icon(
-                                    Icons.drag_handle,
-                                    color: theme.colorScheme.outline,
+                                  padding: const EdgeInsets.all(12),
+                                  child: Column(
+                                    crossAxisAlignment: CrossAxisAlignment.start,
+                                    children: [
+                                      Row(
+                                        children: [
+                                          Chip(
+                                            avatar: Icon(
+                                              _getCategoryIcon(category),
+                                              size: 16,
+                                            ),
+                                            label: Text(
+                                              t(context, _getCategoryLabelKey(category)),
+                                              style: const TextStyle(fontSize: 12),
+                                            ),
+                                            visualDensity: VisualDensity.compact,
+                                            padding: EdgeInsets.zero,
+                                          ),
+                                          const Spacer(),
+                                          ReorderableDragStartListener(
+                                            index: index,
+                                            child: Padding(
+                                              padding: const EdgeInsets.all(8.0),
+                                              child: Icon(
+                                                Icons.drag_handle,
+                                                color: theme.colorScheme.outline,
+                                              ),
+                                            ),
+                                          ),
+                                        ],
+                                      ),
+                                      _buildHeadingValue(
+                                        context,
+                                        _getField1LabelKey(category),
+                                        e.safeResentment,
+                                      ),
+                                      if (iAmNames.isNotEmpty)
+                                        ...iAmNames.map(
+                                          (name) => Padding(
+                                            padding: const EdgeInsets.only(top: 4),
+                                            child: RichText(
+                                              text: TextSpan(
+                                                children: [
+                                                  TextSpan(
+                                                    text: '${t(context, 'i_am')}: ',
+                                                    style: TextStyle(
+                                                      color: theme.colorScheme.primary,
+                                                      fontWeight: FontWeight.w600,
+                                                    ),
+                                                  ),
+                                                  TextSpan(
+                                                    text: name,
+                                                    style: theme.textTheme.bodyMedium?.copyWith(
+                                                      color: theme.colorScheme.primary,
+                                                    ),
+                                                  ),
+                                                ],
+                                              ),
+                                            ),
+                                          ),
+                                        ),
+                                      _buildHeadingValue(
+                                        context,
+                                        _getField2LabelKey(category),
+                                        e.safeReason,
+                                      ),
+                                      _buildHeadingValue(
+                                          context, 'affects_my', e.safeAffect),
+                                      _buildHeadingValue(
+                                          context, 'my_part', e.myTake ?? ''),
+                                      _buildHeadingValue(
+                                        context,
+                                        'shortcoming_field',
+                                        e.shortcomings ?? '',
+                                      ),
+                                      Row(
+                                        mainAxisAlignment: MainAxisAlignment.end,
+                                        children: [
+                                          IconButton(
+                                            icon: const Icon(Icons.edit),
+                                            tooltip: t(context, 'edit_entry'),
+                                            onPressed: () => widget.onEdit(e.key),
+                                          ),
+                                          IconButton(
+                                            icon: const Icon(Icons.delete),
+                                            tooltip: t(context, 'delete_entry'),
+                                            onPressed: () async {
+                                              final confirm =
+                                                  await showDialog<bool>(
+                                                context: context,
+                                                builder: (_) => AlertDialog(
+                                                  title:
+                                                      Text(t(context, 'delete_entry')),
+                                                  content: Text(
+                                                      t(context, 'delete_confirm')),
+                                                  actions: [
+                                                    TextButton(
+                                                      onPressed: () =>
+                                                          Navigator.pop(context, false),
+                                                      child: Text(t(context, 'cancel')),
+                                                    ),
+                                                    TextButton(
+                                                      onPressed: () =>
+                                                          Navigator.pop(context, true),
+                                                      child: Text(
+                                                        t(context, 'delete'),
+                                                        style: TextStyle(
+                                                            color: theme
+                                                                .colorScheme.error),
+                                                      ),
+                                                    ),
+                                                  ],
+                                                ),
+                                              );
+
+                                              if (confirm ?? false) {
+                                                await _inventoryService
+                                                    .deleteEntryByKey(e.key);
+                                                widget.onDelete?.call(e.key);
+                                                if (!context.mounted) return;
+                                                ScaffoldMessenger.of(context)
+                                                    .showSnackBar(
+                                                  SnackBar(
+                                                      content: Text(
+                                                          t(context, 'entry_deleted'))),
+                                                );
+                                              }
+                                            },
+                                          ),
+                                        ],
+                                      ),
+                                    ],
                                   ),
                                 ),
-                              ),
-                            ],
-                          ),
-                          _buildHeadingValue(context, _getField1LabelKey(category), e.safeResentment),
-                          // Display all I Am names (stacked if multiple)
-                          if (iAmNames.isNotEmpty)
-                            ...iAmNames.map((name) => Padding(
-                              padding: const EdgeInsets.only(top: 4),
-                              child: Column(
-                                crossAxisAlignment: CrossAxisAlignment.start,
-                                children: [
-                                  Text(
-                                    t(context, 'i_am'),
-                                    style: TextStyle(
-                                      color: Theme.of(context).colorScheme.primary,
-                                      fontWeight: FontWeight.w600,
-                                    ),
-                                  ),
-                                  Text(name, style: theme.textTheme.bodyMedium),
-                                ],
-                              ),
-                            )),
-                          _buildHeadingValue(context, _getField2LabelKey(category), e.safeReason),
-                          _buildHeadingValue(context, 'affects_my', e.safeAffect),
-                          _buildHeadingValue(context, 'my_part', e.myTake ?? ''),
-                          _buildHeadingValue(context, 'shortcoming_field', e.shortcomings ?? ''),
-                          Row(
-                            mainAxisAlignment: MainAxisAlignment.end,
-                            children: [
-                              IconButton(
-                                icon: const Icon(Icons.edit),
-                                tooltip: t(context, 'edit_entry'),
-                                onPressed: () => widget.onEdit(e.key),
-                              ),
-                              IconButton(
-                                icon: const Icon(Icons.delete),
-                                tooltip: t(context, 'delete_entry'),
-                                onPressed: () async {
-                                  final confirm = await showDialog<bool>(
-                                    context: context,
-                                    builder: (_) => AlertDialog(
-                                      title: Text(t(context, 'delete_entry')),
-                                      content: Text(t(context, 'delete_confirm')),
-                                      actions: [
-                                        TextButton(
-                                          onPressed: () =>
-                                              Navigator.pop(context, false),
-                                          child: Text(t(context, 'cancel')),
+                              );
+                            }
+
+                            // Compact layout
+                            final entryId = e.id;
+                            final isExpanded = _expandedEntryIds.contains(entryId);
+                            final iAmNames = isExpanded
+                              ? _getIAmNames(e.effectiveIAmIds)
+                              : const <String>[];
+                            final iAmJoined = iAmNames.join(', ');
+
+                            return Card(
+                              key: ValueKey(e.id),
+                              margin: const EdgeInsets.symmetric(vertical: 6),
+                              child: Padding(
+                                padding: const EdgeInsets.all(12),
+                                child: Column(
+                                  crossAxisAlignment: CrossAxisAlignment.start,
+                                  children: [
+                                    Row(
+                                      children: [
+                                        Icon(
+                                          _getCategoryIcon(category),
+                                          size: 18,
+                                          color: theme.colorScheme.primary,
                                         ),
-                                        TextButton(
-                                          onPressed: () =>
-                                              Navigator.pop(context, true),
-                                          child: Text(
-                                            t(context, 'delete'),
-                                            style: TextStyle(
-                                                color:
-                                                    theme.colorScheme.error),
+                                        const Spacer(),
+                                        ReorderableDragStartListener(
+                                          index: index,
+                                          child: Padding(
+                                            padding: const EdgeInsets.all(8.0),
+                                            child: Icon(
+                                              Icons.drag_handle,
+                                              color: theme.colorScheme.outline,
+                                            ),
                                           ),
                                         ),
                                       ],
                                     ),
-                                  );
+                                    if (!isExpanded) ...[
+                                      _buildCompactLine(
+                                        context,
+                                                headingKey: _getCompactField1PrefixKey(category),
+                                        value: e.safeResentment,
+                                        faded: true,
+                                      ),
+                                      _buildCompactLine(
+                                        context,
+                                                headingKey: _getCompactField2PrefixKey(category),
+                                        value: e.safeReason,
+                                        faded: true,
+                                      ),
+                                    ] else ...[
+                                      _buildHeadingValue(
+                                        context,
+                                        _getField1LabelKey(category),
+                                        e.safeResentment,
+                                      ),
+                                      _buildHeadingValue(
+                                        context,
+                                        _getField2LabelKey(category),
+                                        e.safeReason,
+                                      ),
+                                      if (iAmNames.isNotEmpty)
+                                        _buildHeadingValue(
+                                          context,
+                                          'i_am',
+                                          iAmJoined,
+                                        ),
+                                      _buildHeadingValue(
+                                        context,
+                                        'affects_my',
+                                        e.safeAffect,
+                                      ),
+                                      _buildHeadingValue(
+                                        context,
+                                        'my_part',
+                                        e.myTake ?? '',
+                                      ),
+                                      _buildHeadingValue(
+                                        context,
+                                        'shortcoming_field',
+                                        e.shortcomings ?? '',
+                                      ),
+                                    ],
+                                    const SizedBox(height: 4),
+                                    Row(
+                                      children: [
+                                        // Always show more/less (even if only to remove fade + show full headings)
+                                        GestureDetector(
+                                          onTap: () {
+                                            setState(() {
+                                              if (isExpanded) {
+                                                _expandedEntryIds.remove(entryId);
+                                              } else {
+                                                _expandedEntryIds.add(entryId);
+                                              }
+                                            });
+                                          },
+                                          child: Padding(
+                                            padding: const EdgeInsets.only(top: 4),
+                                            child: Text(
+                                              isExpanded
+                                                  ? t(context, 'show_less')
+                                                  : t(context, 'show_more'),
+                                              style: theme.textTheme.bodySmall?.copyWith(
+                                                fontStyle: FontStyle.italic,
+                                                color: theme.colorScheme.primary,
+                                              ),
+                                            ),
+                                          ),
+                                        ),
+                                        const Spacer(),
+                                        IconButton(
+                                          icon: const Icon(Icons.edit),
+                                          tooltip: t(context, 'edit_entry'),
+                                          visualDensity: VisualDensity.compact,
+                                          onPressed: () => widget.onEdit(e.key),
+                                        ),
+                                        IconButton(
+                                          icon: const Icon(Icons.delete),
+                                          tooltip: t(context, 'delete_entry'),
+                                          visualDensity: VisualDensity.compact,
+                                          onPressed: () async {
+                                            final confirm = await showDialog<bool>(
+                                              context: context,
+                                              builder: (_) => AlertDialog(
+                                                title: Text(t(context, 'delete_entry')),
+                                                content: Text(t(context, 'delete_confirm')),
+                                                actions: [
+                                                  TextButton(
+                                                    onPressed: () =>
+                                                        Navigator.pop(context, false),
+                                                    child: Text(t(context, 'cancel')),
+                                                  ),
+                                                  TextButton(
+                                                    onPressed: () =>
+                                                        Navigator.pop(context, true),
+                                                    child: Text(
+                                                      t(context, 'delete'),
+                                                      style: TextStyle(
+                                                        color: theme.colorScheme.error,
+                                                      ),
+                                                    ),
+                                                  ),
+                                                ],
+                                              ),
+                                            );
 
-                                  if (confirm ?? false) {
-                                    await _inventoryService.deleteEntryByKey(e.key);
-                                    widget.onDelete?.call(e.key);
-                                    if (!context.mounted) return;
-                                    ScaffoldMessenger.of(context)
-                                        .showSnackBar(
-                                      SnackBar(
-                                          content: Text(
-                                              t(context, 'entry_deleted'))),
-                                    );
-                                  }
-                                },
+                                            if (confirm ?? false) {
+                                              await _inventoryService.deleteEntryByKey(e.key);
+                                              widget.onDelete?.call(e.key);
+                                              if (!context.mounted) return;
+                                              ScaffoldMessenger.of(context).showSnackBar(
+                                                SnackBar(
+                                                  content: Text(t(context, 'entry_deleted')),
+                                                ),
+                                              );
+                                            }
+                                          },
+                                        ),
+                                      ],
+                                    ),
+                                  ],
+                                ),
                               ),
-                            ],
-                          ),
-                        ],
-                      ),
-                    ),
-                  );
+                            );
+                          },
+                        );
                       },
                     );
                   },
@@ -438,6 +714,41 @@ class _ListTabState extends State<ListTab> {
           ),
         ),
       ],
+    );
+  }
+}
+
+class _FadedOverflowText extends StatelessWidget {
+  final String text;
+  final TextStyle? style;
+
+  const _FadedOverflowText(this.text, {this.style});
+
+  @override
+  Widget build(BuildContext context) {
+    // Fade out the last part of the line (instead of ellipsis) to match the spec.
+    return ShaderMask(
+      shaderCallback: (bounds) {
+        return const LinearGradient(
+          begin: Alignment.centerLeft,
+          end: Alignment.centerRight,
+          colors: [
+            Colors.black,
+            Colors.black,
+            Colors.transparent,
+          ],
+          // Start fading earlier to keep the visible portion shorter.
+          stops: [0.0, 0.55, 1.0],
+        ).createShader(bounds);
+      },
+      blendMode: BlendMode.dstIn,
+      child: Text(
+        text,
+        style: style,
+        maxLines: 1,
+        overflow: TextOverflow.clip,
+        softWrap: false,
+      ),
     );
   }
 }

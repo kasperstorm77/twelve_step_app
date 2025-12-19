@@ -1,5 +1,4 @@
 //main.dart - Flutter Modular Integration
-import 'dart:io' show Platform;
 import 'dart:ui' as ui;
 import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
@@ -24,9 +23,6 @@ import 'shared/utils/platform_helper.dart';
 import 'shared/services/app_settings_service.dart';
 import 'shared/services/app_switcher_service.dart';
 
-// Platform-specific imports (only available on mobile - conditional for web)
-import 'shared/services/google_sign_in_wrapper.dart';
-
 // Import modular app
 import 'app/app_module.dart';
 import 'app/app_widget.dart';
@@ -34,9 +30,20 @@ import 'app/app_widget.dart';
 void main() async {
   WidgetsFlutterBinding.ensureInitialized();
 
+  final startupTotal = Stopwatch()..start();
+  Future<T> timed<T>(String label, Future<T> Function() action) async {
+    final sw = Stopwatch()..start();
+    final result = await action();
+    sw.stop();
+    if (kDebugMode) {
+      print('startup: $label ${sw.elapsedMilliseconds}ms (total ${startupTotal.elapsedMilliseconds}ms)');
+    }
+    return result;
+  }
+
   // Initialize window manager for desktop platforms
   if (PlatformHelper.isDesktop) {
-    await windowManager.ensureInitialized();
+    await timed('windowManager.ensureInitialized', () => windowManager.ensureInitialized());
     
     // Get localized window title based on system locale
     final locale = ui.PlatformDispatcher.instance.locale;
@@ -48,13 +55,16 @@ void main() async {
       center: true,
       title: windowTitle,
     );
-    await windowManager.waitUntilReadyToShow(windowOptions, () async {
-      await windowManager.show();
-      await windowManager.focus();
-    });
+    await timed(
+      'windowManager.waitUntilReadyToShow',
+      () => windowManager.waitUntilReadyToShow(windowOptions, () async {
+        await windowManager.show();
+        await windowManager.focus();
+      }),
+    );
   }
 
-  await Hive.initFlutter();
+  await timed('Hive.initFlutter', () => Hive.initFlutter());
 
   Hive.registerAdapter(InventoryEntryAdapter());
   Hive.registerAdapter(InventoryCategoryAdapter());
@@ -73,231 +83,147 @@ void main() async {
   Hive.registerAdapter(MorningRitualEntryAdapter());
 
   try {
-    await Hive.openBox<InventoryEntry>('entries');
+    await timed("Hive.openBox('entries')", () => Hive.openBox<InventoryEntry>('entries'));
   } catch (e) {
     if (kDebugMode) print('Error opening entries box: $e');
     // If there's corrupted data, clear the box and start fresh
-    await Hive.deleteBoxFromDisk('entries');
-    await Hive.openBox<InventoryEntry>('entries');
+    await timed("Hive.deleteBoxFromDisk('entries')", () => Hive.deleteBoxFromDisk('entries'));
+    await timed("Hive.openBox('entries') [recreate]", () => Hive.openBox<InventoryEntry>('entries'));
     if (kDebugMode) print('Cleared corrupted entries box and created new one');
   }
 
   // Open I Am definitions box
   try {
-    await Hive.openBox<IAmDefinition>('i_am_definitions');
+    await timed("Hive.openBox('i_am_definitions')", () => Hive.openBox<IAmDefinition>('i_am_definitions'));
   } catch (e) {
     if (kDebugMode) print('Error opening i_am_definitions box: $e');
-    await Hive.deleteBoxFromDisk('i_am_definitions');
-    await Hive.openBox<IAmDefinition>('i_am_definitions');
+    await timed("Hive.deleteBoxFromDisk('i_am_definitions')", () => Hive.deleteBoxFromDisk('i_am_definitions'));
+    await timed("Hive.openBox('i_am_definitions') [recreate]", () => Hive.openBox<IAmDefinition>('i_am_definitions'));
     if (kDebugMode) print('Cleared corrupted i_am_definitions box and created new one');
   }
 
   // Open people box for 8th step amends
   try {
-    await Hive.openBox<Person>('people_box');
+    await timed("Hive.openBox('people_box')", () => Hive.openBox<Person>('people_box'));
   } catch (e) {
     if (kDebugMode) print('Error opening people_box: $e');
-    await Hive.deleteBoxFromDisk('people_box');
-    await Hive.openBox<Person>('people_box');
+    await timed("Hive.deleteBoxFromDisk('people_box')", () => Hive.deleteBoxFromDisk('people_box'));
+    await timed("Hive.openBox('people_box') [recreate]", () => Hive.openBox<Person>('people_box'));
     if (kDebugMode) print('Cleared corrupted people_box and created new one');
   }
 
   // Open reflections box for evening ritual
   try {
-    await Hive.openBox<ReflectionEntry>('reflections_box');
+    await timed("Hive.openBox('reflections_box')", () => Hive.openBox<ReflectionEntry>('reflections_box'));
   } catch (e) {
     if (kDebugMode) print('Error opening reflections_box: $e');
     // The data model changed significantly - clear and recreate
     try {
-      await Hive.deleteBoxFromDisk('reflections_box');
+      await timed("Hive.deleteBoxFromDisk('reflections_box')", () => Hive.deleteBoxFromDisk('reflections_box'));
     } catch (deleteError) {
       if (kDebugMode) print('Error deleting reflections_box: $deleteError (this is okay)');
       // If we can't delete, try closing and reopening
       try {
-        await Hive.close();
+        await timed('Hive.close', () => Hive.close());
       } catch (_) {}
     }
-    await Hive.openBox<ReflectionEntry>('reflections_box');
+    await timed("Hive.openBox('reflections_box') [recreate]", () => Hive.openBox<ReflectionEntry>('reflections_box'));
     if (kDebugMode) print('Cleared corrupted reflections_box and created new one');
   }
 
   // Open gratitude box
   try {
-    await Hive.openBox<GratitudeEntry>('gratitude_box');
+    await timed("Hive.openBox('gratitude_box')", () => Hive.openBox<GratitudeEntry>('gratitude_box'));
   } catch (e) {
     if (kDebugMode) print('Error opening gratitude_box: $e');
-    await Hive.deleteBoxFromDisk('gratitude_box');
-    await Hive.openBox<GratitudeEntry>('gratitude_box');
+    await timed("Hive.deleteBoxFromDisk('gratitude_box')", () => Hive.deleteBoxFromDisk('gratitude_box'));
+    await timed("Hive.openBox('gratitude_box') [recreate]", () => Hive.openBox<GratitudeEntry>('gratitude_box'));
     if (kDebugMode) print('Cleared corrupted gratitude_box and created new one');
   }
 
   // Open agnosticism pairs box
   try {
-    await Hive.openBox<BarrierPowerPair>('agnosticism_pairs');
+    await timed("Hive.openBox('agnosticism_pairs')", () => Hive.openBox<BarrierPowerPair>('agnosticism_pairs'));
   } catch (e) {
     if (kDebugMode) print('Error opening agnosticism_pairs: $e');
-    await Hive.deleteBoxFromDisk('agnosticism_pairs');
-    await Hive.openBox<BarrierPowerPair>('agnosticism_pairs');
+    await timed("Hive.deleteBoxFromDisk('agnosticism_pairs')", () => Hive.deleteBoxFromDisk('agnosticism_pairs'));
+    await timed("Hive.openBox('agnosticism_pairs') [recreate]", () => Hive.openBox<BarrierPowerPair>('agnosticism_pairs'));
     if (kDebugMode) print('Cleared corrupted agnosticism_pairs and created new one');
   }
 
   // Open morning ritual items box (definitions)
   try {
-    await Hive.openBox<RitualItem>('morning_ritual_items');
+    await timed("Hive.openBox('morning_ritual_items')", () => Hive.openBox<RitualItem>('morning_ritual_items'));
   } catch (e) {
     if (kDebugMode) print('Error opening morning_ritual_items: $e');
-    await Hive.deleteBoxFromDisk('morning_ritual_items');
-    await Hive.openBox<RitualItem>('morning_ritual_items');
+    await timed("Hive.deleteBoxFromDisk('morning_ritual_items')", () => Hive.deleteBoxFromDisk('morning_ritual_items'));
+    await timed("Hive.openBox('morning_ritual_items') [recreate]", () => Hive.openBox<RitualItem>('morning_ritual_items'));
     if (kDebugMode) print('Cleared corrupted morning_ritual_items and created new one');
   }
 
   // Open morning ritual entries box (daily completions)
   try {
-    await Hive.openBox<MorningRitualEntry>('morning_ritual_entries');
+    await timed("Hive.openBox('morning_ritual_entries')", () => Hive.openBox<MorningRitualEntry>('morning_ritual_entries'));
   } catch (e) {
     if (kDebugMode) print('Error opening morning_ritual_entries: $e');
-    await Hive.deleteBoxFromDisk('morning_ritual_entries');
-    await Hive.openBox<MorningRitualEntry>('morning_ritual_entries');
+    await timed("Hive.deleteBoxFromDisk('morning_ritual_entries')", () => Hive.deleteBoxFromDisk('morning_ritual_entries'));
+    await timed("Hive.openBox('morning_ritual_entries') [recreate]", () => Hive.openBox<MorningRitualEntry>('morning_ritual_entries'));
     if (kDebugMode) print('Cleared corrupted morning_ritual_entries and created new one');
   }
 
   // Open a separate settings box for sync preferences
-  await Hive.openBox('settings');
+  await timed("Hive.openBox('settings')", () => Hive.openBox('settings'));
 
   // Migration: Assign order values to existing entries (runs once, also called after restore)
-  await InventoryService.migrateOrderValues();
+  await timed('InventoryService.migrateOrderValues', () => InventoryService.migrateOrderValues());
 
   // Initialize I Am definitions with default value
-  await IAmService().initializeDefaults();
+  await timed('IAmService.initializeDefaults', () => IAmService().initializeDefaults());
 
   // NOTE: Morning ritual check is done AFTER Drive sync to ensure restored settings are used
 
-  // Initialize AllAppsDriveService (on web this will be a no-op stub)
-  try {
-    await AllAppsDriveService.instance.initialize();
-  } catch (e) {
-    if (kDebugMode) print('AllAppsDriveService initialization: $e');
-  }
-
-  // Attempt silent sign-in and initialize Drive client early so CRUD
-  // operations can sync without the user opening Settings.
-  // PLATFORM: Mobile uses google_sign_in, Desktop uses loopback OAuth with cached credentials
+  // Attempt silent sign-in and initialize Drive client early so CRUD operations can sync
+  // without the user opening Settings.
   if (PlatformHelper.isMobile || PlatformHelper.isWeb || PlatformHelper.isDesktop) {
     try {
-      // Initialize AllAppsDriveService (handles platform-specific auth internally)
-      await AllAppsDriveService.instance.initialize();
-      
-      if (PlatformHelper.isMobile) {
-        // Mobile-specific: Use GoogleSignIn and pass token to AllAppsDriveService
-        final scopes = <String>['email', 'https://www.googleapis.com/auth/drive.appdata'];
-        final googleSignIn = Platform.isIOS
-            ? GoogleSignIn(
-                scopes: scopes,
-                // iOS requires iOS OAuth client for Drive API access
-                serverClientId: '628217349107-2u1kqe686mqd9a2mncfs4hr9sgmq4f9k.apps.googleusercontent.com',
-              )
-            : GoogleSignIn(scopes: scopes); // Android uses default (no serverClientId)
-        final account = await googleSignIn.signInSilently();
-        if (account != null) {
-          final auth = await account.authentication;
-          final accessToken = auth.accessToken;
-          if (accessToken != null) {
-            await AllAppsDriveService.instance.setClientFromToken(accessToken);
-            
-            // set sync flag from settings box
-            final settingsBox = Hive.box('settings');
-            // Enable sync by default when Google account is available
-            final enabled = settingsBox.get('syncEnabled', defaultValue: true) ?? true;
-            await settingsBox.put('syncEnabled', enabled); // Save the default
-            await AllAppsDriveService.instance.setSyncEnabled(enabled);
-            
-            // Check if remote has newer data - if so, block uploads until user decides
-            if (enabled) {
-              try {
-                final remoteNewer = await AllAppsDriveService.instance.isRemoteNewer();
-                if (remoteNewer) {
-                  if (kDebugMode) print('Mobile: ⚠️ Remote has newer data - blocking uploads until user fetches or dismisses');
-                  AllAppsDriveService.instance.blockUploads();
-                } else {
-                  if (kDebugMode) print('Mobile: ✓ Local data is up to date');
-                }
-              } catch (e) {
-                if (kDebugMode) print('Mobile: Remote check failed: $e');
-              }
-            }
+      await timed('AllAppsDriveService.initialize', () => AllAppsDriveService.instance.initialize());
+
+      if (AllAppsDriveService.instance.isAuthenticated) {
+        final settingsBox = Hive.box('settings');
+
+        // Preserve existing behavior: default syncEnabled=true once an account is available.
+        final enabled = settingsBox.get('syncEnabled', defaultValue: true) ?? true;
+        await timed("settings.put('syncEnabled')", () => settingsBox.put('syncEnabled', enabled));
+        await timed('AllAppsDriveService.setSyncEnabled', () => AllAppsDriveService.instance.setSyncEnabled(enabled));
+
+        if (enabled) {
+          final remoteNewer = await timed('AllAppsDriveService.isRemoteNewer', () => AllAppsDriveService.instance.isRemoteNewer());
+          if (remoteNewer) {
+            if (kDebugMode) print('startup: ⚠️ Remote has newer data - blocking uploads until user fetches or dismisses');
+            AllAppsDriveService.instance.blockUploads();
+          } else {
+            if (kDebugMode) print('startup: ✓ Local data is up to date');
           }
         }
-      } else if (PlatformHelper.isWeb) {
-        // Web-specific: AllAppsDriveService handles everything
-        // Silent sign-in will be attempted by the service's initialize()
-        if (kDebugMode) print('Web: Checking authentication status...');
-        if (AllAppsDriveService.instance.isAuthenticated) {
-          if (kDebugMode) print('Web: User is authenticated');
-          final settingsBox = Hive.box('settings');
-          final enabled = settingsBox.get('syncEnabled', defaultValue: true) ?? true;
-          await settingsBox.put('syncEnabled', enabled);
-          await AllAppsDriveService.instance.setSyncEnabled(enabled);
-          
-          // Check if remote has newer data - if so, block uploads until user decides
-          if (enabled) {
-            try {
-              final remoteNewer = await AllAppsDriveService.instance.isRemoteNewer();
-              if (remoteNewer) {
-                if (kDebugMode) print('Web: ⚠️ Remote has newer data - blocking uploads until user fetches or dismisses');
-                AllAppsDriveService.instance.blockUploads();
-              } else {
-                if (kDebugMode) print('Web: ✓ Local data is up to date');
-              }
-            } catch (e) {
-              if (kDebugMode) print('Web: Remote check failed: $e');
-            }
-          }
-        } else {
-          if (kDebugMode) print('Web: User not authenticated - sign in required in Data Management');
-        }
-      } else if (PlatformHelper.isDesktop) {
-        // Desktop-specific: AllAppsDriveService handles everything via loopback OAuth
-        // Silent sign-in attempts to use cached credentials
-        if (kDebugMode) print('Desktop: Checking authentication status...');
-        if (AllAppsDriveService.instance.isAuthenticated) {
-          if (kDebugMode) print('Desktop: User is authenticated (cached credentials)');
-          final settingsBox = Hive.box('settings');
-          final enabled = settingsBox.get('syncEnabled', defaultValue: true) ?? true;
-          await settingsBox.put('syncEnabled', enabled);
-          await AllAppsDriveService.instance.setSyncEnabled(enabled);
-          
-          // Check if remote has newer data - if so, block uploads until user decides
-          if (enabled) {
-            try {
-              final remoteNewer = await AllAppsDriveService.instance.isRemoteNewer();
-              if (remoteNewer) {
-                if (kDebugMode) print('Desktop: ⚠️ Remote has newer data - blocking uploads until user fetches or dismisses');
-                AllAppsDriveService.instance.blockUploads();
-              } else {
-                if (kDebugMode) print('Desktop: ✓ Local data is up to date');
-              }
-            } catch (e) {
-              if (kDebugMode) print('Desktop: Remote check failed: $e');
-            }
-          }
-        } else {
-          if (kDebugMode) print('Desktop: User not authenticated - sign in required in Data Management');
-        }
+      } else {
+        if (kDebugMode) print('startup: Drive not authenticated - sign in required in Data Management');
       }
     } catch (e) {
-      if (kDebugMode) print('Silent drive init failed: $e');
+      if (kDebugMode) print('startup: Silent drive init failed: $e');
     }
   } else {
-    if (kDebugMode) print('Google Drive sync not available on ${PlatformHelper.platformName}');
+    if (kDebugMode) print('startup: Google Drive sync not available on ${PlatformHelper.platformName}');
   }
 
   // Check if we should auto-load morning ritual at app startup (only once per day)
   // This is done AFTER Drive sync so restored settings from backup are used
   if (AppSettingsService.shouldForceMorningRitual()) {
     if (kDebugMode) print('main: Within morning ritual window (first time today), setting morning ritual as selected app');
-    await AppSwitcherService.setSelectedAppId(AvailableApps.morningRitual);
-    await AppSettingsService.markMorningRitualForced();
+    await timed('AppSwitcherService.setSelectedAppId(morningRitual)', () => AppSwitcherService.setSelectedAppId(AvailableApps.morningRitual));
+    await timed('AppSettingsService.markMorningRitualForced', () => AppSettingsService.markMorningRitualForced());
   }
 
+  startupTotal.stop();
+  if (kDebugMode) print('startup: runApp (total ${startupTotal.elapsedMilliseconds}ms)');
   runApp(ModularApp(module: AppModule(), child: const AppWidget()));
 }

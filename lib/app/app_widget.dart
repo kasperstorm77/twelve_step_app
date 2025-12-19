@@ -14,6 +14,7 @@ import '../shared/services/locale_provider.dart';
 import '../shared/services/app_settings_service.dart';
 import '../shared/services/app_switcher_service.dart';
 import '../shared/services/all_apps_drive_service_impl.dart';
+import '../shared/services/data_refresh_service.dart';
 import '../shared/models/app_entry.dart';
 import '../shared/localizations.dart';
 import '../fourth_step/models/inventory_entry.dart';
@@ -325,6 +326,8 @@ class _AppWidgetState extends State<AppWidget> with WidgetsBindingObserver {
       final remoteLastModified = DateTime.parse(decoded['lastModified'] as String);
       await Hive.box('settings').put('lastModified', remoteLastModified.toIso8601String());
     }
+
+    Modular.get<DataRefreshService>().notifyDataRestored();
   }
 
   @override

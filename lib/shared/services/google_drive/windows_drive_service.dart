@@ -263,6 +263,121 @@ class WindowsDriveService {
     }
   }
 
+  /// Get the newest backup's Drive-modified timestamp (fast path for conflict checks).
+  ///
+  /// This avoids downloading/parsing the JSON backup content just to read `lastModified`.
+  ///
+  /// If [runCleanup] is true, retention cleanup runs first (may be slower).
+  Future<DateTime?> getNewestBackupModifiedTime({bool runCleanup = false}) async {
+    try {
+      await _authService.refreshTokenIfNeeded();
+      final client = await _authService.createDriveClient();
+      if (client == null) {
+        if (kDebugMode) print('Windows Drive: Not signed in');
+        return null;
+      }
+
+      if (runCleanup) {
+        await _cleanupOldBackupsInternal(client);
+      }
+
+      final baseName = _authService.config.fileName.replaceAll('.json', '');
+      final files = await client.findBackupFiles('${baseName}_*.json');
+      if (files.isEmpty) return null;
+
+      DateTime? newest;
+      for (final file in files) {
+        final ts = file.modifiedTime ?? file.createdTime;
+        if (ts == null) continue;
+        if (newest == null) {
+          newest = ts;
+        } else if (ts.isAfter(newest)) {
+          newest = ts;
+        }
+      }
+
+      return newest?.toUtc();
+    } catch (e) {
+      if (kDebugMode) print('Windows Drive: getNewestBackupModifiedTime failed: $e');
+      return null;
+    }
+  }
+
+  /// Get the newest backup's `lastModified` timestamp from the JSON itself.
+  ///
+  /// This matches the app's conflict-detection semantics and avoids comparing against
+  /// Drive's file-level `modifiedTime` (which can be slightly later than the JSON timestamp).
+  ///
+  /// Uses a small prefix download to extract the field, falling back to a full download
+  /// only if needed.
+  Future<DateTime?> getNewestBackupJsonLastModified({bool runCleanup = false}) async {
+    try {
+      await _authService.refreshTokenIfNeeded();
+      final client = await _authService.createDriveClient();
+      if (client == null) {
+        if (kDebugMode) print('Windows Drive: Not signed in');
+        return null;
+      }
+
+      if (runCleanup) {
+        await _cleanupOldBackupsInternal(client);
+      }
+
+      final baseName = _authService.config.fileName.replaceAll('.json', '');
+      final files = await client.findBackupFiles('${baseName}_*.json');
+      if (files.isEmpty) return null;
+
+      // Pick newest by timestamp in filename if possible.
+      final regex = RegExp(r'(\d{4})-(\d{2})-(\d{2})(?:_(\d{2})-(\d{2})-(\d{2}))?');
+      DateTime? bestTs;
+      String? bestId;
+
+      for (final file in files) {
+        final name = file.name ?? '';
+        final match = regex.firstMatch(name);
+        if (match == null) continue;
+
+        final year = int.parse(match.group(1)!);
+        final month = int.parse(match.group(2)!);
+        final day = int.parse(match.group(3)!);
+        final hour = int.tryParse(match.group(4) ?? '0') ?? 0;
+        final minute = int.tryParse(match.group(5) ?? '0') ?? 0;
+        final second = int.tryParse(match.group(6) ?? '0') ?? 0;
+        final ts = DateTime(year, month, day, hour, minute, second).toUtc();
+
+        if (bestTs == null || ts.isAfter(bestTs)) {
+          bestTs = ts;
+          bestId = file.id;
+        }
+      }
+
+      final fileId = bestId ?? files.first.id;
+      if (fileId == null) return null;
+
+      final lastModifiedRegex = RegExp(r'"lastModified"\s*:\s*"([^"]+)"');
+      for (final maxBytes in const [8192, 65536]) {
+        final prefix = await client.readFilePrefix(fileId, maxBytes: maxBytes);
+        if (prefix == null) continue;
+
+        final match = lastModifiedRegex.firstMatch(prefix);
+        if (match != null) {
+          return DateTime.parse(match.group(1)!).toUtc();
+        }
+      }
+
+      // Last resort: full download.
+      final full = await client.readFile(fileId);
+      if (full == null) return null;
+
+      final match = lastModifiedRegex.firstMatch(full);
+      if (match == null) return null;
+      return DateTime.parse(match.group(1)!).toUtc();
+    } catch (e) {
+      if (kDebugMode) print('Windows Drive: getNewestBackupJsonLastModified failed: $e');
+      return null;
+    }
+  }
+
   /// Download content from a specific backup file
   Future<String?> downloadBackupContent(String fileName) async {
     try {

@@ -138,6 +138,21 @@ final Map<String, Map<String, String>> localizedValues = {
     // Table view generic headers
     'field1_header': 'Who/What',
     'field2_header': 'Cause/Action',
+    // 4th Step settings
+    'fourth_step_compact_view': 'Compact view',
+    'fourth_step_compact_view_desc': 'Show a condensed overview in the list',
+    // 4th Step compact view prefixes (include ':' in the localized text)
+    'compact_prefix_resentment': 'Recentment:',
+    'compact_prefix_fear': 'Fear:',
+    'compact_prefix_harms': 'Harm:',
+    'compact_prefix_sexual_harms': 'Harm:',
+    'compact_prefix_cause': 'Cause:',
+    'compact_prefix_why': 'Why:',
+    'compact_prefix_what': 'What:',
+    'compact_prefix_i_am': 'I am:',
+    'compact_prefix_affects': 'Affects:',
+    'compact_prefix_my_part': 'My part:',
+    'compact_prefix_shortcoming': 'Shortcoming:',
     // Error and status messages
     'failed_load_backups': 'Failed to load backups',
     'sign_in_no_token': 'Google sign-in succeeded but no access token was returned',
@@ -534,6 +549,21 @@ final Map<String, Map<String, String>> localizedValues = {
     // Table view generic headers
     'field1_header': 'Hvem/Hvad',
     'field2_header': 'Årsag/Handling',
+    // 4th Step settings
+    'fourth_step_compact_view': 'Kompakt visning',
+    'fourth_step_compact_view_desc': 'Vis en kort oversigt i listen',
+    // 4th Step compact view prefixes (include ':' in the localized text)
+    'compact_prefix_resentment': 'Vred På:',
+    'compact_prefix_fear': 'Frygt for:',
+    'compact_prefix_harms': 'Skade:',
+    'compact_prefix_sexual_harms': 'Skade:',
+    'compact_prefix_cause': 'Årsag:',
+    'compact_prefix_why': 'Hvorfor:',
+    'compact_prefix_what': 'Hvad:',
+    'compact_prefix_i_am': 'Jeg er:',
+    'compact_prefix_affects': 'Påvirker:',
+    'compact_prefix_my_part': 'Min del:',
+    'compact_prefix_shortcoming': 'Defekt:',
     // Error and status messages
     'failed_load_backups': 'Kunne ikke indlæse backups',
     'sign_in_no_token': 'Google login lykkedes, men ingen adgangstoken blev returneret',
@@ -655,7 +685,7 @@ final Map<String, Map<String, String>> localizedValues = {
     'agnosticism_paper_tab': 'Papir',
     'agnosticism_archive_tab': 'Arkiv',
     'agnosticism_barriers_title': 'Ikke overgivet til Gud',
-    'agnosticism_powers_title': 'Guds vilje',
+    'agnosticism_powers_title': 'Guds korrigerende handling',
     'agnosticism_flip': 'Vend Papir',
     'agnosticism_add_pair': 'Tilføj Par',
     'agnosticism_edit_pair': 'Rediger Par',

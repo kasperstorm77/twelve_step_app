@@ -1,6 +1,7 @@
 ﻿import 'dart:convert';
 import 'dart:io';
 import 'package:flutter/material.dart';
+import 'package:flutter_modular/flutter_modular.dart';
 import 'package:hive_flutter/hive_flutter.dart';
 import 'package:file_picker/file_picker.dart';
 import 'package:flutter/foundation.dart';
@@ -23,6 +24,7 @@ import 'package:flutter_file_dialog/flutter_file_dialog.dart';
 import '../services/google_sign_in_wrapper.dart';
 import '../services/all_apps_drive_service.dart';
 import '../services/app_settings_service.dart';
+import '../services/data_refresh_service.dart';
 
 // Google Drive scopes
 const String driveAppdataScope =
@@ -760,6 +762,8 @@ class _DataManagementTabState extends State<DataManagementTab> {
           await settingsBox.put('lastModified', remoteTimestamp.toIso8601String());
           if (kDebugMode) print('_fetchFromGoogle: Saved lastModified timestamp: ${remoteTimestamp.toIso8601String()}');
         }
+
+        Modular.get<DataRefreshService>().notifyDataRestored();
         
         // Calculate counts for all app data
         final entriesCount = entries.length;

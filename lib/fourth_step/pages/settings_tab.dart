@@ -10,6 +10,8 @@ import '../../fourth_step/models/i_am_definition.dart';
 import '../services/i_am_service.dart';
 import '../../shared/localizations.dart';
 import '../../shared/utils/platform_helper.dart';
+import '../../shared/services/app_settings_service.dart';
+import '../../shared/services/all_apps_drive_service.dart';
 
 class SettingsTab extends StatefulWidget {
   final Box<InventoryEntry> box;
@@ -26,6 +28,8 @@ class _SettingsTabState extends State<SettingsTab> {
   @override
   Widget build(BuildContext context) {
     final iAmBox = Hive.box<IAmDefinition>('i_am_definitions');
+    final theme = Theme.of(context);
+    final compactViewEnabled = AppSettingsService.getFourthStepCompactViewEnabled();
 
     return Scaffold(
       body: ValueListenableBuilder(
@@ -43,6 +47,47 @@ class _SettingsTabState extends State<SettingsTab> {
                     onPressed: () => _exportCsv(context),
                     icon: const Icon(Icons.download, size: 18),
                     label: Text(t(context, 'export_csv')),
+                  ),
+                ),
+              ),
+              Padding(
+                padding: const EdgeInsets.symmetric(horizontal: 16.0, vertical: 8.0),
+                child: Card(
+                  margin: EdgeInsets.zero,
+                  child: Padding(
+                    padding: const EdgeInsets.all(12),
+                    child: Row(
+                      children: [
+                        Expanded(
+                          child: Column(
+                            crossAxisAlignment: CrossAxisAlignment.start,
+                            children: [
+                              Text(
+                                t(context, 'fourth_step_compact_view'),
+                                style: theme.textTheme.bodyMedium?.copyWith(
+                                  fontWeight: FontWeight.w600,
+                                ),
+                              ),
+                              const SizedBox(height: 2),
+                              Text(
+                                t(context, 'fourth_step_compact_view_desc'),
+                                style: theme.textTheme.bodySmall?.copyWith(
+                                  color: theme.colorScheme.onSurface.withValues(alpha: 0.6),
+                                ),
+                              ),
+                            ],
+                          ),
+                        ),
+                        Switch(
+                          value: compactViewEnabled,
+                          onChanged: (value) async {
+                            await AppSettingsService.setFourthStepCompactViewEnabled(value);
+                            AllAppsDriveService.instance.scheduleUploadFromBox(widget.box);
+                            if (mounted) setState(() {});
+                          },
+                        ),
+                      ],
+                    ),
                   ),
                 ),
               ),

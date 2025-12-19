@@ -522,7 +522,7 @@ class AllAppsDriveService {
   /// Load sync state from Hive
   Future<void> _loadSyncState() async {
     try {
-      final settingsBox = await Hive.openBox('settings');
+      final settingsBox = await _getSettingsBox();
       final enabled = settingsBox.get('syncEnabled', defaultValue: false) ?? false;
       if (PlatformHelper.isWindows) {
         _windowsDriveService?.setSyncEnabled(enabled);
@@ -534,10 +534,17 @@ class AllAppsDriveService {
     }
   }
 
+  Future<Box<dynamic>> _getSettingsBox() async {
+    if (Hive.isBoxOpen('settings')) {
+      return Hive.box('settings');
+    }
+    return Hive.openBox('settings');
+  }
+
   /// Save sync state to Hive
   Future<void> _saveSyncState(bool enabled) async {
     try {
-      final settingsBox = await Hive.openBox('settings');
+      final settingsBox = await _getSettingsBox();
       await settingsBox.put('syncEnabled', enabled);
     } catch (e) {
       if (kDebugMode) print('AllAppsDriveService: Failed to save sync state - $e');
@@ -547,7 +554,7 @@ class AllAppsDriveService {
   /// Save last modified timestamp
   Future<void> _saveLastModified(DateTime timestamp) async {
     try {
-      final settingsBox = await Hive.openBox('settings');
+      final settingsBox = await _getSettingsBox();
       await settingsBox.put('lastModified', timestamp.toIso8601String());
     } catch (e) {
       if (kDebugMode) print('AllAppsDriveService: Failed to save lastModified - $e');
@@ -557,7 +564,7 @@ class AllAppsDriveService {
   /// Get local last modified timestamp
   Future<DateTime?> _getLocalLastModified() async {
     try {
-      final settingsBox = await Hive.openBox('settings');
+      final settingsBox = await _getSettingsBox();
       final timestampStr = settingsBox.get('lastModified') as String?;
       if (timestampStr != null) {
         return DateTime.parse(timestampStr);
@@ -580,34 +587,32 @@ class AllAppsDriveService {
     }
 
     try {
-      // Get local timestamp
+      final localSw = Stopwatch()..start();
       final localTimestamp = await _getLocalLastModified();
-      if (kDebugMode) print('AllAppsDriveService: isRemoteNewer() - local timestamp: ${localTimestamp?.toIso8601String() ?? "null"}');
-      
-      // Download remote content to check timestamp
-      final String? content;
+      localSw.stop();
+      if (kDebugMode) {
+        print('AllAppsDriveService: isRemoteNewer() - local timestamp: ${localTimestamp?.toIso8601String() ?? "null"} (${localSw.elapsedMilliseconds}ms)');
+      }
+
+      // Fast-path: extract `lastModified` from the newest backup JSON via prefix download.
+      // This avoids downloading/parsing the full JSON backup while matching our conflict semantics.
+      final remoteSw = Stopwatch()..start();
+      final DateTime? remoteTimestamp;
       if (PlatformHelper.isWindows) {
-        content = await _windowsDriveService!.downloadContent();
+        remoteTimestamp = await _windowsDriveService!.getNewestBackupJsonLastModified(runCleanup: false);
       } else {
-        content = await _mobileDriveService!.downloadContent();
+        remoteTimestamp = await _mobileDriveService!.getNewestBackupJsonLastModified(runCleanup: false);
       }
-      
-      if (content == null) {
-        if (kDebugMode) print('AllAppsDriveService: isRemoteNewer() - no remote file found');
+      remoteSw.stop();
+
+      if (remoteTimestamp == null) {
+        if (kDebugMode) print('AllAppsDriveService: isRemoteNewer() - no remote backup found (${remoteSw.elapsedMilliseconds}ms)');
         return false;
       }
 
-      // Parse remote timestamp
-      final decoded = json.decode(content) as Map<String, dynamic>;
-      final remoteTimestampStr = decoded['lastModified'] as String?;
-      
-      if (remoteTimestampStr == null) {
-        if (kDebugMode) print('AllAppsDriveService: isRemoteNewer() - remote file has no timestamp');
-        return false;
+      if (kDebugMode) {
+        print('AllAppsDriveService: isRemoteNewer() - remote timestamp: ${remoteTimestamp.toIso8601String()} (${remoteSw.elapsedMilliseconds}ms)');
       }
-
-      final remoteTimestamp = DateTime.parse(remoteTimestampStr);
-      if (kDebugMode) print('AllAppsDriveService: isRemoteNewer() - remote timestamp: ${remoteTimestamp.toIso8601String()}');
       
       // If no local timestamp, remote is considered newer
       if (localTimestamp == null) {

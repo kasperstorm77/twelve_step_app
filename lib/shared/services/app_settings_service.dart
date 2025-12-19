@@ -14,6 +14,35 @@ class AppSettingsService {
   static const String _morningEndMinuteKey = 'morning_ritual_end_minute';
   static const String _morningRitualLastForcedDateKey = 'morning_ritual_last_forced_date';
 
+  // 4th step settings keys
+  static const String _fourthStepCompactViewEnabledKey = 'fourth_step_compact_view_enabled';
+
+  static bool getFourthStepCompactViewEnabled() {
+    try {
+      final settingsBox = Hive.box(_settingsBoxName);
+      return settingsBox.get(
+            _fourthStepCompactViewEnabledKey,
+            defaultValue: false,
+          ) as bool;
+    } catch (e) {
+      if (kDebugMode) {
+        print('AppSettingsService: Error getting 4th step compact view setting - $e');
+      }
+      return false;
+    }
+  }
+
+  static Future<void> setFourthStepCompactViewEnabled(bool enabled) async {
+    try {
+      final settingsBox = Hive.box(_settingsBoxName);
+      await settingsBox.put(_fourthStepCompactViewEnabledKey, enabled);
+    } catch (e) {
+      if (kDebugMode) {
+        print('AppSettingsService: Error saving 4th step compact view setting - $e');
+      }
+    }
+  }
+
   /// Get morning ritual settings
   static Map<String, dynamic> getMorningRitualSettings() {
     try {
@@ -127,6 +156,7 @@ class AppSettingsService {
       'morningRitualAutoLoadEnabled': settings['enabled'] as bool,
       'morningRitualStartTime': '${startTime.hour.toString().padLeft(2, '0')}:${startTime.minute.toString().padLeft(2, '0')}:00',
       'morningRitualEndTime': '${endTime.hour.toString().padLeft(2, '0')}:${endTime.minute.toString().padLeft(2, '0')}:00',
+      'fourthStepCompactViewEnabled': getFourthStepCompactViewEnabled(),
     };
   }
 
@@ -134,6 +164,9 @@ class AppSettingsService {
   static Future<void> importFromSync(Map<String, dynamic> data) async {
     try {
       final enabled = data['morningRitualAutoLoadEnabled'] as bool? ?? false;
+
+      final compactViewEnabled =
+          data['fourthStepCompactViewEnabled'] as bool? ?? false;
       
       TimeOfDay startTime = const TimeOfDay(hour: 5, minute: 0);
       TimeOfDay endTime = const TimeOfDay(hour: 9, minute: 0);
@@ -167,6 +200,8 @@ class AppSettingsService {
         startTime: startTime,
         endTime: endTime,
       );
+
+      await setFourthStepCompactViewEnabled(compactViewEnabled);
       
       if (kDebugMode) print('AppSettingsService: Imported morning ritual settings from sync');
     } catch (e) {

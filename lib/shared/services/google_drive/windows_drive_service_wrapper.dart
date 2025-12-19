@@ -158,6 +158,26 @@ class WindowsDriveServiceWrapper {
     }
   }
 
+  /// Get the newest backup's Drive-modified timestamp (fast conflict check).
+  Future<DateTime?> getNewestBackupModifiedTime({bool runCleanup = false}) async {
+    if (!_driveService.isSignedIn) {
+      if (kDebugMode) print('Windows Drive: Not signed in');
+      return null;
+    }
+
+    return _driveService.getNewestBackupModifiedTime(runCleanup: runCleanup);
+  }
+
+  /// Get the newest backup's `lastModified` timestamp from the JSON itself.
+  Future<DateTime?> getNewestBackupJsonLastModified({bool runCleanup = false}) async {
+    if (!_driveService.isSignedIn) {
+      if (kDebugMode) print('Windows Drive: Not signed in');
+      return null;
+    }
+
+    return _driveService.getNewestBackupJsonLastModified(runCleanup: runCleanup);
+  }
+
   /// Download content from a specific backup file
   Future<String?> downloadBackupContent(String fileName) async {
     if (!_driveService.isSignedIn) {
