@@ -17,6 +17,8 @@ class _NotificationFormResult {
   final TimeOfDay time;
   final Set<int> weekdays;
   final bool enabled;
+  final bool vibrateEnabled;
+  final bool soundEnabled;
 
   const _NotificationFormResult({
     required this.title,
@@ -25,6 +27,8 @@ class _NotificationFormResult {
     required this.time,
     required this.weekdays,
     required this.enabled,
+    required this.vibrateEnabled,
+    required this.soundEnabled,
   });
 }
 
@@ -43,6 +47,8 @@ class _NotificationsHomeState extends State<NotificationsHome> {
     super.initState();
     // Ensure box is opened so the page can render existing notifications.
     NotificationsService.openBox();
+    // Check and log permission status for debugging
+    NotificationsService.checkPermissionStatus();
   }
 
   void _changeLanguage(String langCode) {
@@ -151,6 +157,8 @@ class _NotificationsHomeState extends State<NotificationsHome> {
       scheduleType: result.scheduleType,
       timeMinutes: timeMinutes,
       weekdays: result.weekdays.toList()..sort(),
+      vibrateEnabled: result.vibrateEnabled,
+      soundEnabled: result.soundEnabled,
     );
 
     await NotificationsService.upsert(notification);
@@ -170,6 +178,8 @@ class _NotificationsHomeState extends State<NotificationsHome> {
         time: initialTime,
         weekdays: existing.weekdays.toSet(),
         enabled: existing.enabled,
+        vibrateEnabled: existing.vibrateEnabled,
+        soundEnabled: existing.soundEnabled,
       ),
     );
     if (result == null) return;
@@ -182,6 +192,8 @@ class _NotificationsHomeState extends State<NotificationsHome> {
       scheduleType: result.scheduleType,
       timeMinutes: timeMinutes,
       weekdays: result.weekdays.toList()..sort(),
+      vibrateEnabled: result.vibrateEnabled,
+      soundEnabled: result.soundEnabled,
     );
 
     await NotificationsService.upsert(updated);
@@ -417,9 +429,7 @@ class _NotificationsHomeState extends State<NotificationsHome> {
                                     size: 20,
                                     color: theme.colorScheme.error,
                                   ),
-                                  visualDensity: VisualDensity.compact,
-                                  padding: EdgeInsets.zero,
-                                  constraints: const BoxConstraints(),
+                                  tooltip: t(context, 'delete'),
                                 ),
                               ],
                             ),
@@ -458,6 +468,8 @@ class _NotificationEditorDialogState extends State<_NotificationEditorDialog> {
   late TimeOfDay _time;
   late Set<int> _weekdays;
   late bool _enabled;
+  late bool _vibrateEnabled;
+  late bool _soundEnabled;
 
   @override
   void initState() {
@@ -468,6 +480,8 @@ class _NotificationEditorDialogState extends State<_NotificationEditorDialog> {
     _time = widget.initial?.time ?? const TimeOfDay(hour: 8, minute: 0);
     _weekdays = widget.initial?.weekdays.toSet() ?? <int>{};
     _enabled = widget.initial?.enabled ?? true;
+    _vibrateEnabled = widget.initial?.vibrateEnabled ?? true;
+    _soundEnabled = widget.initial?.soundEnabled ?? true;
   }
 
   @override
@@ -661,6 +675,34 @@ class _NotificationEditorDialogState extends State<_NotificationEditorDialog> {
                 });
               },
             ),
+            const SizedBox(height: 8),
+            Text(
+              t(widget.parentContext, 'notifications_alert_settings'),
+              style: TextStyle(
+                color: theme.colorScheme.primary,
+                fontWeight: FontWeight.w600,
+              ),
+            ),
+            SwitchListTile(
+              contentPadding: EdgeInsets.zero,
+              title: Text(t(widget.parentContext, 'notifications_field_vibrate')),
+              value: _vibrateEnabled,
+              onChanged: (v) {
+                setState(() {
+                  _vibrateEnabled = v;
+                });
+              },
+            ),
+            SwitchListTile(
+              contentPadding: EdgeInsets.zero,
+              title: Text(t(widget.parentContext, 'notifications_field_sound')),
+              value: _soundEnabled,
+              onChanged: (v) {
+                setState(() {
+                  _soundEnabled = v;
+                });
+              },
+            ),
             if (!_isValid()) ...[
               const SizedBox(height: 8),
               Text(
@@ -690,6 +732,8 @@ class _NotificationEditorDialogState extends State<_NotificationEditorDialog> {
                       time: _time,
                       weekdays: _weekdays,
                       enabled: _enabled,
+                      vibrateEnabled: _vibrateEnabled,
+                      soundEnabled: _soundEnabled,
                     ),
                   );
                 }

@@ -114,7 +114,7 @@ dart run build_runner build --delete-conflicting-outputs
 ## Google Drive Sync Architecture
 
 **Centralized Design**:
-- **All Apps Service**: `AllAppsDriveService` (in `lib/shared/services/all_apps_drive_service_impl.dart`) syncs ALL 6 apps to single Google Drive JSON file
+- **All Apps Service**: `AllAppsDriveService` (in `lib/shared/services/all_apps_drive_service_impl.dart`) syncs ALL 7 apps to single Google Drive JSON file
 - **Platform Selection**: Automatically uses `MobileDriveService` or `WindowsDriveServiceWrapper` based on platform
 - **Auth Layer**: 
   - Mobile: `MobileGoogleAuthService` via `google_sign_in` package
@@ -140,6 +140,7 @@ dart run build_runner build --delete-conflicting-outputs
   "reflections": [...],          // Evening ritual
   "gratitude": [...],            // Gratitude (also accepts 'gratitudeEntries')
   "agnosticism": [...],          // Agnosticism (also accepts 'agnosticismPapers')
+  "notifications": [...],        // Notifications (with vibrateEnabled/soundEnabled)
   "appSettings": {               // App settings (v8.0+)
     "morningRitualAutoLoadEnabled": false,
     "morningRitualStartTime": "05:00:00",
@@ -413,7 +414,8 @@ import 'package:google_sign_in/google_sign_in.dart'; // Mobile only
 - **App Entry**: `lib/main.dart` (Hive init, silent sign-in, auto-sync for all platforms)
 - **Routing**: `lib/app/app_module.dart`, `lib/app/app_widget.dart`, `lib/shared/pages/app_router.dart`
 - **Drive Sync**: `lib/shared/services/all_apps_drive_service_impl.dart` (syncs all 7 apps)
-- **Notifications**: `lib/notifications/services/notifications_service.dart` (local notifications scheduling)
+- **Notifications**: `lib/notifications/services/notifications_service.dart` (local notifications scheduling with vibrate/sound options)
+- **Morning Ritual Timer**: `lib/morning_ritual/pages/morning_ritual_today_tab.dart` (uses `wakelock_plus` to keep screen on during timer)
 - **Windows OAuth**: `lib/shared/services/google_drive/windows_google_auth_service.dart` (loopback method)
 - **Mobile OAuth**: `lib/shared/services/google_drive/mobile_google_auth_service.dart`
 - **Data Management**: 
@@ -481,3 +483,5 @@ Before making changes that affect data:
 ✅ **Do**: Use nested ValueListenableBuilder when UI depends on multiple boxes
 ✅ **Do**: Pass `onAppSwitched` callback to all app home pages
 ✅ **Do**: Register `ScheduledNotificationReceiver` and `ScheduledNotificationBootReceiver` in AndroidManifest
+✅ **Do**: Use `wakelock_plus` to keep screen on during Morning Ritual timer
+✅ **Do**: Include `SCHEDULE_EXACT_ALARM` and `USE_EXACT_ALARM` permissions in AndroidManifest for notifications

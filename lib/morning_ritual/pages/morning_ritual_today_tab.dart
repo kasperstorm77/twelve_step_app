@@ -4,6 +4,7 @@ import 'package:flutter/services.dart';
 import 'package:flutter_ringtone_player/flutter_ringtone_player.dart';
 import 'package:hive_flutter/hive_flutter.dart';
 import 'package:vibration/vibration.dart';
+import 'package:wakelock_plus/wakelock_plus.dart';
 import '../models/ritual_item.dart';
 import '../models/morning_ritual_entry.dart';
 import '../services/morning_ritual_service.dart';
@@ -60,6 +61,8 @@ class _MorningRitualTodayTabState extends State<MorningRitualTodayTab> {
   void dispose() {
     _timer?.cancel();
     FlutterRingtonePlayer().stop();
+    // Ensure wake lock is disabled when leaving the page
+    WakelockPlus.disable();
     MorningRitualService.ritualItemsBox.listenable().removeListener(_onRitualItemsChanged);
     super.dispose();
   }
@@ -139,6 +142,9 @@ class _MorningRitualTodayTabState extends State<MorningRitualTodayTab> {
   }
 
   void _startTimer() {
+    // Enable wake lock to keep screen on during timer
+    WakelockPlus.enable();
+    
     setState(() {
       _timerRunning = true;
       _timerPaused = false;
@@ -155,12 +161,15 @@ class _MorningRitualTodayTabState extends State<MorningRitualTodayTab> {
         setState(() {
           _timerRunning = false;
         });
+        // Disable wake lock when timer completes
+        WakelockPlus.disable();
       }
     });
   }
 
   void _pauseTimer() {
     _timer?.cancel();
+    // Keep wake lock enabled while paused (timer still active)
     setState(() {
       _timerRunning = false;
       _timerPaused = true;
@@ -173,6 +182,8 @@ class _MorningRitualTodayTabState extends State<MorningRitualTodayTab> {
 
   void _stopTimer() {
     _timer?.cancel();
+    // Disable wake lock when timer is stopped
+    WakelockPlus.disable();
     setState(() {
       _timerRunning = false;
       _timerPaused = false;

@@ -863,6 +863,7 @@ class _DataManagementTabState extends State<DataManagementTab> {
         final n = AppNotification.fromJson(nJson as Map<String, dynamic>);
         await notificationsBox.put(n.id, n);
       }
+      await NotificationsService.rescheduleAll();
       if (kDebugMode) print('Windows import: Imported ${notificationsBox.length} notifications');
     }
 

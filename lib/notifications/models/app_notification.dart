@@ -46,6 +46,12 @@ class AppNotification extends HiveObject {
   @HiveField(9)
   DateTime lastModified;
 
+  @HiveField(10)
+  bool vibrateEnabled;
+
+  @HiveField(11)
+  bool soundEnabled;
+
   AppNotification({
     String? id,
     required this.notificationId,
@@ -57,6 +63,8 @@ class AppNotification extends HiveObject {
     List<int>? weekdays,
     DateTime? createdAt,
     DateTime? lastModified,
+    this.vibrateEnabled = true,
+    this.soundEnabled = true,
   })  : id = id ?? const Uuid().v4(),
         weekdays = weekdays ?? <int>[],
         createdAt = createdAt ?? DateTime.now(),
@@ -69,6 +77,8 @@ class AppNotification extends HiveObject {
     NotificationScheduleType? scheduleType,
     int? timeMinutes,
     List<int>? weekdays,
+    bool? vibrateEnabled,
+    bool? soundEnabled,
   }) {
     return AppNotification(
       id: id,
@@ -81,6 +91,8 @@ class AppNotification extends HiveObject {
       weekdays: weekdays ?? List<int>.from(this.weekdays),
       createdAt: createdAt,
       lastModified: DateTime.now(),
+      vibrateEnabled: vibrateEnabled ?? this.vibrateEnabled,
+      soundEnabled: soundEnabled ?? this.soundEnabled,
     );
   }
 
@@ -95,6 +107,8 @@ class AppNotification extends HiveObject {
         'weekdays': weekdays,
         'createdAt': createdAt.toIso8601String(),
         'lastModified': lastModified.toIso8601String(),
+        'vibrateEnabled': vibrateEnabled,
+        'soundEnabled': soundEnabled,
       };
 
   factory AppNotification.fromJson(Map<String, dynamic> json) {
@@ -113,6 +127,8 @@ class AppNotification extends HiveObject {
       lastModified: json['lastModified'] != null
           ? DateTime.parse(json['lastModified'] as String)
           : DateTime.now(),
+      vibrateEnabled: (json['vibrateEnabled'] as bool?) ?? true,
+      soundEnabled: (json['soundEnabled'] as bool?) ?? true,
     );
   }
 }

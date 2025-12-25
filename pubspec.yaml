@@ -36,6 +36,7 @@ dependencies:
   timezone: ^0.10.1
   flutter_timezone: ^3.0.1
   flutter_ringtone_player: ^4.0.0+3  # For morning ritual alarm sound (cross-platform)
+  wakelock_plus: ^1.2.10  # Keep screen on during morning ritual timer
   intl: any  # Provided by flutter_localizations
   app_links: ^6.3.2  # Deep link handling for Windows OAuth
   window_manager: ^0.4.3  # Window size management for desktop

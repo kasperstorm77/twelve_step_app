@@ -75,9 +75,19 @@ feature_graphics.png
 google-services_debug.json
 google-services_release.json
 
-# Exclude ALL platform directories - we only want Dart code
-android/
-ios/
+# Exclude platform directories - but keep AndroidManifest.xml and Info.plist
+android/*
+!android/app/
+android/app/*
+!android/app/src/
+android/app/src/*
+!android/app/src/main/
+android/app/src/main/*
+!android/app/src/main/AndroidManifest.xml
+ios/*
+!ios/Runner/
+ios/Runner/*
+!ios/Runner/Info.plist
 linux/
 macos/
 windows/

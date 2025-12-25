@@ -7,6 +7,8 @@ import 'package:hive_flutter/hive_flutter.dart';
 import 'package:timezone/data/latest_all.dart' as tz;
 import 'package:timezone/timezone.dart' as tz;
 
+import '../../fourth_step/models/inventory_entry.dart';
+import '../../shared/services/all_apps_drive_service.dart';
 import '../../shared/utils/platform_helper.dart';
 import '../models/app_notification.dart';
 
@@ -71,7 +73,44 @@ class NotificationsService {
     }
 
     final ios = _plugin.resolvePlatformSpecificImplementation<IOSFlutterLocalNotificationsPlugin>();
-    await ios?.requestPermissions(alert: true, badge: true, sound: true);
+    if (ios != null) {
+      final granted = await ios.requestPermissions(
+        alert: true, 
+        badge: true, 
+        sound: true,
+        critical: true,  // Request critical alerts for time-sensitive notifications
+      );
+      if (kDebugMode) {
+        print('NotificationsService: iOS permissions granted = $granted');
+      }
+    }
+  }
+
+  /// Check and print iOS notification permission status (for debugging)
+  static Future<void> checkPermissionStatus() async {
+    if (!PlatformHelper.isMobile) return;
+    
+    final ios = _plugin.resolvePlatformSpecificImplementation<IOSFlutterLocalNotificationsPlugin>();
+    if (ios != null) {
+      final settings = await ios.checkPermissions();
+      if (kDebugMode) {
+        print('NotificationsService: iOS permission status:');
+        print('  - isEnabled: ${settings?.isEnabled}');
+        print('  - isAlertEnabled: ${settings?.isAlertEnabled}');
+        print('  - isBadgeEnabled: ${settings?.isBadgeEnabled}');
+        print('  - isSoundEnabled: ${settings?.isSoundEnabled}');
+        print('  - isProvisionalEnabled: ${settings?.isProvisionalEnabled}');
+      }
+    }
+    
+    // Also show pending notifications
+    final pending = await _plugin.pendingNotificationRequests();
+    if (kDebugMode) {
+      print('NotificationsService: ${pending.length} pending notifications:');
+      for (final p in pending) {
+        print('  - ID: ${p.id}, Title: ${p.title}, Body: ${p.body}');
+      }
+    }
   }
 
   static Box<AppNotification> get box => Hive.box<AppNotification>(notificationsBoxName);
@@ -123,26 +162,31 @@ class NotificationsService {
     return scheduled;
   }
 
-  static NotificationDetails _details() {
-    const androidDetails = AndroidNotificationDetails(
+  static NotificationDetails _details(AppNotification notification) {
+    final androidDetails = AndroidNotificationDetails(
       'daily_notifications',
       'Daily notifications',
       channelDescription: 'Reminders scheduled by the Notifications app',
       importance: Importance.max,
       priority: Priority.high,
-      playSound: true,
-      enableVibration: true,
+      playSound: notification.soundEnabled,
+      enableVibration: notification.vibrateEnabled,
       fullScreenIntent: true,  // This helps wake the device
       category: AndroidNotificationCategory.alarm,  // Mark as alarm category
     );
 
-    const iosDetails = DarwinNotificationDetails(
+    // For iOS: use default sound when sound is enabled
+    // Setting sound to null uses the default iOS notification sound
+    final iosDetails = DarwinNotificationDetails(
       presentAlert: true,
       presentBadge: true,
-      presentSound: true,
+      presentSound: notification.soundEnabled,
+      sound: notification.soundEnabled ? 'default' : null,
+      // Ensure notifications show even when app is in foreground
+      interruptionLevel: InterruptionLevel.timeSensitive,
     );
 
-    return const NotificationDetails(android: androidDetails, iOS: iosDetails);
+    return NotificationDetails(android: androidDetails, iOS: iosDetails);
   }
 
   static Future<void> schedule(AppNotification notification) async {
@@ -191,20 +235,24 @@ class NotificationsService {
           print('  - Scheduled for: $scheduledTime');
           print('  - Now is: ${tz.TZDateTime.now(tz.local)}');
         }
-        // Try without matchDateTimeComponents first to test one-time firing
         await _plugin.zonedSchedule(
           notification.notificationId,
           notification.title,
           notification.body,
           scheduledTime,
-          _details(),
+          _details(notification),
           uiLocalNotificationDateInterpretation:
               UILocalNotificationDateInterpretation.absoluteTime,
-          androidScheduleMode: AndroidScheduleMode.alarmClock,
+          androidScheduleMode: AndroidScheduleMode.exactAllowWhileIdle,
+          matchDateTimeComponents: DateTimeComponents.time,  // Repeat daily at same time
           payload: notification.id,
         );
         if (kDebugMode) {
-          print('NotificationsService.schedule: zonedSchedule call completed (one-time)');
+          print('NotificationsService.schedule: zonedSchedule call completed (daily repeating)');
+          // Verify it was scheduled
+          final pending = await _plugin.pendingNotificationRequests();
+          final found = pending.any((p) => p.id == notification.notificationId);
+          print('NotificationsService.schedule: Verified in pending list: $found');
         }
       } else {
         // Weekly: schedule one per weekday. We allocate derived IDs.
@@ -221,10 +269,10 @@ class NotificationsService {
             notification.title,
             notification.body,
             scheduledTime,
-            _details(),
+            _details(notification),
             uiLocalNotificationDateInterpretation:
                 UILocalNotificationDateInterpretation.absoluteTime,
-            androidScheduleMode: AndroidScheduleMode.alarmClock,
+            androidScheduleMode: AndroidScheduleMode.exactAllowWhileIdle,
             matchDateTimeComponents: DateTimeComponents.dayOfWeekAndTime,
             payload: notification.id,
           );
@@ -257,8 +305,55 @@ class NotificationsService {
     await initialize();
     await openBox();
 
+    if (kDebugMode) {
+      print('NotificationsService.rescheduleAll: Scheduling ${box.values.length} notifications');
+    }
+
     for (final notification in box.values) {
       await schedule(notification);
+    }
+
+    // Debug: List all pending notifications
+    if (kDebugMode) {
+      final pending = await _plugin.pendingNotificationRequests();
+      print('NotificationsService.rescheduleAll: ${pending.length} pending notifications:');
+      for (final p in pending) {
+        print('  - ID: ${p.id}, Title: ${p.title}');
+      }
+    }
+  }
+
+  /// Show a test notification immediately (for debugging)
+  static Future<void> showTestNotification() async {
+    await initialize();
+    
+    const androidDetails = AndroidNotificationDetails(
+      'test_channel',
+      'Test notifications',
+      channelDescription: 'Test channel for debugging',
+      importance: Importance.max,
+      priority: Priority.high,
+      playSound: true,
+    );
+    
+    const iosDetails = DarwinNotificationDetails(
+      presentAlert: true,
+      presentBadge: true,
+      presentSound: true,
+      sound: 'default',  // Use default iOS notification sound
+    );
+    
+    const details = NotificationDetails(android: androidDetails, iOS: iosDetails);
+    
+    await _plugin.show(
+      0,
+      'Test Notification',
+      'If you see this, notifications are working!',
+      details,
+    );
+    
+    if (kDebugMode) {
+      print('NotificationsService.showTestNotification: Showed test notification');
     }
   }
 
@@ -267,6 +362,7 @@ class NotificationsService {
 
     await box.put(notification.id, notification);
     await schedule(notification);
+    _triggerSync();
   }
 
   static Future<void> delete(AppNotification notification) async {
@@ -274,5 +370,21 @@ class NotificationsService {
 
     await cancel(notification);
     await box.delete(notification.id);
+    _triggerSync();
+  }
+
+  /// Trigger background sync after changes
+  static void _triggerSync() {
+    try {
+      // Trigger sync using the centralized AllAppsDriveService
+      // Note: Uses entries box as trigger, but syncs all apps
+      final entriesBox = Hive.box<InventoryEntry>('entries');
+      AllAppsDriveService.instance.scheduleUploadFromBox(entriesBox);
+    } catch (e) {
+      if (kDebugMode) {
+        print('Sync not available or failed: $e');
+      }
+      // Sync not available or failed, silently continue
+    }
   }
 }
