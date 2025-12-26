@@ -295,9 +295,18 @@ class NotificationsService {
   static Future<void> cancel(AppNotification notification) async {
     await initialize();
 
-    await _plugin.cancel(notification.notificationId);
-    for (var weekday = 1; weekday <= 7; weekday++) {
-      await _plugin.cancel(_derivedNotificationId(notification.notificationId, weekday));
+    // Wrap cancel calls in try-catch to handle corrupted plugin cache
+    // (can happen after app reinstall when stale data exists)
+    try {
+      await _plugin.cancel(notification.notificationId);
+      for (var weekday = 1; weekday <= 7; weekday++) {
+        await _plugin.cancel(_derivedNotificationId(notification.notificationId, weekday));
+      }
+    } catch (e) {
+      if (kDebugMode) {
+        print('NotificationsService.cancel: failed (likely stale cache): $e');
+      }
+      // Ignore errors - the notification may not exist or cache is corrupted
     }
   }
 
@@ -333,14 +342,12 @@ class NotificationsService {
       channelDescription: 'Test channel for debugging',
       importance: Importance.max,
       priority: Priority.high,
-      playSound: true,
     );
     
     const iosDetails = DarwinNotificationDetails(
       presentAlert: true,
       presentBadge: true,
       presentSound: true,
-      sound: 'default',  // Use default iOS notification sound
     );
     
     const details = NotificationDetails(android: androidDetails, iOS: iosDetails);

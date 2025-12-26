@@ -75,19 +75,32 @@ feature_graphics.png
 google-services_debug.json
 google-services_release.json
 
-# Exclude platform directories - but keep AndroidManifest.xml and Info.plist
+# Exclude platform directories - but keep essential build config files
+# Android - track build configuration files (no secrets - signing key paths only)
 android/*
+!android/build.gradle.kts
+!android/settings.gradle.kts
+!android/gradle.properties
 !android/app/
 android/app/*
+!android/app/build.gradle.kts
 !android/app/src/
 android/app/src/*
 !android/app/src/main/
 android/app/src/main/*
 !android/app/src/main/AndroidManifest.xml
+
+# iOS - track essential config files (no secrets)
 ios/*
+!ios/Podfile
 !ios/Runner/
 ios/Runner/*
 !ios/Runner/Info.plist
+!ios/Runner/AppDelegate.swift
+!ios/Runner.xcodeproj/
+ios/Runner.xcodeproj/*
+!ios/Runner.xcodeproj/project.pbxproj
+!ios/Runner.xcodeproj/xcshareddata/
 linux/
 macos/
 windows/
