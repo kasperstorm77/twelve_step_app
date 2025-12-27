@@ -475,6 +475,7 @@ Before making changes that affect data:
 ❌ **Don't**: Forget `mounted` checks before using context after async operations
 ❌ **Don't**: Delete `.jks` or `.keystore` files when "cleaning up" the project root
 ❌ **Don't**: Forget BroadcastReceivers in AndroidManifest for scheduled notifications
+❌ **Don't**: Use `SCHEDULE_EXACT_ALARM` or `USE_EXACT_ALARM` permissions (requires declaring app as primarily alarm clock)
 ✅ **Do**: Use loopback HTTP server for desktop OAuth (`http://127.0.0.1:PORT`)
 ✅ **Do**: Use debounced uploads for performance (700ms)
 ✅ **Do**: Show warnings before data replacement  
@@ -483,5 +484,5 @@ Before making changes that affect data:
 ✅ **Do**: Use nested ValueListenableBuilder when UI depends on multiple boxes
 ✅ **Do**: Pass `onAppSwitched` callback to all app home pages
 ✅ **Do**: Register `ScheduledNotificationReceiver` and `ScheduledNotificationBootReceiver` in AndroidManifest
-✅ **Do**: Use `wakelock_plus` to keep screen on during Morning Ritual timer
-✅ **Do**: Include `SCHEDULE_EXACT_ALARM` and `USE_EXACT_ALARM` permissions in AndroidManifest for notifications
+✅ **Do**: Use `wakelock_plus` to keep screen on during Morning Ritual timer (only while timer is running)
+✅ **Do**: Use `inexactAllowWhileIdle` for notification scheduling (no special permissions needed)

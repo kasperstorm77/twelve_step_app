@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_modular/flutter_modular.dart';
 import 'package:table_calendar/table_calendar.dart';
+import 'package:wakelock_plus/wakelock_plus.dart';
 import '../services/morning_ritual_service.dart';
 import '../../shared/localizations.dart';
 import '../../shared/services/app_switcher_service.dart';
@@ -33,14 +34,19 @@ class _MorningRitualHomeState extends State<MorningRitualHome>
   void initState() {
     super.initState();
     _tabController = TabController(length: 3, vsync: this);
-    _tabController.addListener(() {
-      setState(() {}); // Rebuild to show/hide FAB
-    });
+    _tabController.addListener(_onTabChanged);
+  }
+
+  void _onTabChanged() {
+    setState(() {}); // Rebuild to show/hide FAB
   }
 
   @override
   void dispose() {
+    _tabController.removeListener(_onTabChanged);
     _tabController.dispose();
+    // Ensure wake lock is disabled when leaving Morning Ritual app
+    WakelockPlus.disable();
     super.dispose();
   }
 

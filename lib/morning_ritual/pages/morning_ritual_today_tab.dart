@@ -169,7 +169,8 @@ class _MorningRitualTodayTabState extends State<MorningRitualTodayTab> {
 
   void _pauseTimer() {
     _timer?.cancel();
-    // Keep wake lock enabled while paused (timer still active)
+    // Disable wake lock when timer is paused (only keep screen on while actively running)
+    WakelockPlus.disable();
     setState(() {
       _timerRunning = false;
       _timerPaused = true;

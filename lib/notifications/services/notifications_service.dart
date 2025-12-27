@@ -62,14 +62,8 @@ class NotificationsService {
     final android = _plugin.resolvePlatformSpecificImplementation<AndroidFlutterLocalNotificationsPlugin>();
     if (android != null) {
       await android.requestNotificationsPermission();
-      
-      // Android 12+ requires explicit "Alarms & reminders" permission
-      final canSchedule = await android.canScheduleExactNotifications() ?? false;
-      debugPrint('NotificationsService: canScheduleExactNotifications = $canSchedule');
-      if (!canSchedule) {
-        debugPrint('NotificationsService: Requesting exact alarm permission...');
-        await android.requestExactAlarmsPermission();
-      }
+      // Note: We use USE_EXACT_ALARM permission (auto-granted for alarm/reminder apps)
+      // instead of SCHEDULE_EXACT_ALARM (requires Play Store declaration)
     }
 
     final ios = _plugin.resolvePlatformSpecificImplementation<IOSFlutterLocalNotificationsPlugin>();
@@ -163,9 +157,18 @@ class NotificationsService {
   }
 
   static NotificationDetails _details(AppNotification notification) {
+    // Use different channel IDs for sound/no-sound to avoid Android channel caching issues
+    // Once a channel is created, its sound setting is fixed and can't be changed
+    final channelId = notification.soundEnabled 
+        ? 'daily_notifications_sound' 
+        : 'daily_notifications_silent';
+    final channelName = notification.soundEnabled
+        ? 'Daily notifications (with sound)'
+        : 'Daily notifications (silent)';
+    
     final androidDetails = AndroidNotificationDetails(
-      'daily_notifications',
-      'Daily notifications',
+      channelId,
+      channelName,
       channelDescription: 'Reminders scheduled by the Notifications app',
       importance: Importance.max,
       priority: Priority.high,
@@ -175,13 +178,11 @@ class NotificationsService {
       category: AndroidNotificationCategory.alarm,  // Mark as alarm category
     );
 
-    // For iOS: use default sound when sound is enabled
-    // Setting sound to null uses the default iOS notification sound
+    // For iOS: presentSound controls whether sound plays
     final iosDetails = DarwinNotificationDetails(
       presentAlert: true,
       presentBadge: true,
       presentSound: notification.soundEnabled,
-      sound: notification.soundEnabled ? 'default' : null,
       // Ensure notifications show even when app is in foreground
       interruptionLevel: InterruptionLevel.timeSensitive,
     );
@@ -210,21 +211,8 @@ class NotificationsService {
     }
 
     try {
-      // Check exact alarm permission on Android
-      if (PlatformHelper.isAndroid) {
-        final android = _plugin.resolvePlatformSpecificImplementation<AndroidFlutterLocalNotificationsPlugin>();
-        if (android != null) {
-          final canSchedule = await android.canScheduleExactNotifications() ?? false;
-          if (kDebugMode) {
-            print('NotificationsService.schedule: canScheduleExactNotifications = $canSchedule');
-          }
-          if (!canSchedule) {
-            debugPrint('WARNING: Cannot schedule exact notifications! User must grant "Alarms & reminders" permission.');
-            await android.requestExactAlarmsPermission();
-            return;
-          }
-        }
-      }
+      // Using inexact alarms - app is not primarily an alarm clock so can't use exact alarms
+      // Inexact alarms may fire a few minutes early/late but are acceptable for reminders
 
       if (notification.scheduleType == NotificationScheduleType.daily) {
         final scheduledTime = _nextInstanceOfTime(notification.timeMinutes);
@@ -243,7 +231,7 @@ class NotificationsService {
           _details(notification),
           uiLocalNotificationDateInterpretation:
               UILocalNotificationDateInterpretation.absoluteTime,
-          androidScheduleMode: AndroidScheduleMode.exactAllowWhileIdle,
+          androidScheduleMode: AndroidScheduleMode.inexactAllowWhileIdle,
           matchDateTimeComponents: DateTimeComponents.time,  // Repeat daily at same time
           payload: notification.id,
         );
@@ -272,7 +260,7 @@ class NotificationsService {
             _details(notification),
             uiLocalNotificationDateInterpretation:
                 UILocalNotificationDateInterpretation.absoluteTime,
-            androidScheduleMode: AndroidScheduleMode.exactAllowWhileIdle,
+            androidScheduleMode: AndroidScheduleMode.inexactAllowWhileIdle,
             matchDateTimeComponents: DateTimeComponents.dayOfWeekAndTime,
             payload: notification.id,
           );
@@ -298,9 +286,15 @@ class NotificationsService {
     // Wrap cancel calls in try-catch to handle corrupted plugin cache
     // (can happen after app reinstall when stale data exists)
     try {
+      if (kDebugMode) {
+        print('NotificationsService.cancel: Cancelling notification id=${notification.notificationId}');
+      }
       await _plugin.cancel(notification.notificationId);
       for (var weekday = 1; weekday <= 7; weekday++) {
         await _plugin.cancel(_derivedNotificationId(notification.notificationId, weekday));
+      }
+      if (kDebugMode) {
+        print('NotificationsService.cancel: Successfully cancelled');
       }
     } catch (e) {
       if (kDebugMode) {
@@ -337,11 +331,12 @@ class NotificationsService {
     await initialize();
     
     const androidDetails = AndroidNotificationDetails(
-      'test_channel',
+      'test_channel_sound',
       'Test notifications',
       channelDescription: 'Test channel for debugging',
       importance: Importance.max,
       priority: Priority.high,
+      playSound: true,
     );
     
     const iosDetails = DarwinNotificationDetails(
@@ -375,8 +370,20 @@ class NotificationsService {
   static Future<void> delete(AppNotification notification) async {
     await openBox();
 
+    if (kDebugMode) {
+      print('NotificationsService.delete: Deleting notification id=${notification.id}');
+      print('NotificationsService.delete: Box contains ${box.length} items');
+      print('NotificationsService.delete: Box keys: ${box.keys.toList()}');
+      print('NotificationsService.delete: Key exists: ${box.containsKey(notification.id)}');
+    }
+
     await cancel(notification);
     await box.delete(notification.id);
+    
+    if (kDebugMode) {
+      print('NotificationsService.delete: After delete, box contains ${box.length} items');
+    }
+    
     _triggerSync();
   }
 
