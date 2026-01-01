@@ -3,31 +3,18 @@
 // which is freshly fetched from Modular.routerDelegate.navigatorKey.currentContext,
 // not the widget's stale context. The analyzer cannot distinguish this case.
 
-import 'dart:convert';
 import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_modular/flutter_modular.dart';
 import 'package:flutter_localizations/flutter_localizations.dart';
 import 'package:google_fonts/google_fonts.dart';
-import 'package:hive_flutter/hive_flutter.dart';
 import '../shared/services/locale_provider.dart';
 import '../shared/services/app_settings_service.dart';
 import '../shared/services/app_switcher_service.dart';
 import '../shared/services/all_apps_drive_service_impl.dart';
-import '../shared/services/data_refresh_service.dart';
+import '../shared/services/backup_restore_service.dart';
 import '../shared/models/app_entry.dart';
 import '../shared/localizations.dart';
-import '../fourth_step/models/inventory_entry.dart';
-import '../fourth_step/models/i_am_definition.dart';
-import '../fourth_step/services/inventory_service.dart';
-import '../eighth_step/models/person.dart';
-import '../evening_ritual/models/reflection_entry.dart';
-import '../gratitude/models/gratitude_entry.dart';
-import '../agnosticism/models/barrier_power_pair.dart';
-import '../morning_ritual/models/ritual_item.dart';
-import '../morning_ritual/models/morning_ritual_entry.dart';
-import '../notifications/models/app_notification.dart';
-import '../notifications/services/notifications_service.dart';
 
 class AppWidget extends StatefulWidget {
   const AppWidget({super.key});
@@ -217,131 +204,16 @@ class _AppWidgetState extends State<AppWidget> with WidgetsBindingObserver {
     }
   }
 
-  /// Import data from JSON content (same logic as Data Management tabs)
+  /// Import data from JSON content using centralized BackupRestoreService
+  /// This is called during auto-sync when remote data is newer
+  /// Note: No safety backup is created for auto-sync to avoid backup loops
   Future<void> _importDataFromJson(String content) async {
-    final decoded = json.decode(content) as Map<String, dynamic>;
-    
-    // Import I Am definitions first
-    if (decoded.containsKey('iAmDefinitions')) {
-      final iAmBox = Hive.box<IAmDefinition>('i_am_definitions');
-      final iAmDefs = decoded['iAmDefinitions'] as List<dynamic>?;
-      if (iAmDefs != null) {
-        await iAmBox.clear();
-        for (final defJson in iAmDefs) {
-          final def = IAmDefinition(
-            id: defJson['id'] as String,
-            name: defJson['name'] as String,
-            reasonToExist: defJson['reasonToExist'] as String?,
-          );
-          await iAmBox.add(def);
-        }
-      }
-    }
-
-    // Import entries
-    if (decoded.containsKey('entries')) {
-      final entriesBox = Hive.box<InventoryEntry>('entries');
-      final entries = decoded['entries'] as List<dynamic>;
-      await entriesBox.clear();
-      for (final item in entries) {
-        if (item is Map<String, dynamic>) {
-          final entry = InventoryEntry.fromJson(item);
-          await entriesBox.add(entry);
-        }
-      }
-      await InventoryService.migrateOrderValues();
-    }
-
-    // Import people (8th step)
-    if (decoded.containsKey('people')) {
-      final peopleBox = Hive.box<Person>('people_box');
-      final peopleList = decoded['people'] as List;
-      await peopleBox.clear();
-      for (final personJson in peopleList) {
-        final person = Person.fromJson(personJson as Map<String, dynamic>);
-        await peopleBox.put(person.internalId, person);
-      }
-    }
-
-    // Import reflections (evening ritual)
-    if (decoded.containsKey('reflections')) {
-      final reflectionsBox = Hive.box<ReflectionEntry>('reflections_box');
-      final reflectionsList = decoded['reflections'] as List;
-      await reflectionsBox.clear();
-      for (final reflectionJson in reflectionsList) {
-        final reflection = ReflectionEntry.fromJson(reflectionJson as Map<String, dynamic>);
-        await reflectionsBox.put(reflection.internalId, reflection);
-      }
-    }
-
-    // Import gratitude entries
-    if (decoded.containsKey('gratitude') || decoded.containsKey('gratitudeEntries')) {
-      final gratitudeBox = Hive.box<GratitudeEntry>('gratitude_box');
-      final gratitudeList = (decoded['gratitude'] ?? decoded['gratitudeEntries']) as List;
-      await gratitudeBox.clear();
-      for (final gratitudeJson in gratitudeList) {
-        final gratitude = GratitudeEntry.fromJson(gratitudeJson as Map<String, dynamic>);
-        await gratitudeBox.add(gratitude);
-      }
-    }
-
-    // Import agnosticism pairs
-    if (decoded.containsKey('agnosticism') || decoded.containsKey('agnosticismPapers')) {
-      final agnosticismBox = Hive.box<BarrierPowerPair>('agnosticism_pairs');
-      final pairsList = (decoded['agnosticism'] ?? decoded['agnosticismPapers']) as List;
-      await agnosticismBox.clear();
-      for (final pairJson in pairsList) {
-        final pair = BarrierPowerPair.fromJson(pairJson as Map<String, dynamic>);
-        await agnosticismBox.put(pair.id, pair);
-      }
-    }
-
-    // Import morning ritual items
-    if (decoded.containsKey('morningRitualItems')) {
-      final morningRitualItemsBox = Hive.box<RitualItem>('morning_ritual_items');
-      final itemsList = decoded['morningRitualItems'] as List;
-      await morningRitualItemsBox.clear();
-      for (final itemJson in itemsList) {
-        final item = RitualItem.fromJson(itemJson as Map<String, dynamic>);
-        await morningRitualItemsBox.put(item.id, item);
-      }
-    }
-
-    // Import morning ritual entries
-    if (decoded.containsKey('morningRitualEntries')) {
-      final morningRitualEntriesBox = Hive.box<MorningRitualEntry>('morning_ritual_entries');
-      final entriesList = decoded['morningRitualEntries'] as List;
-      await morningRitualEntriesBox.clear();
-      for (final entryJson in entriesList) {
-        final entry = MorningRitualEntry.fromJson(entryJson as Map<String, dynamic>);
-        await morningRitualEntriesBox.put(entry.id, entry);
-      }
-    }
-
-    // Import notifications
-    if (decoded.containsKey('notifications')) {
-      final notificationsBox = Hive.box<AppNotification>(NotificationsService.notificationsBoxName);
-      final notificationsList = decoded['notifications'] as List;
-      await notificationsBox.clear();
-      for (final nJson in notificationsList) {
-        final n = AppNotification.fromJson(nJson as Map<String, dynamic>);
-        await notificationsBox.put(n.id, n);
-      }
-      await NotificationsService.rescheduleAll();
-    }
-
-    // Import app settings
-    if (decoded.containsKey('appSettings')) {
-      AppSettingsService.importFromSync(decoded['appSettings'] as Map<String, dynamic>);
-    }
-
-    // Save the remote lastModified timestamp locally
-    if (decoded.containsKey('lastModified')) {
-      final remoteLastModified = DateTime.parse(decoded['lastModified'] as String);
-      await Hive.box('settings').put('lastModified', remoteLastModified.toIso8601String());
-    }
-
-    Modular.get<DataRefreshService>().notifyDataRestored();
+    // Use BackupRestoreService for consistent restore behavior
+    // createSafetyBackup is false for auto-sync to avoid backup loops
+    await BackupRestoreService.restoreFromJsonString(
+      content,
+      createSafetyBackup: false,
+    );
   }
 
   @override

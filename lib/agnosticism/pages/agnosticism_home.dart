@@ -10,9 +10,7 @@ import 'paper_tab.dart';
 import 'archive_tab.dart';
 
 class AgnosticismHome extends StatefulWidget {
-  final VoidCallback? onAppSwitched;
-
-  const AgnosticismHome({super.key, this.onAppSwitched});
+  const AgnosticismHome({super.key});
 
   @override
   State<AgnosticismHome> createState() => _AgnosticismHomeState();
@@ -88,10 +86,6 @@ class _AgnosticismHomeState extends State<AgnosticismHome> with SingleTickerProv
                   if (app.id != currentAppId) {
                     await AppSwitcherService.setSelectedAppId(app.id);
                     if (!mounted) return;
-                    
-                    if (widget.onAppSwitched != null) {
-                      widget.onAppSwitched!();
-                    }
                   }
                   if (!dialogContext.mounted) return;
                   Navigator.of(dialogContext).pop();

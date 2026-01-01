@@ -12,9 +12,7 @@ import 'evening_ritual_form_tab.dart';
 import 'evening_ritual_list_tab.dart';
 
 class EveningRitualHome extends StatefulWidget {
-  final VoidCallback? onAppSwitched;
-
-  const EveningRitualHome({super.key, this.onAppSwitched});
+  const EveningRitualHome({super.key});
 
   @override
   State<EveningRitualHome> createState() => _EveningRitualHomeState();
@@ -87,11 +85,6 @@ class _EveningRitualHomeState extends State<EveningRitualHome> with SingleTicker
                   if (app.id != currentAppId) {
                     await AppSwitcherService.setSelectedAppId(app.id);
                     if (!mounted) return;
-                    
-                    // Trigger callback
-                    if (widget.onAppSwitched != null) {
-                      widget.onAppSwitched!();
-                    }
                   }
                   if (!dialogContext.mounted) return;
                   Navigator.of(dialogContext).pop();

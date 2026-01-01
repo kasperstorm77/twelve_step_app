@@ -22,7 +22,9 @@ class DataManagementTab extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    if (PlatformHelper.isWindows) {
+    // Use desktop implementation for all desktop platforms (Windows, macOS, Linux)
+    // The desktop implementation uses loopback OAuth which works on all desktops
+    if (PlatformHelper.isDesktop) {
       return windows.DataManagementTab(box: box);
     } else {
       return mobile.DataManagementTab(box: box);

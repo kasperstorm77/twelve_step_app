@@ -12,9 +12,7 @@ import '../../shared/services/locale_provider.dart';
 import 'eighth_step_settings_tab.dart' as settings;
 
 class EighthStepHome extends StatefulWidget {
-  final VoidCallback? onAppSwitched;
-
-  const EighthStepHome({super.key, this.onAppSwitched});
+  const EighthStepHome({super.key});
 
   @override
   State<EighthStepHome> createState() => _EighthStepHomeState();
@@ -93,11 +91,6 @@ class _EighthStepHomeState extends State<EighthStepHome> {
                   if (app.id != currentAppId) {
                     await AppSwitcherService.setSelectedAppId(app.id);
                     if (!mounted) return;
-                    
-                    // Trigger callback
-                    if (widget.onAppSwitched != null) {
-                      widget.onAppSwitched!();
-                    }
                   }
                   if (!dialogContext.mounted) return;
                   Navigator.of(dialogContext).pop();

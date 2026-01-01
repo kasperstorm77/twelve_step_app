@@ -3,20 +3,12 @@ import 'dart:convert';
 import 'package:flutter/foundation.dart';
 import 'package:hive_flutter/hive_flutter.dart';
 import '../../fourth_step/models/inventory_entry.dart';
-import '../../fourth_step/models/i_am_definition.dart';
-import '../../eighth_step/models/person.dart';
-import '../../evening_ritual/models/reflection_entry.dart';
-import '../../morning_ritual/models/ritual_item.dart';
-import '../../morning_ritual/models/morning_ritual_entry.dart';
-import '../../gratitude/models/gratitude_entry.dart';
-import '../../agnosticism/models/barrier_power_pair.dart';
-import '../../notifications/models/app_notification.dart';
 import 'google_drive/drive_config.dart';
 import 'google_drive/mobile_drive_service.dart';
 import 'google_drive/windows_drive_service_wrapper.dart';
 import '../utils/platform_helper.dart';
-import 'app_settings_service.dart';
 import 'local_backup_service.dart';
+import 'sync_payload_builder.dart';
 
 // --------------------------------------------------------------------------
 // All Apps Drive Service - Platform-Aware Implementation
@@ -206,74 +198,10 @@ class AllAppsDriveService {
     }
 
     try {
-      // Get I Am definitions
-      final iAmBox = Hive.box<IAmDefinition>('i_am_definitions');
-      final iAmDefinitions = iAmBox.values.map((def) {
-        final map = <String, dynamic>{
-          'id': def.id,
-          'name': def.name,
-        };
-        if (def.reasonToExist != null && def.reasonToExist!.isNotEmpty) {
-          map['reasonToExist'] = def.reasonToExist;
-        }
-        return map;
-      }).toList();
-
-      // Get 8th step people
-      final peopleBox = Hive.box<Person>('people_box');
-      final people = peopleBox.values.map((p) => p.toJson()).toList();
-
-      // Get evening reflections
-      final reflectionsBox = Hive.box<ReflectionEntry>('reflections_box');
-      final reflections = reflectionsBox.values.map((r) => r.toJson()).toList();
-
-      // Get gratitude entries
-      final gratitudeBox = Hive.box<GratitudeEntry>('gratitude_box');
-      final gratitudeEntries = gratitudeBox.values.map((g) => g.toJson()).toList();
-
-      // Get agnosticism barrier/power pairs
-      final agnosticismBox = Hive.box<BarrierPowerPair>('agnosticism_pairs');
-      final agnosticismPairs = agnosticismBox.values.map((p) => p.toJson()).toList();
-
-      // Get morning ritual items (definitions)
-      final morningRitualItemsBox = Hive.box<RitualItem>('morning_ritual_items');
-      final morningRitualItems = morningRitualItemsBox.values.map((i) => i.toJson()).toList();
-
-      // Get morning ritual entries (daily completions)
-      final morningRitualEntriesBox = Hive.box<MorningRitualEntry>('morning_ritual_entries');
-      final morningRitualEntries = morningRitualEntriesBox.values.map((e) => e.toJson()).toList();
-
-      // Get notifications
-      final notificationsBox = Hive.box<AppNotification>(
-        'notifications_box',
-      );
-      final notifications = notificationsBox.values.map((n) => n.toJson()).toList();
-
-      // Get app settings for sync
-      final appSettings = AppSettingsService.exportForSync();
-
-      // Prepare complete export data with I Am definitions and people
-      final entries = box.values.map((e) => e.toJson()).toList();
-      
-      final now = DateTime.now().toUtc();
-      final exportData = {
-        'version': '8.0', // Increment version to include app settings
-        'exportDate': now.toIso8601String(),
-        'lastModified': now.toIso8601String(), // For sync conflict detection
-        'iAmDefinitions': iAmDefinitions,
-        'entries': entries,
-        'people': people, // Add 8th step people
-        'reflections': reflections, // Add evening reflections
-        'gratitude': gratitudeEntries, // Add gratitude entries
-        'agnosticism': agnosticismPairs, // Add agnosticism barrier/power pairs
-        'morningRitualItems': morningRitualItems, // Add morning ritual definitions
-        'morningRitualEntries': morningRitualEntries, // Add morning ritual daily entries
-        'notifications': notifications, // Notifications
-        'appSettings': appSettings, // Add app settings (morning ritual auto-load, etc.)
-      };
-
-      // Serialize to JSON string
-      final jsonString = json.encode(exportData);
+      // Use centralized payload builder
+      final payload = SyncPayloadBuilder.buildPayload(entriesBox: box);
+      final jsonString = json.encode(payload);
+      final timestamp = SyncPayloadBuilder.getPayloadTimestamp(payload);
 
       if (PlatformHelper.isWindows) {
         _windowsDriveService!.scheduleUpload(jsonString);
@@ -282,7 +210,7 @@ class AllAppsDriveService {
       }
       
       // Save the upload timestamp locally
-      await _saveLastModified(now);
+      await _saveLastModified(timestamp);
       
       // Only notify UI for user-initiated uploads
       if (notifyUI) {
@@ -359,79 +287,13 @@ class AllAppsDriveService {
     _uploadInProgress = true;
 
     try {
-      // Get I Am definitions
-      final iAmBox = Hive.box<IAmDefinition>('i_am_definitions');
-      final iAmDefinitions = iAmBox.values.map((def) {
-        final map = <String, dynamic>{
-          'id': def.id,
-          'name': def.name,
-        };
-        if (def.reasonToExist != null && def.reasonToExist!.isNotEmpty) {
-          map['reasonToExist'] = def.reasonToExist;
-        }
-        return map;
-      }).toList();
-
-      // Get 8th step people
-      final peopleBox = Hive.box<Person>('people_box');
-      final people = peopleBox.values.map((p) => p.toJson()).toList();
-
-      // Get evening reflections
-      final reflectionsBox = Hive.box<ReflectionEntry>('reflections_box');
-      final reflections = reflectionsBox.values.map((r) => r.toJson()).toList();
-
-      // Get gratitude entries
-      final gratitudeBox = Hive.box<GratitudeEntry>('gratitude_box');
-      final gratitudeEntries = gratitudeBox.values.map((g) => g.toJson()).toList();
-
-      // Get agnosticism barrier/power pairs
-      final agnosticismBox = Hive.box<BarrierPowerPair>('agnosticism_pairs');
-      final agnosticismPairs = agnosticismBox.values.map((p) => p.toJson()).toList();
-
-      // Get morning ritual items (definitions)
-      final morningRitualItemsBox = Hive.box<RitualItem>('morning_ritual_items');
-      final morningRitualItems = morningRitualItemsBox.values.map((i) => i.toJson()).toList();
-
-      // Get morning ritual entries (daily completions)
-      final morningRitualEntriesBox = Hive.box<MorningRitualEntry>('morning_ritual_entries');
-      final morningRitualEntries = morningRitualEntriesBox.values.map((e) => e.toJson()).toList();
-
-      // Get notifications
-      final notificationsBox = Hive.box<AppNotification>(
-        'notifications_box',
-      );
-      final notifications = notificationsBox.values.map((n) => n.toJson()).toList();
-
-      // Get app settings for sync
-      final appSettings = AppSettingsService.exportForSync();
-
-      // Prepare complete export data with I Am definitions and people
-      // Get entries from passed box or fetch from standard entries box
-      final entriesBox = box ?? Hive.box<InventoryEntry>('entries');
-      final entries = entriesBox.values.map((e) => e.toJson()).toList();
-      
-      final now = DateTime.now().toUtc();
-      final exportData = {
-        'version': '8.0', // Increment version to include app settings
-        'exportDate': now.toIso8601String(),
-        'lastModified': now.toIso8601String(), // For sync conflict detection
-        'iAmDefinitions': iAmDefinitions,
-        'entries': entries,
-        'people': people, // Add 8th step people
-        'reflections': reflections, // Add evening reflections
-        'gratitude': gratitudeEntries, // Add gratitude entries
-        'agnosticism': agnosticismPairs, // Add agnosticism barrier/power pairs
-        'morningRitualItems': morningRitualItems, // Add morning ritual definitions
-        'morningRitualEntries': morningRitualEntries, // Add morning ritual daily entries
-        'notifications': notifications, // Notifications
-        'appSettings': appSettings, // Add app settings (morning ritual auto-load, etc.)
-      };
-
-      // Serialize to JSON string
-      final jsonString = json.encode(exportData);
+      // Use centralized payload builder
+      final payload = SyncPayloadBuilder.buildPayload(entriesBox: box);
+      final jsonString = json.encode(payload);
+      final timestamp = SyncPayloadBuilder.getPayloadTimestamp(payload);
       
       // Save the upload timestamp locally (fire and forget)
-      _saveLastModified(now);
+      _saveLastModified(timestamp);
       
       // Perform upload directly (debouncing already happened at this level)
       if (PlatformHelper.isWindows) {
@@ -679,7 +541,9 @@ class AllAppsDriveService {
     } else {
       _mobileDriveService?.dispose();
     }
+    _uploadDebounceTimer?.cancel();
     _uploadCountController.close();
+    _uploadsBlockedController.close();
   }
 }
 

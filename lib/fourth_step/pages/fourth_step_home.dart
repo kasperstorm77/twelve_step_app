@@ -15,9 +15,7 @@ import '../../shared/services/locale_provider.dart';
 import '../../shared/pages/data_management_page.dart';
 
 class ModularInventoryHome extends StatefulWidget {
-  final VoidCallback? onAppSwitched;
-
-  const ModularInventoryHome({super.key, this.onAppSwitched});
+  const ModularInventoryHome({super.key});
 
   @override
   State<ModularInventoryHome> createState() => _ModularInventoryHomeState();
@@ -196,11 +194,6 @@ class _ModularInventoryHomeState extends State<ModularInventoryHome>
                   if (app.id != currentAppId) {
                     await AppSwitcherService.setSelectedAppId(app.id);
                     if (!mounted) return;
-                    
-                    // Trigger callback to refresh parent AppRouter
-                    if (widget.onAppSwitched != null) {
-                      widget.onAppSwitched!();
-                    }
                   }
                   if (!dialogContext.mounted) return;
                   Navigator.of(dialogContext).pop();

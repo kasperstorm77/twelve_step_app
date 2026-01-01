@@ -9,76 +9,61 @@ import '../../gratitude/pages/gratitude_home.dart';
 import '../../agnosticism/pages/agnosticism_home.dart';
 import '../../notifications/pages/notifications_home.dart';
 
-/// Global app router that determines which app to display based on AppSwitcherService
-class AppRouter extends StatefulWidget {
+/// Global app router that determines which app to display based on AppSwitcherService.
+/// 
+/// Uses [ValueListenableBuilder] to automatically rebuild when the selected app
+/// changes, eliminating the need for manual setState calls or callback propagation.
+class AppRouter extends StatelessWidget {
+  /// Optional callback for additional side effects when app changes.
+  /// Note: UI rebuilds happen automatically via ValueListenableBuilder.
   final VoidCallback? onAppSwitched;
 
   const AppRouter({super.key, this.onAppSwitched});
 
   @override
-  State<AppRouter> createState() => _AppRouterState();
-}
+  Widget build(BuildContext context) {
+    return ValueListenableBuilder<String>(
+      valueListenable: AppSwitcherService.selectedAppNotifier,
+      builder: (context, currentAppId, _) {
+        // Notify parent after frame completes (for any additional side effects)
+        if (onAppSwitched != null) {
+          WidgetsBinding.instance.addPostFrameCallback((_) {
+            onAppSwitched!();
+          });
+        }
 
-class _AppRouterState extends State<AppRouter> {
-  void _onAppSwitched() {
-    setState(() {}); // Trigger rebuild when app is switched
-    widget.onAppSwitched?.call();
+        return _buildAppForId(currentAppId);
+      },
+    );
   }
 
-  @override
-  Widget build(BuildContext context) {
-    // Get the user's selected app
-    final currentAppId = AppSwitcherService.getSelectedAppId();
-
-    // Route to the appropriate app based on selection
+  /// Build the appropriate app widget for the given app ID
+  Widget _buildAppForId(String currentAppId) {
     switch (currentAppId) {
       case AvailableApps.fourthStepInventory:
-        return ModularInventoryHome(
-          key: ValueKey(currentAppId),
-          onAppSwitched: _onAppSwitched,
-        );
+        return ModularInventoryHome(key: ValueKey(currentAppId));
 
       case AvailableApps.eighthStepAmends:
-        return EighthStepHome(
-          key: ValueKey(currentAppId),
-          onAppSwitched: _onAppSwitched,
-        );
+        return EighthStepHome(key: ValueKey(currentAppId));
 
       case AvailableApps.eveningRitual:
-        return EveningRitualHome(
-          key: ValueKey(currentAppId),
-          onAppSwitched: _onAppSwitched,
-        );
+        return EveningRitualHome(key: ValueKey(currentAppId));
 
       case AvailableApps.morningRitual:
-        return MorningRitualHome(
-          key: ValueKey(currentAppId),
-          onAppSwitched: _onAppSwitched,
-        );
+        return MorningRitualHome(key: ValueKey(currentAppId));
 
       case AvailableApps.gratitude:
-        return GratitudeHome(
-          key: ValueKey(currentAppId),
-          onAppSwitched: _onAppSwitched,
-        );
+        return GratitudeHome(key: ValueKey(currentAppId));
 
       case AvailableApps.agnosticism:
-        return AgnosticismHome(
-          key: ValueKey(currentAppId),
-          onAppSwitched: _onAppSwitched,
-        );
+        return AgnosticismHome(key: ValueKey(currentAppId));
 
       case AvailableApps.notifications:
-        return NotificationsHome(
-          key: ValueKey(currentAppId),
-          onAppSwitched: _onAppSwitched,
-        );
+        return NotificationsHome(key: ValueKey(currentAppId));
 
       default:
         // Fallback to 4th step if unknown app ID
-        return ModularInventoryHome(
-          key: ValueKey(currentAppId),
-        );
+        return ModularInventoryHome(key: ValueKey(currentAppId));
     }
   }
 }

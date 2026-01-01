@@ -33,9 +33,7 @@ class _NotificationFormResult {
 }
 
 class NotificationsHome extends StatefulWidget {
-  final VoidCallback? onAppSwitched;
-
-  const NotificationsHome({super.key, this.onAppSwitched});
+  const NotificationsHome({super.key});
 
   @override
   State<NotificationsHome> createState() => _NotificationsHomeState();
@@ -91,7 +89,6 @@ class _NotificationsHomeState extends State<NotificationsHome> {
                   if (app.id != currentAppId) {
                     await AppSwitcherService.setSelectedAppId(app.id);
                     if (!mounted) return;
-                    widget.onAppSwitched?.call();
                   }
                   if (!dialogContext.mounted) return;
                   Navigator.of(dialogContext).pop();

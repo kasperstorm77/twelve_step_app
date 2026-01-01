@@ -380,12 +380,18 @@ ValueListenableBuilder(
 
 ### App Switching
 ```dart
-// Get current app ID
+// Get current app ID (synchronous)
 final currentAppId = AppSwitcherService.getSelectedAppId();
 
-// Switch to different app
+// Switch to different app (reactive - AppRouter rebuilds automatically)
 await AppSwitcherService.setSelectedAppId(AvailableApps.gratitude);
-widget.onAppSwitched?.call(); // Trigger AppRouter rebuild
+// No callback needed - AppRouter uses ValueListenableBuilder on selectedAppNotifier
+
+// For reactive UI outside AppRouter:
+ValueListenableBuilder<String>(
+  valueListenable: AppSwitcherService.selectedAppNotifier,
+  builder: (context, appId, _) => Text('Current: $appId'),
+)
 ```
 
 ## Platform-Specific Code

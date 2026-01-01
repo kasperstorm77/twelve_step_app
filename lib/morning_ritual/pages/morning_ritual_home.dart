@@ -14,9 +14,7 @@ import 'morning_ritual_history_tab.dart';
 import 'morning_ritual_settings_tab.dart';
 
 class MorningRitualHome extends StatefulWidget {
-  final VoidCallback? onAppSwitched;
-
-  const MorningRitualHome({super.key, this.onAppSwitched});
+  const MorningRitualHome({super.key});
 
   @override
   State<MorningRitualHome> createState() => _MorningRitualHomeState();
@@ -100,11 +98,6 @@ class _MorningRitualHomeState extends State<MorningRitualHome>
                   if (app.id != currentAppId) {
                     await AppSwitcherService.setSelectedAppId(app.id);
                     if (!mounted) return;
-
-                    // Trigger callback
-                    if (widget.onAppSwitched != null) {
-                      widget.onAppSwitched!();
-                    }
                   }
                   if (!dialogContext.mounted) return;
                   Navigator.of(dialogContext).pop();

@@ -10,9 +10,7 @@ import 'gratitude_today_tab.dart';
 import 'gratitude_list_tab.dart';
 
 class GratitudeHome extends StatefulWidget {
-  final VoidCallback? onAppSwitched;
-
-  const GratitudeHome({super.key, this.onAppSwitched});
+  const GratitudeHome({super.key});
 
   @override
   State<GratitudeHome> createState() => _GratitudeHomeState();
@@ -82,10 +80,6 @@ class _GratitudeHomeState extends State<GratitudeHome> with SingleTickerProvider
                   if (app.id != currentAppId) {
                     await AppSwitcherService.setSelectedAppId(app.id);
                     if (!mounted) return;
-                    
-                    if (widget.onAppSwitched != null) {
-                      widget.onAppSwitched!();
-                    }
                   }
                   if (!dialogContext.mounted) return;
                   Navigator.of(dialogContext).pop();

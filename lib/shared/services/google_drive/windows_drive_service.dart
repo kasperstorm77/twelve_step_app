@@ -215,8 +215,8 @@ class WindowsDriveService {
         return [];
       }
 
-      // Run cleanup first to enforce retention policy
-      await _cleanupOldBackupsInternal(client);
+      // NOTE: Cleanup is NOT run here - only after uploading a new backup.
+      // This ensures users can see and restore from old backups on fresh installs.
       
       // Find all backup files matching pattern
       final baseName = _authService.config.fileName.replaceAll('.json', '');

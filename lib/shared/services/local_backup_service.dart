@@ -1,19 +1,8 @@
 import 'dart:async';
-import 'dart:convert';
 import 'dart:io';
 import 'package:flutter/foundation.dart';
-import 'package:hive_flutter/hive_flutter.dart';
 import 'package:path_provider/path_provider.dart';
-import '../../fourth_step/models/inventory_entry.dart';
-import '../../fourth_step/models/i_am_definition.dart';
-import '../../eighth_step/models/person.dart';
-import '../../evening_ritual/models/reflection_entry.dart';
-import '../../morning_ritual/models/ritual_item.dart';
-import '../../morning_ritual/models/morning_ritual_entry.dart';
-import '../../gratitude/models/gratitude_entry.dart';
-import '../../agnosticism/models/barrier_power_pair.dart';
-import '../../notifications/models/app_notification.dart';
-import 'app_settings_service.dart';
+import 'sync_payload_builder.dart';
 
 // --------------------------------------------------------------------------
 // Local Backup Service - Mirrors Drive backup functionality locally
@@ -79,7 +68,7 @@ class LocalBackupService {
     _backupInProgress = true;
 
     try {
-      final content = await _buildBackupContent();
+      final content = _buildBackupContent();
       await _createDatedBackup(content);
       if (kDebugMode) print('LocalBackupService: Debounced backup completed');
     } catch (e) {
@@ -89,74 +78,10 @@ class LocalBackupService {
     }
   }
 
-  /// Build the backup JSON content (same format as Drive backup)
-  Future<String> _buildBackupContent() async {
-    // Get I Am definitions
-    final iAmBox = Hive.box<IAmDefinition>('i_am_definitions');
-    final iAmDefinitions = iAmBox.values.map((def) {
-      final map = <String, dynamic>{
-        'id': def.id,
-        'name': def.name,
-      };
-      if (def.reasonToExist != null && def.reasonToExist!.isNotEmpty) {
-        map['reasonToExist'] = def.reasonToExist;
-      }
-      return map;
-    }).toList();
-
-    // Get inventory entries
-    final entriesBox = Hive.box<InventoryEntry>('entries');
-    final entries = entriesBox.values.map((e) => e.toJson()).toList();
-
-    // Get 8th step people
-    final peopleBox = Hive.box<Person>('people_box');
-    final people = peopleBox.values.map((p) => p.toJson()).toList();
-
-    // Get evening reflections
-    final reflectionsBox = Hive.box<ReflectionEntry>('reflections_box');
-    final reflections = reflectionsBox.values.map((r) => r.toJson()).toList();
-
-    // Get gratitude entries
-    final gratitudeBox = Hive.box<GratitudeEntry>('gratitude_box');
-    final gratitudeEntries = gratitudeBox.values.map((g) => g.toJson()).toList();
-
-    // Get agnosticism barrier/power pairs
-    final agnosticismBox = Hive.box<BarrierPowerPair>('agnosticism_pairs');
-    final agnosticismPairs = agnosticismBox.values.map((p) => p.toJson()).toList();
-
-    // Get morning ritual items (definitions)
-    final morningRitualItemsBox = Hive.box<RitualItem>('morning_ritual_items');
-    final morningRitualItems = morningRitualItemsBox.values.map((i) => i.toJson()).toList();
-
-    // Get morning ritual entries (daily completions)
-    final morningRitualEntriesBox = Hive.box<MorningRitualEntry>('morning_ritual_entries');
-    final morningRitualEntries = morningRitualEntriesBox.values.map((e) => e.toJson()).toList();
-
-    // Get notifications
-    final notificationsBox = Hive.box<AppNotification>('notifications_box');
-    final notifications = notificationsBox.values.map((n) => n.toJson()).toList();
-
-    // Get app settings for sync
-    final appSettings = AppSettingsService.exportForSync();
-
-    final now = DateTime.now().toUtc();
-    final exportData = {
-      'version': '8.0',
-      'exportDate': now.toIso8601String(),
-      'lastModified': now.toIso8601String(),
-      'iAmDefinitions': iAmDefinitions,
-      'entries': entries,
-      'people': people,
-      'reflections': reflections,
-      'gratitude': gratitudeEntries,
-      'agnosticism': agnosticismPairs,
-      'morningRitualItems': morningRitualItems,
-      'morningRitualEntries': morningRitualEntries,
-      'notifications': notifications,
-      'appSettings': appSettings,
-    };
-
-    return json.encode(exportData);
+  /// Build the backup JSON content using centralized SyncPayloadBuilder
+  /// This ensures local backup format is identical to Drive backup
+  String _buildBackupContent() {
+    return SyncPayloadBuilder.buildJsonString();
   }
 
   /// Create a dated backup file (mirrors Drive's _createDatedBackup)
@@ -275,8 +200,8 @@ class LocalBackupService {
     if (kDebugMode) print('LocalBackupService.listAvailableBackups() called');
     
     try {
-      // Run cleanup first to enforce retention policy
-      await _cleanupOldBackups();
+      // NOTE: Cleanup is NOT run here - only after creating a new backup.
+      // This ensures users can see and restore from old backups.
       
       final backupDir = await _getBackupDirectory();
       final files = await backupDir.list().toList();
@@ -390,7 +315,7 @@ class LocalBackupService {
     _backupInProgress = true;
     
     try {
-      final content = await _buildBackupContent();
+      final content = _buildBackupContent();
       await _createDatedBackup(content);
       if (kDebugMode) print('LocalBackupService: Manual backup completed');
     } catch (e) {
