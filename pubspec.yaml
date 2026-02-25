@@ -18,7 +18,7 @@ dependencies:
   flutter_file_dialog: ^3.0.2
   file_picker: ^10.3.3
   flutter_modular: ^6.3.4
-  google_fonts: ^5.0.0
+  google_fonts: ^6.3.2
   googleapis_auth: ^1.4.1
   googleapis: ^11.4.0
   http: ^1.2.0

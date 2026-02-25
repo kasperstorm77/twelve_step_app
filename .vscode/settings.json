@@ -4,5 +4,17 @@
   "dart.debuggerHandlesPathsEverywhereForBreakpoints": true,
   "files.associations": {
     "*.dart": "dart"
-  }
+  },
+  "java.jdt.ls.java.home": "/usr/lib/jvm/java-17-openjdk-amd64",
+  "java.import.gradle.enabled": false,
+  "java.import.exclusions": [
+    "**/android/**"
+  ],
+  "java.configuration.runtimes": [
+    {
+      "name": "JavaSE-17",
+      "path": "/usr/lib/jvm/java-17-openjdk-amd64",
+      "default": true
+    }
+  ]
 }
