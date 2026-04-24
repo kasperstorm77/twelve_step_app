@@ -12,7 +12,7 @@ Family Sharing is a private app for families to share events, shopping lists, an
 
 ### How to get support
 
-If you have questions, feedback, or problems with the app, please send an email to **[kasper@stormstyrken.dk](mailto:kasper@stormstyrken.dk)**. Typical response time is within 2 business days.
+If you have questions, feedback, or problems with the app, please send an email to **[kasper@stormstyrken.dk](mailto:kasper@stormstyrken.dk)**. I will try to respond as soon as possible.
 
 When reporting a problem, please include:
 
@@ -48,7 +48,7 @@ Family Sharing er en privat app til familier, der vil dele begivenheder, indkøb
 
 ### Sådan får du support
 
-Hvis du har spørgsmål, feedback eller problemer med appen, så send en e-mail til **[kasper@stormstyrken.dk](mailto:kasper@stormstyrken.dk)**. Almindelig svartid er inden for 2 hverdage.
+Hvis du har spørgsmål, feedback eller problemer med appen, så send en e-mail til **[kasper@stormstyrken.dk](mailto:kasper@stormstyrken.dk)**. Jeg vil prøve at svare så hurtigt som muligt.
 
 Når du rapporterer et problem, så medtag gerne:
 
