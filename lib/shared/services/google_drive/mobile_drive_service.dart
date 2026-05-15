@@ -122,6 +122,35 @@ class MobileDriveService {
       _uploadController.add('Upload successful');
       if (kDebugMode) print('MobileDriveService.uploadContent() - success!');
     } catch (e) {
+      // Auto-recover from expired access tokens (401 / UNAUTHENTICATED).
+      // The cached _driveClient is constructed with a 59-minute hardcoded
+      // expiry and no refresh token, so it goes stale even though the user
+      // is still signed in. Refresh once via google_sign_in and retry.
+      final msg = e.toString();
+      final looksLikeAuthError = msg.contains('401') ||
+          msg.contains('UNAUTHENTICATED') ||
+          msg.contains('Invalid Credentials') ||
+          msg.contains('Login Required');
+      if (looksLikeAuthError) {
+        if (kDebugMode) print('MobileDriveService.uploadContent() - auth error, refreshing token and retrying');
+        try {
+          final refreshed = await _authService.refreshTokenIfNeeded();
+          if (refreshed) {
+            _driveClient = await _authService.createDriveClient();
+            if (_driveClient != null) {
+              await _createDatedBackup(content);
+              _uploadController.add('Upload successful (after token refresh)');
+              if (kDebugMode) print('MobileDriveService.uploadContent() - retry success after refresh');
+              return;
+            }
+          }
+        } catch (retryError) {
+          if (kDebugMode) print('MobileDriveService.uploadContent() - retry after refresh failed: $retryError');
+          final errorMsg = 'Upload failed after token refresh: $retryError';
+          _errorController.add(errorMsg);
+          rethrow;
+        }
+      }
       final errorMsg = 'Upload failed: $e';
       _errorController.add(errorMsg);
       if (kDebugMode) print('MobileDriveService.uploadContent() - error: $e');

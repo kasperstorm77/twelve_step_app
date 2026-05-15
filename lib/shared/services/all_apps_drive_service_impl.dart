@@ -245,15 +245,15 @@ class AllAppsDriveService {
   /// Also triggers local backup regardless of Drive sync status
   void scheduleUploadFromBox([Box<InventoryEntry>? box]) {
     if (kDebugMode) print('AllAppsDriveService: scheduleUploadFromBox called - syncEnabled=$syncEnabled, isAuthenticated=$isAuthenticated, uploadsBlocked=$_uploadsBlocked');
-    
+
     // Always schedule local backup regardless of Drive sync status
     LocalBackupService.instance.scheduleBackup();
-    
-    if (!syncEnabled || !isAuthenticated) {
-      if (kDebugMode) print('AllAppsDriveService: ⚠️ Drive upload skipped - sync not enabled or not authenticated');
+
+    if (!syncEnabled) {
+      if (kDebugMode) print('AllAppsDriveService: ⚠️ Drive upload skipped - sync not enabled');
       return;
     }
-    
+
     // SAFETY: Don't upload if remote has newer data - would overwrite it!
     if (_uploadsBlocked) {
       if (kDebugMode) print('AllAppsDriveService: ⚠️ Upload BLOCKED - remote has newer data, user must fetch or dismiss first');
@@ -261,13 +261,15 @@ class AllAppsDriveService {
     }
 
     // Cancel any pending upload and reset the timer
-    // This ensures rapid changes (like multiple reorders) are coalesced
+    // This ensures rapid changes (like multiple reorders) are coalesced.
+    // NOTE: isAuthenticated is checked inside _performDebouncedUpload AFTER an
+    // auth-recovery attempt, so we still schedule even when currently false.
     _uploadDebounceTimer?.cancel();
-    
+
     _uploadDebounceTimer = Timer(_uploadDebounceDelay, () async {
       await _performDebouncedUpload(box);
     });
-    
+
     if (kDebugMode) print('AllAppsDriveService: Upload scheduled (debounced ${_uploadDebounceDelay.inMilliseconds}ms)');
   }
   
@@ -278,12 +280,30 @@ class AllAppsDriveService {
       if (kDebugMode) print('AllAppsDriveService: _performDebouncedUpload skipped - upload already in progress');
       return;
     }
-    
-    if (!syncEnabled || !isAuthenticated || _uploadsBlocked) {
-      if (kDebugMode) print('AllAppsDriveService: _performDebouncedUpload skipped - conditions not met');
+
+    if (!syncEnabled || _uploadsBlocked) {
+      if (kDebugMode) print('AllAppsDriveService: _performDebouncedUpload skipped - sync disabled or blocked');
       return;
     }
-    
+
+    // Auth recovery: if not authenticated, attempt to recover by re-running
+    // silent sign-in. Handles the case where signInSilently() failed at app
+    // startup (transient Play Services state, race, etc.) but can succeed now.
+    if (!isAuthenticated && !PlatformHelper.isDesktop) {
+      if (kDebugMode) print('AllAppsDriveService: not authenticated, attempting auth recovery');
+      try {
+        await _mobileDriveService!.initialize();
+      } catch (e) {
+        if (kDebugMode) print('AllAppsDriveService: auth recovery init failed: $e');
+      }
+    }
+
+    if (!isAuthenticated) {
+      if (kDebugMode) print('AllAppsDriveService: _performDebouncedUpload skipped - not authenticated after recovery attempt');
+      _saveLastSyncError('Not authenticated - open Data Management to sign in');
+      return;
+    }
+
     _uploadInProgress = true;
 
     try {
@@ -291,10 +311,10 @@ class AllAppsDriveService {
       final payload = SyncPayloadBuilder.buildPayload(entriesBox: box);
       final jsonString = json.encode(payload);
       final timestamp = SyncPayloadBuilder.getPayloadTimestamp(payload);
-      
+
       // Save the upload timestamp locally (fire and forget)
       _saveLastModified(timestamp);
-      
+
       // Perform upload directly (debouncing already happened at this level)
       if (PlatformHelper.isDesktop) {
         await _windowsDriveService!.driveService.uploadFile(
@@ -305,8 +325,10 @@ class AllAppsDriveService {
         await _mobileDriveService!.uploadContent(jsonString);
       }
       if (kDebugMode) print('AllAppsDriveService: Debounced upload completed');
+      _saveLastSyncSuccess(timestamp);
     } catch (e) {
       if (kDebugMode) print('AllAppsDriveService: Background sync failed: $e');
+      _saveLastSyncError(e.toString());
       // Background sync failed, will retry on next change
     } finally {
       _uploadInProgress = false;
@@ -441,6 +463,28 @@ class AllAppsDriveService {
       await settingsBox.put('lastModified', timestamp.toIso8601String());
     } catch (e) {
       if (kDebugMode) print('AllAppsDriveService: Failed to save lastModified - $e');
+    }
+  }
+
+  /// Persist a successful Drive upload for diagnostics. Best-effort.
+  Future<void> _saveLastSyncSuccess(DateTime timestamp) async {
+    try {
+      final settingsBox = await _getSettingsBox();
+      await settingsBox.put('lastSyncSuccessAt', timestamp.toIso8601String());
+      await settingsBox.put('lastSyncError', null);
+    } catch (e) {
+      if (kDebugMode) print('AllAppsDriveService: Failed to save lastSyncSuccessAt - $e');
+    }
+  }
+
+  /// Persist a failed Drive upload for diagnostics. Best-effort.
+  Future<void> _saveLastSyncError(String error) async {
+    try {
+      final settingsBox = await _getSettingsBox();
+      await settingsBox.put('lastSyncError', error);
+      await settingsBox.put('lastSyncErrorAt', DateTime.now().toUtc().toIso8601String());
+    } catch (e) {
+      if (kDebugMode) print('AllAppsDriveService: Failed to save lastSyncError - $e');
     }
   }
 

@@ -25,13 +25,18 @@ class MobileGoogleAuthService {
 
   MobileGoogleAuthService({required GoogleDriveConfig config})
       : _config = config,
+        // Scopes MUST match the set requested by the interactive sign-in path
+        // in data_management_tab_mobile.dart (['email', driveAppdataScope]).
+        // If they diverge, signInSilently() on this instance can return null
+        // even though the cached account from the tab is still valid, which
+        // silently breaks background uploads.
         _googleSignIn = Platform.isIOS
             ? GoogleSignIn(
-                scopes: [config.scope],
+                scopes: ['email', config.scope],
                 // iOS requires iOS OAuth client for Drive API access
                 serverClientId: '628217349107-2u1kqe686mqd9a2mncfs4hr9sgmq4f9k.apps.googleusercontent.com',
               )
-            : GoogleSignIn(scopes: [config.scope]); // Android uses default (no serverClientId)
+            : GoogleSignIn(scopes: ['email', config.scope]); // Android uses default (no serverClientId)
 
   /// Current authenticated user
   GoogleSignInAccount? get currentUser => _currentUser;
