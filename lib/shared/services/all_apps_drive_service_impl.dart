@@ -63,9 +63,9 @@ class AllAppsDriveService {
       parentFolder: 'appDataFolder',
     );
 
-    if (PlatformHelper.isWindows) {
-      // Windows uses WindowsDriveServiceWrapper
-      if (kDebugMode) print('AllAppsDriveService: Initializing for Windows');
+    if (PlatformHelper.isDesktop) {
+      // Desktop (Windows, macOS, Linux) uses the loopback OAuth WindowsDriveServiceWrapper
+      if (kDebugMode) print('AllAppsDriveService: Initializing for Desktop (${PlatformHelper.platformName})');
       // Will be created async in initialize()
     } else {
       // Mobile (Android/iOS) uses MobileDriveService
@@ -79,7 +79,7 @@ class AllAppsDriveService {
 
   // Expose underlying service properties
   bool get syncEnabled {
-    if (PlatformHelper.isWindows) {
+    if (PlatformHelper.isDesktop) {
       return _windowsDriveService?.syncEnabled ?? false;
     } else {
       return _mobileDriveService?.syncEnabled ?? false;
@@ -87,7 +87,7 @@ class AllAppsDriveService {
   }
   
   bool get isAuthenticated {
-    if (PlatformHelper.isWindows) {
+    if (PlatformHelper.isDesktop) {
       return _windowsDriveService?.isAuthenticated ?? false;
     } else {
       return _mobileDriveService?.isAuthenticated ?? false;
@@ -95,7 +95,7 @@ class AllAppsDriveService {
   }
   
   Stream<bool> get onSyncStateChanged {
-    if (PlatformHelper.isWindows) {
+    if (PlatformHelper.isDesktop) {
       return _windowsDriveService?.onSyncStateChanged ?? Stream.empty();
     } else {
       return _mobileDriveService?.onSyncStateChanged ?? Stream.empty();
@@ -105,7 +105,7 @@ class AllAppsDriveService {
   Stream<int> get onUpload => _uploadCountController.stream;
   
   Stream<String> get onError {
-    if (PlatformHelper.isWindows) {
+    if (PlatformHelper.isDesktop) {
       return _windowsDriveService?.onError ?? Stream.empty();
     } else {
       return _mobileDriveService?.onError ?? Stream.empty();
@@ -114,7 +114,7 @@ class AllAppsDriveService {
 
   /// Initialize the service
   Future<void> initialize() async {
-    if (PlatformHelper.isWindows) {
+    if (PlatformHelper.isDesktop) {
       // Create WindowsDriveService and wrap it
       const config = GoogleDriveConfig(
         fileName: 'twelve_steps_backup.json',
@@ -136,7 +136,7 @@ class AllAppsDriveService {
 
   /// Sign in to Google
   Future<bool> signIn() {
-    if (PlatformHelper.isWindows) {
+    if (PlatformHelper.isDesktop) {
       return _windowsDriveService!.driveService.signIn();
     } else {
       return _mobileDriveService!.signIn();
@@ -145,7 +145,7 @@ class AllAppsDriveService {
 
   /// Sign out from Google  
   Future<void> signOut() async {
-    if (PlatformHelper.isWindows) {
+    if (PlatformHelper.isDesktop) {
       await _windowsDriveService!.driveService.signOut();
     } else {
       await _mobileDriveService!.signOut();
@@ -155,7 +155,7 @@ class AllAppsDriveService {
 
   /// Enable/disable sync
   Future<void> setSyncEnabled(bool enabled) async {
-    if (PlatformHelper.isWindows) {
+    if (PlatformHelper.isDesktop) {
       _windowsDriveService!.setSyncEnabled(enabled);
     } else {
       _mobileDriveService!.setSyncEnabled(enabled);
@@ -165,14 +165,14 @@ class AllAppsDriveService {
 
   /// Set external client from access token (for mobile when auth happens in data management tab)
   Future<void> setClientFromToken(String accessToken) async {
-    if (!PlatformHelper.isWindows) {
+    if (!PlatformHelper.isDesktop) {
       await _mobileDriveService?.setExternalClientFromToken(accessToken);
     }
   }
 
   /// Clear the drive client (used on sign-out)
   void clearClient() {
-    if (!PlatformHelper.isWindows) {
+    if (!PlatformHelper.isDesktop) {
       _mobileDriveService?.clearExternalClient();
     }
   }
@@ -184,7 +184,7 @@ class AllAppsDriveService {
 
   /// Upload raw content directly
   Future<void> uploadContent(String content) async {
-    if (PlatformHelper.isWindows) {
+    if (PlatformHelper.isDesktop) {
       _windowsDriveService!.scheduleUpload(content);
     } else {
       await _mobileDriveService!.uploadContent(content);
@@ -203,7 +203,7 @@ class AllAppsDriveService {
       final jsonString = json.encode(payload);
       final timestamp = SyncPayloadBuilder.getPayloadTimestamp(payload);
 
-      if (PlatformHelper.isWindows) {
+      if (PlatformHelper.isDesktop) {
         _windowsDriveService!.scheduleUpload(jsonString);
       } else {
         await _mobileDriveService!.uploadContent(jsonString);
@@ -296,7 +296,7 @@ class AllAppsDriveService {
       _saveLastModified(timestamp);
       
       // Perform upload directly (debouncing already happened at this level)
-      if (PlatformHelper.isWindows) {
+      if (PlatformHelper.isDesktop) {
         await _windowsDriveService!.driveService.uploadFile(
           fileName: _windowsDriveService!.driveService.config.fileName,
           content: jsonString,
@@ -327,7 +327,7 @@ class AllAppsDriveService {
 
     try {
       final String? content;
-      if (PlatformHelper.isWindows) {
+      if (PlatformHelper.isDesktop) {
         content = await _windowsDriveService!.downloadContent();
       } else {
         content = await _mobileDriveService!.downloadContent();
@@ -344,7 +344,7 @@ class AllAppsDriveService {
 
   /// List available backup restore points
   Future<List<Map<String, dynamic>>> listAvailableBackups() async {
-    if (PlatformHelper.isWindows) {
+    if (PlatformHelper.isDesktop) {
       return await _windowsDriveService!.listAvailableBackups();
     } else {
       return await _mobileDriveService!.listAvailableBackups();
@@ -359,7 +359,7 @@ class AllAppsDriveService {
     }
 
     try {
-      if (PlatformHelper.isWindows) {
+      if (PlatformHelper.isDesktop) {
         return await _windowsDriveService!.downloadBackupContent(fileName);
       } else {
         return await _mobileDriveService!.downloadBackupContent(fileName);
@@ -372,7 +372,7 @@ class AllAppsDriveService {
 
   /// Check if inventory file exists on Drive
   Future<bool> inventoryFileExists() {
-    if (PlatformHelper.isWindows) {
+    if (PlatformHelper.isDesktop) {
       return _windowsDriveService!.fileExists();
     } else {
       return _mobileDriveService!.fileExists();
@@ -381,7 +381,7 @@ class AllAppsDriveService {
 
   /// Delete inventory file from Drive
   Future<bool> deleteInventoryFile() {
-    if (PlatformHelper.isWindows) {
+    if (PlatformHelper.isDesktop) {
       return _windowsDriveService!.deleteContent();
     } else {
       return _mobileDriveService!.deleteContent();
@@ -390,7 +390,7 @@ class AllAppsDriveService {
 
   /// Delete all backup files (DEBUG ONLY)
   Future<int> deleteAllBackups() async {
-    if (PlatformHelper.isWindows) {
+    if (PlatformHelper.isDesktop) {
       return 0;
     } else {
       return await _mobileDriveService!.deleteAllBackups();
@@ -407,7 +407,7 @@ class AllAppsDriveService {
     try {
       final settingsBox = await _getSettingsBox();
       final enabled = settingsBox.get('syncEnabled', defaultValue: false) ?? false;
-      if (PlatformHelper.isWindows) {
+      if (PlatformHelper.isDesktop) {
         _windowsDriveService?.setSyncEnabled(enabled);
       } else {
         _mobileDriveService?.setSyncEnabled(enabled);
@@ -481,7 +481,7 @@ class AllAppsDriveService {
       // This avoids downloading/parsing the full JSON backup while matching our conflict semantics.
       final remoteSw = Stopwatch()..start();
       final DateTime? remoteTimestamp;
-      if (PlatformHelper.isWindows) {
+      if (PlatformHelper.isDesktop) {
         remoteTimestamp = await _windowsDriveService!.getNewestBackupJsonLastModified(runCleanup: false);
       } else {
         remoteTimestamp = await _mobileDriveService!.getNewestBackupJsonLastModified(runCleanup: false);
@@ -536,7 +536,7 @@ class AllAppsDriveService {
 
   /// Dispose resources
   void dispose() {
-    if (PlatformHelper.isWindows) {
+    if (PlatformHelper.isDesktop) {
       _windowsDriveService?.dispose();
     } else {
       _mobileDriveService?.dispose();
