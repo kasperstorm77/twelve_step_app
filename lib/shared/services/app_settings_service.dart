@@ -151,13 +151,30 @@ class AppSettingsService {
     final settings = getMorningRitualSettings();
     final startTime = settings['startTime'] as TimeOfDay;
     final endTime = settings['endTime'] as TimeOfDay;
-    
-    return {
+
+    final result = <String, dynamic>{
       'morningRitualAutoLoadEnabled': settings['enabled'] as bool,
       'morningRitualStartTime': '${startTime.hour.toString().padLeft(2, '0')}:${startTime.minute.toString().padLeft(2, '0')}:00',
       'morningRitualEndTime': '${endTime.hour.toString().padLeft(2, '0')}:${endTime.minute.toString().padLeft(2, '0')}:00',
       'fourthStepCompactViewEnabled': getFourthStepCompactViewEnabled(),
     };
+
+    // Device-portable UI preferences (added to sync coverage).
+    try {
+      final settingsBox = Hive.box(_settingsBoxName);
+      final language = settingsBox.get('language') as String?;
+      if (language != null && language.isNotEmpty) {
+        result['language'] = language;
+      }
+      final selectedAppId = settingsBox.get('selected_app_id') as String?;
+      if (selectedAppId != null && selectedAppId.isNotEmpty) {
+        result['selectedAppId'] = selectedAppId;
+      }
+    } catch (e) {
+      if (kDebugMode) print('AppSettingsService: Error exporting UI prefs - $e');
+    }
+
+    return result;
   }
 
   /// Import settings from Drive sync
@@ -202,7 +219,20 @@ class AppSettingsService {
       );
 
       await setFourthStepCompactViewEnabled(compactViewEnabled);
-      
+
+      // Restore device-portable UI preferences. Only write when present so an
+      // older backup (without these keys) never clobbers the current value.
+      // Read back on next launch by LocaleProvider / AppSwitcherService.
+      final settingsBox = Hive.box(_settingsBoxName);
+      final language = data['language'] as String?;
+      if (language != null && language.isNotEmpty) {
+        await settingsBox.put('language', language);
+      }
+      final selectedAppId = data['selectedAppId'] as String?;
+      if (selectedAppId != null && selectedAppId.isNotEmpty) {
+        await settingsBox.put('selected_app_id', selectedAppId);
+      }
+
       if (kDebugMode) print('AppSettingsService: Imported morning ritual settings from sync');
     } catch (e) {
       if (kDebugMode) print('AppSettingsService: Error importing settings from sync - $e');

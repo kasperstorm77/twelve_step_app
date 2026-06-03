@@ -127,10 +127,19 @@ class MobileDriveService {
       // expiry and no refresh token, so it goes stale even though the user
       // is still signed in. Refresh once via google_sign_in and retry.
       final msg = e.toString();
+      // 401: expired/invalid token. 403 scope variants: a cached token minted
+      // before the scope-align fix can lack the drive.appdata scope; clearing
+      // the auth cache and re-minting (in refreshTokenIfNeeded) recovers a fresh
+      // token with the correct scopes. Both are auto-healed with one retry so no
+      // user action is ever required.
       final looksLikeAuthError = msg.contains('401') ||
           msg.contains('UNAUTHENTICATED') ||
           msg.contains('Invalid Credentials') ||
-          msg.contains('Login Required');
+          msg.contains('Login Required') ||
+          msg.contains('insufficientPermissions') ||
+          msg.contains('insufficient authentication scopes') ||
+          msg.contains('ACCESS_TOKEN_SCOPE_INSUFFICIENT') ||
+          msg.contains('PERMISSION_DENIED');
       if (looksLikeAuthError) {
         if (kDebugMode) print('MobileDriveService.uploadContent() - auth error, refreshing token and retrying');
         try {

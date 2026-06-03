@@ -59,6 +59,11 @@ class _DataManagementTabState extends State<DataManagementTab> {
   List<Map<String, dynamic>> _availableBackups = [];
   String? _selectedBackupFileName;
   bool _loadingBackups = false;
+
+  // Sync diagnostics (read from the settings box; written by AllAppsDriveService).
+  // Surfaced so a silently-failing background sync becomes visible.
+  String? _lastSyncError;
+  String? _lastSyncSuccessAt;
   
   // Track if we've already prompted for this account this session
   // This is persisted in Hive settings so it survives page navigation
@@ -202,6 +207,18 @@ class _DataManagementTabState extends State<DataManagementTab> {
     setState(() {
       // Default to false so fresh installs show the fetch prompt on first sign-in
       _syncEnabled = settingsBox.get('syncEnabled', defaultValue: false);
+      _lastSyncError = settingsBox.get('lastSyncError') as String?;
+      _lastSyncSuccessAt = settingsBox.get('lastSyncSuccessAt') as String?;
+    });
+  }
+
+  /// Re-read background-sync diagnostics from the settings box and refresh UI.
+  void _refreshSyncStatus() {
+    if (!mounted || !Hive.isBoxOpen('settings')) return;
+    final settingsBox = Hive.box('settings');
+    setState(() {
+      _lastSyncError = settingsBox.get('lastSyncError') as String?;
+      _lastSyncSuccessAt = settingsBox.get('lastSyncSuccessAt') as String?;
     });
   }
 
@@ -513,13 +530,46 @@ class _DataManagementTabState extends State<DataManagementTab> {
   }
 
   Future<void> _uploadToDrive() async {
-    if (!_syncEnabled || !AllAppsDriveService.instance.isAuthenticated) return;
+    final messenger = ScaffoldMessenger.of(context);
+
+    // Don't silently no-op: tell the user why an upload can't happen.
+    if (!AllAppsDriveService.instance.isAuthenticated) {
+      messenger.showSnackBar(
+        SnackBar(content: Text(t(context, 'sign_in_to_enable_sync'))),
+      );
+      return;
+    }
+    if (!_syncEnabled) {
+      messenger.showSnackBar(
+        SnackBar(content: Text(t(context, 'sign_in_to_enable_sync'))),
+      );
+      return;
+    }
 
     try {
       // Use the new method that shows UI notification for user-initiated uploads
       await AllAppsDriveService.instance.uploadFromBoxWithNotification(widget.box);
+      if (!mounted) return;
+      messenger.showSnackBar(
+        SnackBar(
+          content: Text(t(context, 'drive_upload_success')
+              .replaceFirst('%s', widget.box.length.toString())),
+          backgroundColor: Colors.green.shade700,
+        ),
+      );
     } catch (e) {
-      // Upload failed silently
+      if (!mounted) return;
+      // Surface the real failure instead of swallowing it — this is the only
+      // way the user (and we) can see WHY Drive sync isn't working.
+      messenger.showSnackBar(
+        SnackBar(
+          content: Text('${t(context, 'fetch_failed')}: $e'),
+          backgroundColor: Colors.red,
+          duration: const Duration(seconds: 6),
+        ),
+      );
+    } finally {
+      _refreshSyncStatus();
     }
   }
 
@@ -913,6 +963,71 @@ class _DataManagementTabState extends State<DataManagementTab> {
     }
   }
 
+  /// Compact status line showing whether background sync is healthy.
+  /// Reads the diagnostics AllAppsDriveService persists to the settings box.
+  Widget _buildSyncStatus() {
+    final blocked = AllAppsDriveService.instance.uploadsBlocked;
+
+    late final IconData icon;
+    late final Color color;
+    late final String message;
+
+    if (!_syncEnabled) {
+      icon = Icons.cloud_off;
+      color = Colors.grey;
+      message = t(context, 'sync_google_drive'); // sync is off
+    } else if (blocked) {
+      icon = Icons.pause_circle_filled;
+      color = Colors.orange.shade800;
+      message = t(context, 'newer_data_available');
+    } else if (_lastSyncError != null && _lastSyncError!.isNotEmpty) {
+      icon = Icons.error_outline;
+      color = Colors.red;
+      message = '${t(context, 'fetch_failed')}: ${_lastSyncError!}';
+    } else if (_lastSyncSuccessAt != null) {
+      icon = Icons.cloud_done;
+      color = Colors.green.shade700;
+      final ts = DateTime.tryParse(_lastSyncSuccessAt!)?.toLocal();
+      final shown = ts != null
+          ? '${ts.year}-${ts.month.toString().padLeft(2, '0')}-${ts.day.toString().padLeft(2, '0')} '
+              '${ts.hour.toString().padLeft(2, '0')}:${ts.minute.toString().padLeft(2, '0')}'
+          : _lastSyncSuccessAt!;
+      message = '${t(context, 'drive_upload_success').replaceFirst('%s', widget.box.length.toString())} ($shown)';
+    } else {
+      icon = Icons.cloud_queue;
+      color = Colors.grey;
+      message = t(context, 'sync_google_drive');
+    }
+
+    return Container(
+      padding: const EdgeInsets.all(10),
+      decoration: BoxDecoration(
+        color: color.withValues(alpha: 0.08),
+        borderRadius: BorderRadius.circular(8),
+        border: Border.all(color: color.withValues(alpha: 0.4)),
+      ),
+      child: Row(
+        children: [
+          Icon(icon, color: color, size: 20),
+          const SizedBox(width: 8),
+          Expanded(
+            child: Text(
+              message,
+              style: TextStyle(color: color, fontSize: 12),
+            ),
+          ),
+          IconButton(
+            icon: const Icon(Icons.refresh, size: 18),
+            padding: EdgeInsets.zero,
+            constraints: const BoxConstraints(),
+            tooltip: t(context, 'refresh_backups'),
+            onPressed: _refreshSyncStatus,
+          ),
+        ],
+      ),
+    );
+  }
+
   @override
   Widget build(BuildContext context) {
     final bool isSignedIn = _currentUser != null;
@@ -972,7 +1087,13 @@ class _DataManagementTabState extends State<DataManagementTab> {
               ],
             ),
           if (driveAvailable) const SizedBox(height: 16),
-          
+
+          // Sync status — makes a silently-failing background sync visible.
+          if (driveAvailable && isSignedIn) ...[
+            _buildSyncStatus(),
+            const SizedBox(height: 16),
+          ],
+
           ElevatedButton(onPressed: _exportJson, child: Text(t(context, 'export_json'))),
           const SizedBox(height: 16),
           ElevatedButton(onPressed: _importJson, child: Text(t(context, 'import_json'))),

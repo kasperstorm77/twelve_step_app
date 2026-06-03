@@ -99,11 +99,42 @@ class MobileGoogleAuthService {
     );
   }
 
-  /// Refresh access token if needed
+  /// Refresh access token if needed.
+  ///
+  /// If [_currentUser] is null we still try to recover the account via
+  /// signInSilently() before giving up. This is the common case on Android:
+  /// the interactive sign-in happens on a *different* GoogleSignIn instance
+  /// (the Data Management tab) which only hands this service a one-shot access
+  /// token via setExternalClientFromToken(). That token is hardcoded to a
+  /// 59-minute expiry with no refresh token, so once it lapses every background
+  /// upload 401s and lands here. Without recovering the account first, this
+  /// returned false immediately and background sync died silently forever.
   Future<bool> refreshTokenIfNeeded() async {
-    if (_currentUser == null) return false;
-    
+    if (_currentUser == null) {
+      try {
+        final account = await _googleSignIn.signInSilently();
+        if (account != null) {
+          // Evict the client-side token cache before reading. On Android
+          // account.authentication can otherwise return the SAME stale token
+          // that just 401'd, so the upload retry would immediately re-401.
+          try {
+            await account.clearAuthCache();
+          } catch (_) {}
+          await _updateAuthState(account);
+          return _accessToken != null;
+        }
+      } catch (e) {
+        if (kDebugMode) print('Token refresh: silent account recovery failed: $e');
+      }
+      return false;
+    }
+
     try {
+      // Drop the cached token first so authentication mints a fresh one rather
+      // than handing back the expired token again.
+      try {
+        await _currentUser!.clearAuthCache();
+      } catch (_) {}
       final auth = await _currentUser!.authentication;
       if (auth.accessToken != null) {
         _accessToken = auth.accessToken;
