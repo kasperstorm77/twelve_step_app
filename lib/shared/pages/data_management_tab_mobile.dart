@@ -563,7 +563,7 @@ class _DataManagementTabState extends State<DataManagementTab> {
       // way the user (and we) can see WHY Drive sync isn't working.
       messenger.showSnackBar(
         SnackBar(
-          content: Text('${t(context, 'fetch_failed')}: $e'),
+          content: Text('${t(context, 'sync_failed')}: $e'),
           backgroundColor: Colors.red,
           duration: const Duration(seconds: 6),
         ),
@@ -983,7 +983,7 @@ class _DataManagementTabState extends State<DataManagementTab> {
     } else if (_lastSyncError != null && _lastSyncError!.isNotEmpty) {
       icon = Icons.error_outline;
       color = Colors.red;
-      message = '${t(context, 'fetch_failed')}: ${_lastSyncError!}';
+      message = '${t(context, 'sync_failed')}: ${_lastSyncError!}';
     } else if (_lastSyncSuccessAt != null) {
       icon = Icons.cloud_done;
       color = Colors.green.shade700;

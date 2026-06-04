@@ -54,6 +54,30 @@ class GoogleDriveCrudClient {
     return (files != null && files.isNotEmpty) ? files.first.id : null;
   }
 
+  /// Decode raw backup bytes into a string.
+  ///
+  /// Backups are written as UTF-8 (see [createFile]/[updateFile]/
+  /// [createDatedBackupFile], which use `utf8.encode`). Decode strictly first;
+  /// if the bytes are not valid UTF-8 it's a legacy backup written via
+  /// `String.codeUnits` — i.e. Latin1 for the chars <= 0xFF that such files are
+  /// guaranteed to contain (chars > 0xFF never uploaded successfully under the
+  /// old path, so no legacy file contains them). Falling back to Latin1
+  /// preserves those characters (e.g. Danish æ/ø/å), keeping every
+  /// previously-saved backup readable.
+  ///
+  /// Known, accepted limitation: a legacy file whose stored text already
+  /// contained literal adjacent mojibake bytes forming a valid UTF-8 sequence
+  /// (e.g. the two characters "Ã©" = bytes [0xC3, 0xA9]) decodes as the composed
+  /// char ("é") without error. This only affects pre-existing double-encoded
+  /// data and can never occur for new (always-UTF-8) backups.
+  static String decodeBackupBytes(List<int> bytes) {
+    try {
+      return utf8.decode(bytes);
+    } on FormatException {
+      return latin1.decode(bytes);
+    }
+  }
+
   /// Read file content by ID
   Future<String?> readFile(String fileId) async {
     final media = await _driveApi.files.get(
@@ -63,7 +87,7 @@ class GoogleDriveCrudClient {
 
     if (media != null) {
       final bytes = await media.stream.expand((chunk) => chunk).toList();
-      return String.fromCharCodes(bytes);
+      return decodeBackupBytes(bytes);
     }
     return null;
   }
@@ -94,7 +118,7 @@ class GoogleDriveCrudClient {
 
   /// Create a new file with content
   Future<String> createFile(String content) async {
-    final bytes = content.codeUnits;
+    final bytes = utf8.encode(content);
     final media = drive_api.Media(Stream.fromIterable([bytes]), bytes.length);
 
     final fileMetadata = drive_api.File()
@@ -112,7 +136,7 @@ class GoogleDriveCrudClient {
 
   /// Update existing file with new content
   Future<String> updateFile(String fileId, String content) async {
-    final bytes = content.codeUnits;
+    final bytes = utf8.encode(content);
     final media = drive_api.Media(Stream.fromIterable([bytes]), bytes.length);
 
     final fileMetadata = drive_api.File()
@@ -213,7 +237,7 @@ class GoogleDriveCrudClient {
 
   /// Create a dated backup file with content
   Future<String> createDatedBackupFile(String content, DateTime date) async {
-    final bytes = content.codeUnits;
+    final bytes = utf8.encode(content);
     final media = drive_api.Media(Stream.fromIterable([bytes]), bytes.length);
 
     // Generate dated filename with timestamp (e.g., twelve_steps_backup_2025-11-23_14-30-15.json)
