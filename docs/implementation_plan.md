@@ -16,19 +16,7 @@ items — but the release items in P1 depend on them.
 
 ## P1 — Blocking a real public release
 
-### P1.1 Replace the placeholder iOS identity
-The app still ships with bundle ID `com.example.twelvestepsapp` and
-display name "Twelvestepsapp". Neither is acceptable for an App Store
-build. Change the bundle ID (e.g. `dk.stormstyrken.twelvestepsapp`),
-set `CFBundleDisplayName` to "12 Steps App", and **re-point the iOS
-OAuth client + `Info.plist` URL scheme** to match — Google Sign-In
-breaks the moment the bundle ID changes without it.
-
-**Why now:** it's the single hard blocker between the current build and
-a submittable one. Full steps in the
-[iOS release runbook](#ios-release-runbook).
-
-### P1.2 Confirm `desktop_oauth_config.dart` is not committed
+### P1.1 Confirm `desktop_oauth_config.dart` is not committed
 `lib/shared/services/google_drive/desktop_oauth_config.dart` holds a
 hardcoded desktop OAuth client id **and secret**. Its header says the
 file is gitignored, but it is present in the working tree. Verify it is
@@ -185,8 +173,9 @@ the callback. Refresh tokens are cached locally (Hive
 **Prerequisites:** an Apple Developer account ($99/yr), an App Store
 Connect app record, and Xcode on macOS.
 
-1. **Bundle identifier.** Default is `com.example.twelvestepsapp` —
-   change it.
+1. **Bundle identifier.** Already set to `dk.stormstyrken.twelvestepsapp`
+   (the Flutter default is `com.example.twelvestepsapp`). If you ever
+   change it again:
    - *Xcode (recommended):* open `ios/Runner.xcworkspace` (not
      `.xcodeproj`) → Runner → Signing & Capabilities → set Bundle
      Identifier (e.g. `dk.stormstyrken.twelvestepsapp`), select your
@@ -235,13 +224,13 @@ set · version incremented · tested on a real device · Google Sign-In
 verified · Drive sync verified · all features tested · screenshots ready ·
 Privacy Policy URL ready · Support URL ready.
 
-**Current configuration (placeholders to replace):** Bundle ID
-`com.example.twelvestepsapp` (change it) · iOS OAuth client
+**Current configuration:** Bundle ID `dk.stormstyrken.twelvestepsapp` ·
+display name "12 Steps App" · iOS OAuth client
 `628217349107-2u1kqe686mqd9a2mncfs4hr9sgmq4f9k.apps.googleusercontent.com`
 · URL scheme
 `com.googleusercontent.apps.628217349107-2u1kqe686mqd9a2mncfs4hr9sgmq4f9k`
-· display name "Twelvestepsapp" (change to "12 Steps App") · version: see
-`pubspec.yaml`.
+· version: see `pubspec.yaml`. (Bundle ID and display name are already
+set; the steps above apply only if you change them again.)
 
 **Troubleshooting.**
 - *"No identity found"* — configure code signing in Xcode with your
