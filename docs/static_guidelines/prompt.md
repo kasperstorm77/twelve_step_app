@@ -1,0 +1,1 @@
+Read docs/static_guidelines/documentation_setup.md and carry out both deliverables exactly as written. Read the referenced claude_md_best_practices.md and the existing docs/ files first, then do the work.
