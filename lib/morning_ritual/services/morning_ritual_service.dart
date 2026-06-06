@@ -1,3 +1,4 @@
+import 'dart:convert';
 import 'package:flutter/foundation.dart';
 import 'package:hive_flutter/hive_flutter.dart';
 import '../models/ritual_item.dart';
@@ -165,6 +166,75 @@ class MorningRitualService {
 
     await saveEntry(entry);
     return entry;
+  }
+
+  // ============ In-Progress Ritual (device-local draft) ============
+  //
+  // The in-progress ritual (which items are done, where the user is) is saved
+  // here so it survives navigating away, switching apps, or restarting the app,
+  // and is restored when the user returns the SAME day. A new calendar day
+  // resets it. This draft is stored in the device-local `settings` box and is
+  // deliberately NOT part of the Drive sync payload (only the finished
+  // [MorningRitualEntry] syncs) — partial progress is per-device, and keeping it
+  // out of sync means the schema/backups are unchanged and fully backwards
+  // compatible.
+
+  static const String _progressKey = 'morning_ritual_progress';
+
+  static String _dayKey(DateTime d) =>
+      '${d.year.toString().padLeft(4, '0')}-${d.month.toString().padLeft(2, '0')}-${d.day.toString().padLeft(2, '0')}';
+
+  /// Persist the in-progress ritual for [date]. Best-effort.
+  static Future<void> saveProgress({
+    required DateTime date,
+    required int currentItemIndex,
+    required DateTime? startedAt,
+    required List<RitualItemRecord> records,
+  }) async {
+    if (!Hive.isBoxOpen('settings')) return;
+    try {
+      final data = {
+        'date': _dayKey(date),
+        'currentItemIndex': currentItemIndex,
+        'startedAt': startedAt?.toIso8601String(),
+        'records': records.map((r) => r.toJson()).toList(),
+      };
+      await Hive.box('settings').put(_progressKey, jsonEncode(data));
+    } catch (e) {
+      if (kDebugMode) print('MorningRitualService: Failed to save progress - $e');
+    }
+  }
+
+  /// Load the saved in-progress ritual if it belongs to [today]. A draft from an
+  /// earlier day is stale (a new day resets the ritual) and is discarded.
+  /// Returns null when there is nothing valid to resume.
+  static Map<String, dynamic>? loadProgress(DateTime today) {
+    if (!Hive.isBoxOpen('settings')) return null;
+    final box = Hive.box('settings');
+    final raw = box.get(_progressKey) as String?;
+    if (raw == null) return null;
+    try {
+      final data = jsonDecode(raw) as Map<String, dynamic>;
+      if (data['date'] != _dayKey(today)) {
+        // Different/previous day — clear so it can't resurface.
+        box.delete(_progressKey);
+        return null;
+      }
+      return data;
+    } catch (_) {
+      box.delete(_progressKey);
+      return null;
+    }
+  }
+
+  /// Clear any saved in-progress ritual (called when the ritual is finished).
+  static Future<void> clearProgress() async {
+    if (!Hive.isBoxOpen('settings')) return;
+    try {
+      await Hive.box('settings').delete(_progressKey);
+    } catch (e) {
+      if (kDebugMode) print('MorningRitualService: Failed to clear progress - $e');
+    }
   }
 
   /// Trigger background sync after changes

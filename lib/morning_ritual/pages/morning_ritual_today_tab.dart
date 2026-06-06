@@ -44,6 +44,9 @@ class _MorningRitualTodayTabState extends State<MorningRitualTodayTab> {
   void initState() {
     super.initState();
     _loadRitualItems();
+    // Resume an in-progress ritual saved earlier today (survives navigating
+    // away / switching apps / restarting the app).
+    _maybeRestoreProgress();
     // Listen to ritual items box for changes (e.g., after sync)
     MorningRitualService.ritualItemsBox.listenable().addListener(_onRitualItemsChanged);
   }
@@ -54,6 +57,9 @@ class _MorningRitualTodayTabState extends State<MorningRitualTodayTab> {
     if (oldWidget.selectedDate != widget.selectedDate) {
       _resetRitual();
       _loadRitualItems();
+      // Returning to today should restore any in-progress ritual; other dates
+      // simply have nothing to resume.
+      _maybeRestoreProgress();
     }
   }
 
@@ -91,6 +97,63 @@ class _MorningRitualTodayTabState extends State<MorningRitualTodayTab> {
       _timerRunning = false;
       _timerPaused = false;
     });
+    // NOTE: deliberately does NOT clear the persisted draft — switching to
+    // another date must not wipe today's in-progress ritual.
+  }
+
+  /// Persist the current in-progress ritual so it can be resumed after the user
+  /// navigates away. No-op unless a ritual is actually running for today.
+  void _saveProgress() {
+    if (!_ritualStarted || !_isToday) return;
+    MorningRitualService.saveProgress(
+      date: widget.selectedDate,
+      currentItemIndex: _currentItemIndex,
+      startedAt: _ritualStartedAt,
+      records: _completedRecords,
+    );
+  }
+
+  /// Resume an in-progress ritual that was saved earlier today. Only today's
+  /// ritual can be in progress; an already-finished ritual or a draft from a
+  /// previous day yields nothing to restore.
+  void _maybeRestoreProgress() {
+    if (!_isToday) return;
+    // A finished ritual is stored as a real entry — that view wins.
+    if (MorningRitualService.getEntryByDate(widget.selectedDate) != null) return;
+    if (_ritualItems.isEmpty) return;
+
+    final progress = MorningRitualService.loadProgress(DateTime.now());
+    if (progress == null) return;
+
+    final records = ((progress['records'] as List?) ?? const [])
+        .map((j) => RitualItemRecord.fromJson(j as Map<String, dynamic>))
+        .toList();
+    var index = (progress['currentItemIndex'] as int?) ?? records.length;
+    if (index < 0) index = 0;
+    // The active items may have changed since the draft was saved. If the
+    // resume point is past the end there is nothing meaningful to resume.
+    if (index >= _ritualItems.length) {
+      MorningRitualService.clearProgress();
+      return;
+    }
+
+    final startedAtStr = progress['startedAt'] as String?;
+    _ritualStarted = true;
+    _completedRecords = records;
+    _currentItemIndex = index;
+    _ritualStartedAt = startedAtStr != null
+        ? (DateTime.tryParse(startedAtStr) ?? DateTime.now())
+        : DateTime.now();
+
+    // Initialise the current item (e.g. timer display). The current timer item
+    // resumes at the start of that item; already-completed items are preserved.
+    _setupCurrentItem();
+
+    // Tell the parent the ritual is in progress (hides the calendar). Deferred
+    // so we never call the parent's setState during this build.
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      if (mounted) widget.onRitualStartedChanged?.call(true);
+    });
   }
 
   bool get _isToday {
@@ -126,6 +189,7 @@ class _MorningRitualTodayTabState extends State<MorningRitualTodayTab> {
     widget.onRitualStartedChanged?.call(true);
 
     _setupCurrentItem();
+    _saveProgress();
   }
 
   void _setupCurrentItem() {
@@ -334,6 +398,7 @@ class _MorningRitualTodayTabState extends State<MorningRitualTodayTab> {
       _finishRitual();
     } else {
       _setupCurrentItem();
+      _saveProgress();
     }
   }
 
@@ -364,6 +429,7 @@ class _MorningRitualTodayTabState extends State<MorningRitualTodayTab> {
       _finishRitual();
     } else {
       _setupCurrentItem();
+      _saveProgress();
     }
   }
 
@@ -384,6 +450,7 @@ class _MorningRitualTodayTabState extends State<MorningRitualTodayTab> {
     });
 
     _setupCurrentItem();
+    _saveProgress();
   }
 
   Future<void> _startOver() async {
@@ -418,6 +485,7 @@ class _MorningRitualTodayTabState extends State<MorningRitualTodayTab> {
         _remainingSeconds = 0;
       });
       _setupCurrentItem();
+      _saveProgress();
     }
   }
 
@@ -430,6 +498,9 @@ class _MorningRitualTodayTabState extends State<MorningRitualTodayTab> {
     );
 
     await MorningRitualService.saveEntry(entry);
+    // The ritual is finished and persisted as a real (synced) entry — drop the
+    // device-local in-progress draft so it can't be resumed.
+    await MorningRitualService.clearProgress();
 
     setState(() {
       _ritualStarted = false;

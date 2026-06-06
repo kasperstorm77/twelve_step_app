@@ -208,15 +208,30 @@ class AllAppsDriveService {
       } else {
         await _mobileDriveService!.uploadContent(jsonString);
       }
-      
+
       // Save the upload timestamp locally
       await _saveLastModified(timestamp);
-      
+
+      // The mobile upload is awaited, so reaching here means the bytes actually
+      // reached Drive. Record success so the sync-status chip clears any
+      // previously-persisted error (e.g. the legacy UTF-16 'CodeUnits' upload
+      // failure). Without this, a stale error string lingers in the settings box
+      // and is shown forever even though uploads now work — only
+      // _performDebouncedUpload cleared it before, so a successful manual or
+      // post-import upload left the old error on screen.
+      if (!PlatformHelper.isDesktop) {
+        await _saveLastSyncSuccess(timestamp);
+      }
+
       // Only notify UI for user-initiated uploads
       if (notifyUI) {
         _notifyUploadCount();
       }
     } catch (e) {
+      // Surface the failure on the status chip too (mobile path is awaited).
+      if (!PlatformHelper.isDesktop) {
+        _saveLastSyncError(e.toString());
+      }
       rethrow;
     }
   }
@@ -485,6 +500,20 @@ class AllAppsDriveService {
       await settingsBox.put('lastSyncErrorAt', DateTime.now().toUtc().toIso8601String());
     } catch (e) {
       if (kDebugMode) print('AllAppsDriveService: Failed to save lastSyncError - $e');
+    }
+  }
+
+  /// Clear a persisted sync error. Used to drop an error that can no longer
+  /// occur (e.g. the legacy UTF-16 'CodeUnits' upload failure, now that backups
+  /// are written as UTF-8) so a stale diagnostic doesn't linger on the status
+  /// chip. Touches ONLY the diagnostic string — never user data, the backup
+  /// payload, or any Drive file — so it is always data-safe.
+  Future<void> clearPersistedSyncError() async {
+    try {
+      final settingsBox = await _getSettingsBox();
+      await settingsBox.put('lastSyncError', null);
+    } catch (e) {
+      if (kDebugMode) print('AllAppsDriveService: Failed to clear lastSyncError - $e');
     }
   }
 

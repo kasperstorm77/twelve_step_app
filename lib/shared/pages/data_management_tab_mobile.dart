@@ -60,11 +60,11 @@ class _DataManagementTabState extends State<DataManagementTab> {
   String? _selectedBackupFileName;
   bool _loadingBackups = false;
 
-  // Sync diagnostics (read from the settings box; written by AllAppsDriveService).
-  // Surfaced so a silently-failing background sync becomes visible.
-  String? _lastSyncError;
-  String? _lastSyncSuccessAt;
-  
+  // Sync diagnostics live in the settings box (written by AllAppsDriveService).
+  // The status chip reads them directly via a ValueListenableBuilder so a
+  // background sync that clears the error updates the UI immediately — no
+  // cached copy that can go stale and keep showing a fixed-but-not-cleared error.
+
   // Track if we've already prompted for this account this session
   // This is persisted in Hive settings so it survives page navigation
   String? get _lastPromptedAccountId {
@@ -207,19 +207,22 @@ class _DataManagementTabState extends State<DataManagementTab> {
     setState(() {
       // Default to false so fresh installs show the fetch prompt on first sign-in
       _syncEnabled = settingsBox.get('syncEnabled', defaultValue: false);
-      _lastSyncError = settingsBox.get('lastSyncError') as String?;
-      _lastSyncSuccessAt = settingsBox.get('lastSyncSuccessAt') as String?;
     });
   }
 
-  /// Re-read background-sync diagnostics from the settings box and refresh UI.
-  void _refreshSyncStatus() {
-    if (!mounted || !Hive.isBoxOpen('settings')) return;
-    final settingsBox = Hive.box('settings');
-    setState(() {
-      _lastSyncError = settingsBox.get('lastSyncError') as String?;
-      _lastSyncSuccessAt = settingsBox.get('lastSyncSuccessAt') as String?;
-    });
+  /// Retry handler for the sync-status chip's refresh button.
+  ///
+  /// The old handler only re-read the persisted status, so tapping it could
+  /// never clear a stale error. Now it actually re-attempts the upload: a
+  /// successful upload clears the persisted error, and the chip — which reads
+  /// the settings box live via ValueListenableBuilder — updates immediately.
+  void _retrySyncNow() {
+    if (_syncEnabled && AllAppsDriveService.instance.isAuthenticated) {
+      _uploadToDrive();
+    } else {
+      // Nothing to retry (not signed in / sync off) — just refresh the list.
+      _loadAvailableBackups();
+    }
   }
 
   Future<void> _toggleSync(bool value) async {
@@ -258,6 +261,26 @@ class _DataManagementTabState extends State<DataManagementTab> {
       // 2. After actual data changes (create/update/delete)
       // 3. After JSON import
       // 4. When user explicitly presses "Backup to Drive" button
+      //
+      // EXCEPTION — drop a stale encoding error: the legacy UTF-16 'CodeUnits'
+      // upload failure can no longer happen now that backups are written as
+      // UTF-8, so a persisted error with that signature is definitively stale.
+      // Clear it directly (NOT via a re-upload: an unsolicited upload here could
+      // race the startup "remote is newer" block and overwrite newer remote
+      // data). This clears only the diagnostic string — no user data or Drive
+      // file is touched — so it is always safe. Real, current failures (auth,
+      // network) are left in place and handled by the retry button / next sync.
+      if (Hive.isBoxOpen('settings')) {
+        final staleError = Hive.box('settings').get('lastSyncError') as String?;
+        if (staleError != null &&
+            (staleError.contains('CodeUnits') ||
+                staleError.contains('Not a byte value'))) {
+          if (kDebugMode) {
+            print('_initializeDriveClient: clearing stale UTF-16 encoding error from settings box');
+          }
+          await AllAppsDriveService.instance.clearPersistedSyncError();
+        }
+      }
     } catch (e) {
       if (kDebugMode) print('Drive initialization failed: $e');
       if (mounted) {
@@ -568,9 +591,9 @@ class _DataManagementTabState extends State<DataManagementTab> {
           duration: const Duration(seconds: 6),
         ),
       );
-    } finally {
-      _refreshSyncStatus();
     }
+    // No manual refresh needed: uploadFromBox persists success/error to the
+    // settings box and the status chip rebuilds from it live.
   }
 
   /// Create a local backup manually
@@ -964,67 +987,85 @@ class _DataManagementTabState extends State<DataManagementTab> {
   }
 
   /// Compact status line showing whether background sync is healthy.
-  /// Reads the diagnostics AllAppsDriveService persists to the settings box.
+  ///
+  /// Reads the diagnostics AllAppsDriveService persists to the settings box
+  /// LIVE via a ValueListenableBuilder. This is deliberate: a successful sync
+  /// (foreground or background) writes `lastSyncSuccessAt`/clears `lastSyncError`
+  /// in the box, and the chip must reflect that immediately. The previous
+  /// version cached those values in widget fields refreshed only on page load,
+  /// so a successful upload that cleared the error left the old error on screen.
   Widget _buildSyncStatus() {
-    final blocked = AllAppsDriveService.instance.uploadsBlocked;
+    if (!Hive.isBoxOpen('settings')) return const SizedBox.shrink();
+    final settingsBox = Hive.box('settings');
 
-    late final IconData icon;
-    late final Color color;
-    late final String message;
-
-    if (!_syncEnabled) {
-      icon = Icons.cloud_off;
-      color = Colors.grey;
-      message = t(context, 'sync_google_drive'); // sync is off
-    } else if (blocked) {
-      icon = Icons.pause_circle_filled;
-      color = Colors.orange.shade800;
-      message = t(context, 'newer_data_available');
-    } else if (_lastSyncError != null && _lastSyncError!.isNotEmpty) {
-      icon = Icons.error_outline;
-      color = Colors.red;
-      message = '${t(context, 'sync_failed')}: ${_lastSyncError!}';
-    } else if (_lastSyncSuccessAt != null) {
-      icon = Icons.cloud_done;
-      color = Colors.green.shade700;
-      final ts = DateTime.tryParse(_lastSyncSuccessAt!)?.toLocal();
-      final shown = ts != null
-          ? '${ts.year}-${ts.month.toString().padLeft(2, '0')}-${ts.day.toString().padLeft(2, '0')} '
-              '${ts.hour.toString().padLeft(2, '0')}:${ts.minute.toString().padLeft(2, '0')}'
-          : _lastSyncSuccessAt!;
-      message = '${t(context, 'drive_upload_success').replaceFirst('%s', widget.box.length.toString())} ($shown)';
-    } else {
-      icon = Icons.cloud_queue;
-      color = Colors.grey;
-      message = t(context, 'sync_google_drive');
-    }
-
-    return Container(
-      padding: const EdgeInsets.all(10),
-      decoration: BoxDecoration(
-        color: color.withValues(alpha: 0.08),
-        borderRadius: BorderRadius.circular(8),
-        border: Border.all(color: color.withValues(alpha: 0.4)),
+    return ValueListenableBuilder<Box>(
+      valueListenable: settingsBox.listenable(
+        keys: const ['lastSyncError', 'lastSyncSuccessAt'],
       ),
-      child: Row(
-        children: [
-          Icon(icon, color: color, size: 20),
-          const SizedBox(width: 8),
-          Expanded(
-            child: Text(
-              message,
-              style: TextStyle(color: color, fontSize: 12),
-            ),
+      builder: (context, box, _) {
+        final lastSyncError = box.get('lastSyncError') as String?;
+        final lastSyncSuccessAt = box.get('lastSyncSuccessAt') as String?;
+        final blocked = AllAppsDriveService.instance.uploadsBlocked;
+
+        late final IconData icon;
+        late final Color color;
+        late final String message;
+
+        if (!_syncEnabled) {
+          icon = Icons.cloud_off;
+          color = Colors.grey;
+          message = t(context, 'sync_google_drive'); // sync is off
+        } else if (blocked) {
+          icon = Icons.pause_circle_filled;
+          color = Colors.orange.shade800;
+          message = t(context, 'newer_data_available');
+        } else if (lastSyncError != null && lastSyncError.isNotEmpty) {
+          icon = Icons.error_outline;
+          color = Colors.red;
+          message = '${t(context, 'sync_failed')}: $lastSyncError';
+        } else if (lastSyncSuccessAt != null) {
+          icon = Icons.cloud_done;
+          color = Colors.green.shade700;
+          final ts = DateTime.tryParse(lastSyncSuccessAt)?.toLocal();
+          final shown = ts != null
+              ? '${ts.year}-${ts.month.toString().padLeft(2, '0')}-${ts.day.toString().padLeft(2, '0')} '
+                  '${ts.hour.toString().padLeft(2, '0')}:${ts.minute.toString().padLeft(2, '0')}'
+              : lastSyncSuccessAt;
+          message = '${t(context, 'drive_upload_success').replaceFirst('%s', widget.box.length.toString())} ($shown)';
+        } else {
+          icon = Icons.cloud_queue;
+          color = Colors.grey;
+          message = t(context, 'sync_google_drive');
+        }
+
+        return Container(
+          padding: const EdgeInsets.all(10),
+          decoration: BoxDecoration(
+            color: color.withValues(alpha: 0.08),
+            borderRadius: BorderRadius.circular(8),
+            border: Border.all(color: color.withValues(alpha: 0.4)),
           ),
-          IconButton(
-            icon: const Icon(Icons.refresh, size: 18),
-            padding: EdgeInsets.zero,
-            constraints: const BoxConstraints(),
-            tooltip: t(context, 'refresh_backups'),
-            onPressed: _refreshSyncStatus,
+          child: Row(
+            children: [
+              Icon(icon, color: color, size: 20),
+              const SizedBox(width: 8),
+              Expanded(
+                child: Text(
+                  message,
+                  style: TextStyle(color: color, fontSize: 12),
+                ),
+              ),
+              IconButton(
+                icon: const Icon(Icons.refresh, size: 18),
+                padding: EdgeInsets.zero,
+                constraints: const BoxConstraints(),
+                tooltip: t(context, 'refresh_backups'),
+                onPressed: _retrySyncNow,
+              ),
+            ],
           ),
-        ],
-      ),
+        );
+      },
     );
   }
 
