@@ -19,7 +19,10 @@ class AgnosticismService {
   /// Get all archived pairs sorted by archived date (newest first)
   List<BarrierPowerPair> getArchivedPairs(Box<BarrierPowerPair> box) {
     final pairs = box.values.where((p) => p.isArchived).toList();
-    pairs.sort((a, b) => (b.archivedAt ?? b.createdAt).compareTo(a.archivedAt ?? a.createdAt));
+    pairs.sort(
+      (a, b) =>
+          (b.archivedAt ?? b.createdAt).compareTo(a.archivedAt ?? a.createdAt),
+    );
     return pairs;
   }
 
@@ -34,7 +37,11 @@ class AgnosticismService {
   }
 
   /// Add a new barrier/power pair
-  Future<BarrierPowerPair?> addPair(Box<BarrierPowerPair> box, String barrier, String power) async {
+  Future<BarrierPowerPair?> addPair(
+    Box<BarrierPowerPair> box,
+    String barrier,
+    String power,
+  ) async {
     if (!canAddPair(box)) {
       return null; // Max pairs reached
     }
@@ -57,7 +64,12 @@ class AgnosticismService {
   }
 
   /// Update an existing pair
-  Future<void> updatePair(Box<BarrierPowerPair> box, String id, String barrier, String power) async {
+  Future<void> updatePair(
+    Box<BarrierPowerPair> box,
+    String id,
+    String barrier,
+    String power,
+  ) async {
     final pair = box.get(id);
     if (pair == null) return;
 
@@ -102,7 +114,9 @@ class AgnosticismService {
   /// Delete an archived pair
   Future<void> deletePair(Box<BarrierPowerPair> box, String id) async {
     final pair = box.get(id);
-    if (pair == null || !pair.isArchived) return; // Only archived pairs can be deleted
+    if (pair == null || !pair.isArchived) {
+      return; // Only archived pairs can be deleted
+    }
 
     await box.delete(id);
     _triggerSync();

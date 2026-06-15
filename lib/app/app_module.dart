@@ -11,7 +11,7 @@ class AppModule extends Module {
     // Shared services - singleton instances
     i.addSingleton<LocaleProvider>(LocaleProvider.new);
     i.addSingleton<DataRefreshService>(DataRefreshService.new);
-    
+
     // Hive boxes - lazy singletons (shared across apps)
     i.addLazySingleton<Box>(() => Hive.box('settings'));
   }

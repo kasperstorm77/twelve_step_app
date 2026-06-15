@@ -64,9 +64,7 @@ class _MorningRitualHomeState extends State<MorningRitualHome>
   void _openDataManagement() async {
     await Navigator.push(
       context,
-      MaterialPageRoute(
-        builder: (context) => const DataManagementPage(),
-      ),
+      MaterialPageRoute(builder: (context) => const DataManagementPage()),
     );
     // Force rebuild after returning from Data Management
     // to ensure restored data is displayed
@@ -84,9 +82,9 @@ class _MorningRitualHomeState extends State<MorningRitualHome>
       builder: (dialogContext) => AlertDialog(
         title: Text(
           t(context, 'select_app'),
-          style: Theme.of(context).textTheme.titleMedium?.copyWith(
-            fontWeight: FontWeight.bold,
-          ),
+          style: Theme.of(
+            context,
+          ).textTheme.titleMedium?.copyWith(fontWeight: FontWeight.bold),
         ),
         content: SingleChildScrollView(
           child: Column(
@@ -107,18 +105,25 @@ class _MorningRitualHomeState extends State<MorningRitualHome>
                   child: Row(
                     children: [
                       Icon(
-                        isSelected ? Icons.radio_button_checked : Icons.radio_button_unchecked,
-                        color: isSelected ? Theme.of(context).colorScheme.primary : null,
+                        isSelected
+                            ? Icons.radio_button_checked
+                            : Icons.radio_button_unchecked,
+                        color: isSelected
+                            ? Theme.of(context).colorScheme.primary
+                            : null,
                         size: 20,
                       ),
                       const SizedBox(width: 12),
                       Expanded(
                         child: Text(
                           app.name,
-                          style: Theme.of(context).textTheme.bodyMedium?.copyWith(
-                            fontWeight: isSelected ? FontWeight.w600 : null,
-                            color: isSelected ? Theme.of(context).colorScheme.primary : null,
-                          ),
+                          style: Theme.of(context).textTheme.bodyMedium
+                              ?.copyWith(
+                                fontWeight: isSelected ? FontWeight.w600 : null,
+                                color: isSelected
+                                    ? Theme.of(context).colorScheme.primary
+                                    : null,
+                              ),
                         ),
                       ),
                     ],
@@ -142,7 +147,10 @@ class _MorningRitualHomeState extends State<MorningRitualHome>
   Widget build(BuildContext context) {
     return Scaffold(
       appBar: AppBar(
-        title: Text(t(context, 'morning_ritual_title'), style: const TextStyle(fontSize: 18)),
+        title: Text(
+          t(context, 'morning_ritual_title'),
+          style: const TextStyle(fontSize: 18),
+        ),
         actions: [
           // App Switcher Icon
           IconButton(
@@ -176,9 +184,13 @@ class _MorningRitualHomeState extends State<MorningRitualHome>
             onSelected: _changeLanguage,
             itemBuilder: (context) => [
               PopupMenuItem(
-                  value: 'en', child: Text(t(context, 'lang_english'))),
+                value: 'en',
+                child: Text(t(context, 'lang_english')),
+              ),
               PopupMenuItem(
-                  value: 'da', child: Text(t(context, 'lang_danish'))),
+                value: 'da',
+                child: Text(t(context, 'lang_danish')),
+              ),
             ],
             icon: const Icon(Icons.language),
             padding: EdgeInsets.zero,
@@ -209,7 +221,8 @@ class _MorningRitualHomeState extends State<MorningRitualHome>
                       firstDay: DateTime.utc(2020, 1, 1),
                       lastDay: DateTime.utc(2030, 12, 31),
                       focusedDay: _focusedDay,
-                      selectedDayPredicate: (day) => isSameDay(_selectedDay, day),
+                      selectedDayPredicate: (day) =>
+                          isSameDay(_selectedDay, day),
                       calendarFormat: CalendarFormat.week,
                       availableCalendarFormats: const {
                         CalendarFormat.week: 'Week',
@@ -233,10 +246,9 @@ class _MorningRitualHomeState extends State<MorningRitualHome>
                       },
                       calendarStyle: CalendarStyle(
                         todayDecoration: BoxDecoration(
-                          color: Theme.of(context)
-                              .colorScheme
-                              .primary
-                              .withValues(alpha: 0.5),
+                          color: Theme.of(
+                            context,
+                          ).colorScheme.primary.withValues(alpha: 0.5),
                           shape: BoxShape.circle,
                         ),
                         selectedDecoration: BoxDecoration(
@@ -266,9 +278,7 @@ class _MorningRitualHomeState extends State<MorningRitualHome>
               ],
             ),
             // History Tab
-            MorningRitualHistoryTab(
-              onDateSelected: _onDateSelected,
-            ),
+            MorningRitualHistoryTab(onDateSelected: _onDateSelected),
             // Settings Tab
             MorningRitualSettingsTab(key: _settingsKey),
           ],

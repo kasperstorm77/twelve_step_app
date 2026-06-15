@@ -44,7 +44,8 @@ class ValidationResult {
   });
 
   @override
-  String toString() => 'ValidationResult(isValid: $isValid, errors: $errors, warnings: $warnings)';
+  String toString() =>
+      'ValidationResult(isValid: $isValid, errors: $errors, warnings: $warnings)';
 }
 
 /// Result of restore operation
@@ -60,7 +61,8 @@ class RestoreResult {
   });
 
   @override
-  String toString() => 'RestoreResult(success: $success, error: $error, counts: $counts)';
+  String toString() =>
+      'RestoreResult(success: $success, error: $error, counts: $counts)';
 }
 
 /// Counts of restored items per category
@@ -90,7 +92,8 @@ class RestoreCounts {
   });
 
   @override
-  String toString() => 'RestoreCounts(entries: $entries, iAms: $iAmDefinitions, people: $people, '
+  String toString() =>
+      'RestoreCounts(entries: $entries, iAms: $iAmDefinitions, people: $people, '
       'reflections: $reflections, gratitude: $gratitude, agnosticism: $agnosticism, '
       'ritualItems: $morningRitualItems, ritualEntries: $morningRitualEntries, '
       'notifications: $notifications, appSettings: $hasAppSettings)';
@@ -140,7 +143,7 @@ class BackupRestoreService {
   // ---------------------------------------------------------------------------
 
   /// Validate payload structure before any destructive operation.
-  /// 
+  ///
   /// This is permissive validation - only fails on malformed data,
   /// not missing optional fields (for backwards compatibility).
   static ValidationResult validate(Map<String, dynamic> data) {
@@ -206,12 +209,18 @@ class BackupRestoreService {
   /// This allows rollback if something goes wrong.
   static Future<void> createPreRestoreSafetyBackup() async {
     try {
-      if (kDebugMode) print('BackupRestoreService: Creating pre-restore safety backup...');
+      if (kDebugMode) {
+        print('BackupRestoreService: Creating pre-restore safety backup...');
+      }
       await LocalBackupService.instance.createBackupNow();
       if (kDebugMode) print('BackupRestoreService: Safety backup created');
     } catch (e) {
       // Don't fail the restore if safety backup fails - just log it
-      if (kDebugMode) print('BackupRestoreService: Safety backup failed (continuing anyway): $e');
+      if (kDebugMode) {
+        print(
+          'BackupRestoreService: Safety backup failed (continuing anyway): $e',
+        );
+      }
     }
   }
 
@@ -220,10 +229,10 @@ class BackupRestoreService {
   // ---------------------------------------------------------------------------
 
   /// Full restore flow: validate → safety backup → apply → update lastModified.
-  /// 
+  ///
   /// [data] - The parsed backup payload
   /// [createSafetyBackup] - Whether to create a local backup before restoring
-  /// 
+  ///
   /// Returns [RestoreResult] with success status and counts
   static Future<RestoreResult> restoreFromPayload(
     Map<String, dynamic> data, {
@@ -239,7 +248,9 @@ class BackupRestoreService {
     }
 
     if (validation.warnings.isNotEmpty && kDebugMode) {
-      debugPrint('BackupRestoreService: Validation warnings: ${validation.warnings}');
+      debugPrint(
+        'BackupRestoreService: Validation warnings: ${validation.warnings}',
+      );
     }
 
     // Step 2: Safety backup (before any destructive operation)
@@ -258,10 +269,14 @@ class BackupRestoreService {
           final settingsBox = Hive.box('settings');
           await settingsBox.put('lastModified', lastModified.toIso8601String());
           if (kDebugMode) {
-            print('BackupRestoreService: Saved lastModified: ${lastModified.toIso8601String()}');
+            print(
+              'BackupRestoreService: Saved lastModified: ${lastModified.toIso8601String()}',
+            );
           }
         } catch (e) {
-          if (kDebugMode) print('BackupRestoreService: Failed to save lastModified: $e');
+          if (kDebugMode) {
+            print('BackupRestoreService: Failed to save lastModified: $e');
+          }
         }
       }
 
@@ -270,7 +285,9 @@ class BackupRestoreService {
         Modular.get<DataRefreshService>().notifyDataRestored();
       } catch (e) {
         // DataRefreshService might not be available in all contexts
-        if (kDebugMode) print('BackupRestoreService: DataRefreshService notify failed: $e');
+        if (kDebugMode) {
+          print('BackupRestoreService: DataRefreshService notify failed: $e');
+        }
       }
 
       return RestoreResult(success: true, counts: counts);
@@ -300,7 +317,7 @@ class BackupRestoreService {
   // ---------------------------------------------------------------------------
 
   /// Apply validated payload to all Hive boxes.
-  /// 
+  ///
   /// IMPORTANT: This clears boxes before writing. Validation and safety
   /// backup should be done BEFORE calling this method.
   static Future<RestoreCounts> _applyPayload(Map<String, dynamic> data) async {
@@ -322,7 +339,11 @@ class BackupRestoreService {
       final iAmBox = Hive.box<IAmDefinition>('i_am_definitions');
       final iAmDefs = data['iAmDefinitions'] as List<dynamic>?;
       if (iAmDefs != null) {
-        if (kDebugMode) print('BackupRestoreService: Importing ${iAmDefs.length} I Am definitions');
+        if (kDebugMode) {
+          print(
+            'BackupRestoreService: Importing ${iAmDefs.length} I Am definitions',
+          );
+        }
         await iAmBox.clear();
         for (final defJson in iAmDefs) {
           final def = IAmDefinition(
@@ -333,7 +354,9 @@ class BackupRestoreService {
           await iAmBox.add(def);
         }
         iAmCount = iAmBox.length;
-        if (kDebugMode) print('BackupRestoreService: I Am box now has $iAmCount definitions');
+        if (kDebugMode) {
+          print('BackupRestoreService: I Am box now has $iAmCount definitions');
+        }
       }
     }
 
@@ -344,7 +367,9 @@ class BackupRestoreService {
       final entriesBox = Hive.box<InventoryEntry>('entries');
       final entries = data['entries'] as List<dynamic>?;
       if (entries != null) {
-        if (kDebugMode) print('BackupRestoreService: Importing ${entries.length} entries');
+        if (kDebugMode) {
+          print('BackupRestoreService: Importing ${entries.length} entries');
+        }
         await entriesBox.clear();
         for (final item in entries) {
           if (item is Map<String, dynamic>) {
@@ -355,7 +380,11 @@ class BackupRestoreService {
         entriesCount = entriesBox.length;
         // Migrate order values for backwards compatibility
         await InventoryService.migrateOrderValues();
-        if (kDebugMode) print('BackupRestoreService: Entries box now has $entriesCount entries');
+        if (kDebugMode) {
+          print(
+            'BackupRestoreService: Entries box now has $entriesCount entries',
+          );
+        }
       }
     }
 
@@ -366,7 +395,9 @@ class BackupRestoreService {
       final peopleBox = Hive.box<Person>('people_box');
       final peopleList = data['people'] as List<dynamic>?;
       if (peopleList != null) {
-        if (kDebugMode) print('BackupRestoreService: Importing ${peopleList.length} people');
+        if (kDebugMode) {
+          print('BackupRestoreService: Importing ${peopleList.length} people');
+        }
         await peopleBox.clear();
         for (final personJson in peopleList) {
           final person = Person.fromJson(personJson as Map<String, dynamic>);
@@ -383,10 +414,16 @@ class BackupRestoreService {
       final reflectionsBox = Hive.box<ReflectionEntry>('reflections_box');
       final reflectionsList = data['reflections'] as List<dynamic>?;
       if (reflectionsList != null) {
-        if (kDebugMode) print('BackupRestoreService: Importing ${reflectionsList.length} reflections');
+        if (kDebugMode) {
+          print(
+            'BackupRestoreService: Importing ${reflectionsList.length} reflections',
+          );
+        }
         await reflectionsBox.clear();
         for (final reflectionJson in reflectionsList) {
-          final reflection = ReflectionEntry.fromJson(reflectionJson as Map<String, dynamic>);
+          final reflection = ReflectionEntry.fromJson(
+            reflectionJson as Map<String, dynamic>,
+          );
           await reflectionsBox.put(reflection.internalId, reflection);
         }
         reflectionsCount = reflectionsBox.length;
@@ -398,12 +435,19 @@ class BackupRestoreService {
     // ---------------------------------------------------------------------------
     if (data.containsKey('gratitude') || data.containsKey('gratitudeEntries')) {
       final gratitudeBox = Hive.box<GratitudeEntry>('gratitude_box');
-      final gratitudeList = (data['gratitude'] ?? data['gratitudeEntries']) as List<dynamic>?;
+      final gratitudeList =
+          (data['gratitude'] ?? data['gratitudeEntries']) as List<dynamic>?;
       if (gratitudeList != null) {
-        if (kDebugMode) print('BackupRestoreService: Importing ${gratitudeList.length} gratitude entries');
+        if (kDebugMode) {
+          print(
+            'BackupRestoreService: Importing ${gratitudeList.length} gratitude entries',
+          );
+        }
         await gratitudeBox.clear();
         for (final gratitudeJson in gratitudeList) {
-          final gratitude = GratitudeEntry.fromJson(gratitudeJson as Map<String, dynamic>);
+          final gratitude = GratitudeEntry.fromJson(
+            gratitudeJson as Map<String, dynamic>,
+          );
           await gratitudeBox.add(gratitude);
         }
         gratitudeCount = gratitudeBox.length;
@@ -413,14 +457,22 @@ class BackupRestoreService {
     // ---------------------------------------------------------------------------
     // Agnosticism (supports legacy 'agnosticismPapers' key)
     // ---------------------------------------------------------------------------
-    if (data.containsKey('agnosticism') || data.containsKey('agnosticismPapers')) {
+    if (data.containsKey('agnosticism') ||
+        data.containsKey('agnosticismPapers')) {
       final agnosticismBox = Hive.box<BarrierPowerPair>('agnosticism_pairs');
-      final pairsList = (data['agnosticism'] ?? data['agnosticismPapers']) as List<dynamic>?;
+      final pairsList =
+          (data['agnosticism'] ?? data['agnosticismPapers']) as List<dynamic>?;
       if (pairsList != null) {
-        if (kDebugMode) print('BackupRestoreService: Importing ${pairsList.length} agnosticism pairs');
+        if (kDebugMode) {
+          print(
+            'BackupRestoreService: Importing ${pairsList.length} agnosticism pairs',
+          );
+        }
         await agnosticismBox.clear();
         for (final pairJson in pairsList) {
-          final pair = BarrierPowerPair.fromJson(pairJson as Map<String, dynamic>);
+          final pair = BarrierPowerPair.fromJson(
+            pairJson as Map<String, dynamic>,
+          );
           await agnosticismBox.put(pair.id, pair);
         }
         agnosticismCount = agnosticismBox.length;
@@ -431,10 +483,16 @@ class BackupRestoreService {
     // Morning Ritual Items (Definitions)
     // ---------------------------------------------------------------------------
     if (data.containsKey('morningRitualItems')) {
-      final morningRitualItemsBox = Hive.box<RitualItem>('morning_ritual_items');
+      final morningRitualItemsBox = Hive.box<RitualItem>(
+        'morning_ritual_items',
+      );
       final itemsList = data['morningRitualItems'] as List<dynamic>?;
       if (itemsList != null) {
-        if (kDebugMode) print('BackupRestoreService: Importing ${itemsList.length} morning ritual items');
+        if (kDebugMode) {
+          print(
+            'BackupRestoreService: Importing ${itemsList.length} morning ritual items',
+          );
+        }
         await morningRitualItemsBox.clear();
         for (final itemJson in itemsList) {
           final item = RitualItem.fromJson(itemJson as Map<String, dynamic>);
@@ -448,13 +506,21 @@ class BackupRestoreService {
     // Morning Ritual Entries (Daily Completions)
     // ---------------------------------------------------------------------------
     if (data.containsKey('morningRitualEntries')) {
-      final morningRitualEntriesBox = Hive.box<MorningRitualEntry>('morning_ritual_entries');
+      final morningRitualEntriesBox = Hive.box<MorningRitualEntry>(
+        'morning_ritual_entries',
+      );
       final entriesList = data['morningRitualEntries'] as List<dynamic>?;
       if (entriesList != null) {
-        if (kDebugMode) print('BackupRestoreService: Importing ${entriesList.length} morning ritual entries');
+        if (kDebugMode) {
+          print(
+            'BackupRestoreService: Importing ${entriesList.length} morning ritual entries',
+          );
+        }
         await morningRitualEntriesBox.clear();
         for (final entryJson in entriesList) {
-          final entry = MorningRitualEntry.fromJson(entryJson as Map<String, dynamic>);
+          final entry = MorningRitualEntry.fromJson(
+            entryJson as Map<String, dynamic>,
+          );
           await morningRitualEntriesBox.put(entry.id, entry);
         }
         ritualEntriesCount = morningRitualEntriesBox.length;
@@ -465,10 +531,16 @@ class BackupRestoreService {
     // Notifications
     // ---------------------------------------------------------------------------
     if (data.containsKey('notifications')) {
-      final notificationsBox = Hive.box<AppNotification>(NotificationsService.notificationsBoxName);
+      final notificationsBox = Hive.box<AppNotification>(
+        NotificationsService.notificationsBoxName,
+      );
       final notificationsList = data['notifications'] as List<dynamic>?;
       if (notificationsList != null) {
-        if (kDebugMode) print('BackupRestoreService: Importing ${notificationsList.length} notifications');
+        if (kDebugMode) {
+          print(
+            'BackupRestoreService: Importing ${notificationsList.length} notifications',
+          );
+        }
         await notificationsBox.clear();
         for (final nJson in notificationsList) {
           final n = AppNotification.fromJson(nJson as Map<String, dynamic>);

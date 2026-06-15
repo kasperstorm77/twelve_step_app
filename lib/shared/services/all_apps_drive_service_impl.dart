@@ -26,26 +26,28 @@ class AllAppsDriveService {
   // Platform-specific drive services
   MobileDriveService? _mobileDriveService;
   WindowsDriveServiceWrapper? _windowsDriveService;
-  
-  final StreamController<int> _uploadCountController = StreamController<int>.broadcast();
-  
+
+  final StreamController<int> _uploadCountController =
+      StreamController<int>.broadcast();
+
   /// Flag to block uploads when remote has newer data.
   /// This prevents overwriting newer Drive data before user decides what to do.
   bool _uploadsBlocked = false;
-  
+
   /// Stream to notify UI when uploads are blocked due to newer remote data
-  final StreamController<bool> _uploadsBlockedController = StreamController<bool>.broadcast();
-  
+  final StreamController<bool> _uploadsBlockedController =
+      StreamController<bool>.broadcast();
+
   /// Whether uploads are currently blocked (remote has newer data)
   bool get uploadsBlocked => _uploadsBlocked;
-  
+
   /// Stream that emits when upload blocking state changes
   Stream<bool> get onUploadsBlockedChanged => _uploadsBlockedController.stream;
-  
+
   /// Debounce timer for scheduling uploads (prevents rapid rebuilding of JSON)
   Timer? _uploadDebounceTimer;
   static const Duration _uploadDebounceDelay = Duration(milliseconds: 1000);
-  
+
   /// Flag to prevent concurrent uploads
   bool _uploadInProgress = false;
 
@@ -65,14 +67,18 @@ class AllAppsDriveService {
 
     if (PlatformHelper.isDesktop) {
       // Desktop (Windows, macOS, Linux) uses the loopback OAuth WindowsDriveServiceWrapper
-      if (kDebugMode) print('AllAppsDriveService: Initializing for Desktop (${PlatformHelper.platformName})');
+      if (kDebugMode) {
+        print(
+          'AllAppsDriveService: Initializing for Desktop (${PlatformHelper.platformName})',
+        );
+      }
       // Will be created async in initialize()
     } else {
       // Mobile (Android/iOS) uses MobileDriveService
       if (kDebugMode) print('AllAppsDriveService: Initializing for Mobile');
       _mobileDriveService = MobileDriveService(config: config);
     }
-    
+
     // Note: We don't auto-listen to all upload events anymore
     // UI notifications are only triggered for user-initiated actions
   }
@@ -85,7 +91,7 @@ class AllAppsDriveService {
       return _mobileDriveService?.syncEnabled ?? false;
     }
   }
-  
+
   bool get isAuthenticated {
     if (PlatformHelper.isDesktop) {
       return _windowsDriveService?.isAuthenticated ?? false;
@@ -93,7 +99,7 @@ class AllAppsDriveService {
       return _mobileDriveService?.isAuthenticated ?? false;
     }
   }
-  
+
   Stream<bool> get onSyncStateChanged {
     if (PlatformHelper.isDesktop) {
       return _windowsDriveService?.onSyncStateChanged ?? Stream.empty();
@@ -101,9 +107,9 @@ class AllAppsDriveService {
       return _mobileDriveService?.onSyncStateChanged ?? Stream.empty();
     }
   }
-  
+
   Stream<int> get onUpload => _uploadCountController.stream;
-  
+
   Stream<String> get onError {
     if (PlatformHelper.isDesktop) {
       return _windowsDriveService?.onError ?? Stream.empty();
@@ -143,7 +149,7 @@ class AllAppsDriveService {
     }
   }
 
-  /// Sign out from Google  
+  /// Sign out from Google
   Future<void> signOut() async {
     if (PlatformHelper.isDesktop) {
       await _windowsDriveService!.driveService.signOut();
@@ -192,7 +198,10 @@ class AllAppsDriveService {
   }
 
   /// Upload inventory entries from Hive box
-  Future<void> uploadFromBox(Box<InventoryEntry> box, {bool notifyUI = false}) async {
+  Future<void> uploadFromBox(
+    Box<InventoryEntry> box, {
+    bool notifyUI = false,
+  }) async {
     if (!syncEnabled || !isAuthenticated) {
       return;
     }
@@ -241,10 +250,14 @@ class AllAppsDriveService {
     if (!_uploadsBlocked) {
       _uploadsBlocked = true;
       _uploadsBlockedController.add(true);
-      if (kDebugMode) print('AllAppsDriveService: ⚠️ Uploads BLOCKED - remote has newer data');
+      if (kDebugMode) {
+        print(
+          'AllAppsDriveService: ⚠️ Uploads BLOCKED - remote has newer data',
+        );
+      }
     }
   }
-  
+
   /// Unblock uploads (called after user fetches data or dismisses the prompt)
   void unblockUploads() {
     if (_uploadsBlocked) {
@@ -259,19 +272,31 @@ class AllAppsDriveService {
   /// Uses debouncing to coalesce rapid changes (e.g., multiple reorders) into a single upload
   /// Also triggers local backup regardless of Drive sync status
   void scheduleUploadFromBox([Box<InventoryEntry>? box]) {
-    if (kDebugMode) print('AllAppsDriveService: scheduleUploadFromBox called - syncEnabled=$syncEnabled, isAuthenticated=$isAuthenticated, uploadsBlocked=$_uploadsBlocked');
+    if (kDebugMode) {
+      print(
+        'AllAppsDriveService: scheduleUploadFromBox called - syncEnabled=$syncEnabled, isAuthenticated=$isAuthenticated, uploadsBlocked=$_uploadsBlocked',
+      );
+    }
 
     // Always schedule local backup regardless of Drive sync status
     LocalBackupService.instance.scheduleBackup();
 
     if (!syncEnabled) {
-      if (kDebugMode) print('AllAppsDriveService: ⚠️ Drive upload skipped - sync not enabled');
+      if (kDebugMode) {
+        print(
+          'AllAppsDriveService: ⚠️ Drive upload skipped - sync not enabled',
+        );
+      }
       return;
     }
 
     // SAFETY: Don't upload if remote has newer data - would overwrite it!
     if (_uploadsBlocked) {
-      if (kDebugMode) print('AllAppsDriveService: ⚠️ Upload BLOCKED - remote has newer data, user must fetch or dismiss first');
+      if (kDebugMode) {
+        print(
+          'AllAppsDriveService: ⚠️ Upload BLOCKED - remote has newer data, user must fetch or dismiss first',
+        );
+      }
       return;
     }
 
@@ -285,19 +310,31 @@ class AllAppsDriveService {
       await _performDebouncedUpload(box);
     });
 
-    if (kDebugMode) print('AllAppsDriveService: Upload scheduled (debounced ${_uploadDebounceDelay.inMilliseconds}ms)');
+    if (kDebugMode) {
+      print(
+        'AllAppsDriveService: Upload scheduled (debounced ${_uploadDebounceDelay.inMilliseconds}ms)',
+      );
+    }
   }
-  
+
   /// Internal method to perform the actual upload after debounce
   Future<void> _performDebouncedUpload([Box<InventoryEntry>? box]) async {
     // Prevent concurrent uploads
     if (_uploadInProgress) {
-      if (kDebugMode) print('AllAppsDriveService: _performDebouncedUpload skipped - upload already in progress');
+      if (kDebugMode) {
+        print(
+          'AllAppsDriveService: _performDebouncedUpload skipped - upload already in progress',
+        );
+      }
       return;
     }
 
     if (!syncEnabled || _uploadsBlocked) {
-      if (kDebugMode) print('AllAppsDriveService: _performDebouncedUpload skipped - sync disabled or blocked');
+      if (kDebugMode) {
+        print(
+          'AllAppsDriveService: _performDebouncedUpload skipped - sync disabled or blocked',
+        );
+      }
       return;
     }
 
@@ -305,16 +342,26 @@ class AllAppsDriveService {
     // silent sign-in. Handles the case where signInSilently() failed at app
     // startup (transient Play Services state, race, etc.) but can succeed now.
     if (!isAuthenticated && !PlatformHelper.isDesktop) {
-      if (kDebugMode) print('AllAppsDriveService: not authenticated, attempting auth recovery');
+      if (kDebugMode) {
+        print(
+          'AllAppsDriveService: not authenticated, attempting auth recovery',
+        );
+      }
       try {
         await _mobileDriveService!.initialize();
       } catch (e) {
-        if (kDebugMode) print('AllAppsDriveService: auth recovery init failed: $e');
+        if (kDebugMode) {
+          print('AllAppsDriveService: auth recovery init failed: $e');
+        }
       }
     }
 
     if (!isAuthenticated) {
-      if (kDebugMode) print('AllAppsDriveService: _performDebouncedUpload skipped - not authenticated after recovery attempt');
+      if (kDebugMode) {
+        print(
+          'AllAppsDriveService: _performDebouncedUpload skipped - not authenticated after recovery attempt',
+        );
+      }
       _saveLastSyncError('Not authenticated - open Data Management to sign in');
       return;
     }
@@ -358,7 +405,9 @@ class AllAppsDriveService {
   /// Download and restore inventory entries
   Future<List<InventoryEntry>?> downloadEntries() async {
     if (!isAuthenticated) {
-      if (kDebugMode) print('AllAppsDriveService: Download skipped - not authenticated');
+      if (kDebugMode) {
+        print('AllAppsDriveService: Download skipped - not authenticated');
+      }
       return null;
     }
 
@@ -369,7 +418,7 @@ class AllAppsDriveService {
       } else {
         content = await _mobileDriveService!.downloadContent();
       }
-      
+
       if (content == null) return null;
 
       return await _parseInventoryContent(content);
@@ -391,7 +440,9 @@ class AllAppsDriveService {
   /// Download and restore from a specific backup file
   Future<String?> downloadBackupContent(String fileName) async {
     if (!isAuthenticated) {
-      if (kDebugMode) print('AllAppsDriveService: Download skipped - not authenticated');
+      if (kDebugMode) {
+        print('AllAppsDriveService: Download skipped - not authenticated');
+      }
       return null;
     }
 
@@ -443,14 +494,17 @@ class AllAppsDriveService {
   Future<void> _loadSyncState() async {
     try {
       final settingsBox = await _getSettingsBox();
-      final enabled = settingsBox.get('syncEnabled', defaultValue: false) ?? false;
+      final enabled =
+          settingsBox.get('syncEnabled', defaultValue: false) ?? false;
       if (PlatformHelper.isDesktop) {
         _windowsDriveService?.setSyncEnabled(enabled);
       } else {
         _mobileDriveService?.setSyncEnabled(enabled);
       }
     } catch (e) {
-      if (kDebugMode) print('AllAppsDriveService: Failed to load sync state - $e');
+      if (kDebugMode) {
+        print('AllAppsDriveService: Failed to load sync state - $e');
+      }
     }
   }
 
@@ -467,7 +521,9 @@ class AllAppsDriveService {
       final settingsBox = await _getSettingsBox();
       await settingsBox.put('syncEnabled', enabled);
     } catch (e) {
-      if (kDebugMode) print('AllAppsDriveService: Failed to save sync state - $e');
+      if (kDebugMode) {
+        print('AllAppsDriveService: Failed to save sync state - $e');
+      }
     }
   }
 
@@ -477,7 +533,9 @@ class AllAppsDriveService {
       final settingsBox = await _getSettingsBox();
       await settingsBox.put('lastModified', timestamp.toIso8601String());
     } catch (e) {
-      if (kDebugMode) print('AllAppsDriveService: Failed to save lastModified - $e');
+      if (kDebugMode) {
+        print('AllAppsDriveService: Failed to save lastModified - $e');
+      }
     }
   }
 
@@ -488,7 +546,9 @@ class AllAppsDriveService {
       await settingsBox.put('lastSyncSuccessAt', timestamp.toIso8601String());
       await settingsBox.put('lastSyncError', null);
     } catch (e) {
-      if (kDebugMode) print('AllAppsDriveService: Failed to save lastSyncSuccessAt - $e');
+      if (kDebugMode) {
+        print('AllAppsDriveService: Failed to save lastSyncSuccessAt - $e');
+      }
     }
   }
 
@@ -497,9 +557,14 @@ class AllAppsDriveService {
     try {
       final settingsBox = await _getSettingsBox();
       await settingsBox.put('lastSyncError', error);
-      await settingsBox.put('lastSyncErrorAt', DateTime.now().toUtc().toIso8601String());
+      await settingsBox.put(
+        'lastSyncErrorAt',
+        DateTime.now().toUtc().toIso8601String(),
+      );
     } catch (e) {
-      if (kDebugMode) print('AllAppsDriveService: Failed to save lastSyncError - $e');
+      if (kDebugMode) {
+        print('AllAppsDriveService: Failed to save lastSyncError - $e');
+      }
     }
   }
 
@@ -513,7 +578,9 @@ class AllAppsDriveService {
       final settingsBox = await _getSettingsBox();
       await settingsBox.put('lastSyncError', null);
     } catch (e) {
-      if (kDebugMode) print('AllAppsDriveService: Failed to clear lastSyncError - $e');
+      if (kDebugMode) {
+        print('AllAppsDriveService: Failed to clear lastSyncError - $e');
+      }
     }
   }
 
@@ -526,7 +593,9 @@ class AllAppsDriveService {
         return DateTime.parse(timestampStr);
       }
     } catch (e) {
-      if (kDebugMode) print('AllAppsDriveService: Failed to get lastModified - $e');
+      if (kDebugMode) {
+        print('AllAppsDriveService: Failed to get lastModified - $e');
+      }
     }
     return null;
   }
@@ -535,10 +604,14 @@ class AllAppsDriveService {
   /// Returns true if remote is newer, false otherwise
   /// Does NOT modify any data - only compares timestamps
   Future<bool> isRemoteNewer() async {
-    if (kDebugMode) print('AllAppsDriveService: isRemoteNewer() - checking timestamps...');
-    
+    if (kDebugMode) {
+      print('AllAppsDriveService: isRemoteNewer() - checking timestamps...');
+    }
+
     if (!isAuthenticated) {
-      if (kDebugMode) print('AllAppsDriveService: isRemoteNewer() - not authenticated');
+      if (kDebugMode) {
+        print('AllAppsDriveService: isRemoteNewer() - not authenticated');
+      }
       return false;
     }
 
@@ -547,7 +620,9 @@ class AllAppsDriveService {
       final localTimestamp = await _getLocalLastModified();
       localSw.stop();
       if (kDebugMode) {
-        print('AllAppsDriveService: isRemoteNewer() - local timestamp: ${localTimestamp?.toIso8601String() ?? "null"} (${localSw.elapsedMilliseconds}ms)');
+        print(
+          'AllAppsDriveService: isRemoteNewer() - local timestamp: ${localTimestamp?.toIso8601String() ?? "null"} (${localSw.elapsedMilliseconds}ms)',
+        );
       }
 
       // Fast-path: extract `lastModified` from the newest backup JSON via prefix download.
@@ -555,30 +630,46 @@ class AllAppsDriveService {
       final remoteSw = Stopwatch()..start();
       final DateTime? remoteTimestamp;
       if (PlatformHelper.isDesktop) {
-        remoteTimestamp = await _windowsDriveService!.getNewestBackupJsonLastModified(runCleanup: false);
+        remoteTimestamp = await _windowsDriveService!
+            .getNewestBackupJsonLastModified(runCleanup: false);
       } else {
-        remoteTimestamp = await _mobileDriveService!.getNewestBackupJsonLastModified(runCleanup: false);
+        remoteTimestamp = await _mobileDriveService!
+            .getNewestBackupJsonLastModified(runCleanup: false);
       }
       remoteSw.stop();
 
       if (remoteTimestamp == null) {
-        if (kDebugMode) print('AllAppsDriveService: isRemoteNewer() - no remote backup found (${remoteSw.elapsedMilliseconds}ms)');
+        if (kDebugMode) {
+          print(
+            'AllAppsDriveService: isRemoteNewer() - no remote backup found (${remoteSw.elapsedMilliseconds}ms)',
+          );
+        }
         return false;
       }
 
       if (kDebugMode) {
-        print('AllAppsDriveService: isRemoteNewer() - remote timestamp: ${remoteTimestamp.toIso8601String()} (${remoteSw.elapsedMilliseconds}ms)');
+        print(
+          'AllAppsDriveService: isRemoteNewer() - remote timestamp: ${remoteTimestamp.toIso8601String()} (${remoteSw.elapsedMilliseconds}ms)',
+        );
       }
-      
+
       // If no local timestamp, remote is considered newer
       if (localTimestamp == null) {
-        if (kDebugMode) print('AllAppsDriveService: isRemoteNewer() - no local timestamp, remote is newer');
+        if (kDebugMode) {
+          print(
+            'AllAppsDriveService: isRemoteNewer() - no local timestamp, remote is newer',
+          );
+        }
         return true;
       }
-      
+
       // Compare timestamps
       final isNewer = remoteTimestamp.isAfter(localTimestamp);
-      if (kDebugMode) print('AllAppsDriveService: isRemoteNewer() - remote is ${isNewer ? "NEWER" : "not newer"} than local');
+      if (kDebugMode) {
+        print(
+          'AllAppsDriveService: isRemoteNewer() - remote is ${isNewer ? "NEWER" : "not newer"} than local',
+        );
+      }
       return isNewer;
     } catch (e) {
       if (kDebugMode) print('AllAppsDriveService: isRemoteNewer() - error: $e');
@@ -589,7 +680,9 @@ class AllAppsDriveService {
   /// @deprecated This method always returns false. Auto-restore is disabled for data safety.
   /// Use [isRemoteNewer] to check if remote has newer data, then prompt user to fetch manually.
   /// Local data is ONLY modified through explicit user action (tap "Restore from backup").
-  @Deprecated('Auto-restore disabled. Use isRemoteNewer() and prompt user instead.')
+  @Deprecated(
+    'Auto-restore disabled. Use isRemoteNewer() and prompt user instead.',
+  )
   Future<bool> checkAndSyncIfNeeded() async {
     // SAFETY: Never automatically modify local data.
     return false;
@@ -603,7 +696,9 @@ class AllAppsDriveService {
         _uploadCountController.add(box.length);
       }
     } catch (e) {
-      if (kDebugMode) print('AllAppsDriveService: Failed to get entries count - $e');
+      if (kDebugMode) {
+        print('AllAppsDriveService: Failed to get entries count - $e');
+      }
     }
   }
 
@@ -624,19 +719,23 @@ class AllAppsDriveService {
 // Static parsing function for compute isolate
 // --------------------------------------------------------------------------
 
-/// Parse JSON content into InventoryEntry list (runs in isolate)  
+/// Parse JSON content into InventoryEntry list (runs in isolate)
 List<InventoryEntry> _parseInventoryJson(String content) {
   try {
     final decoded = json.decode(content) as Map<String, dynamic>;
-    
+
     final entries = decoded['entries'] as List<dynamic>?;
     if (entries == null) return [];
 
     if (kDebugMode && entries.isNotEmpty) {
       debugPrint('_parseInventoryJson: First entry raw JSON: ${entries.first}');
-      debugPrint('_parseInventoryJson: Has iAmId field? ${(entries.first as Map).containsKey('iAmId')}');
+      debugPrint(
+        '_parseInventoryJson: Has iAmId field? ${(entries.first as Map).containsKey('iAmId')}',
+      );
       if ((entries.first as Map).containsKey('iAmId')) {
-        debugPrint('_parseInventoryJson: iAmId value: ${(entries.first as Map)['iAmId']}');
+        debugPrint(
+          '_parseInventoryJson: iAmId value: ${(entries.first as Map)['iAmId']}',
+        );
       }
     }
 

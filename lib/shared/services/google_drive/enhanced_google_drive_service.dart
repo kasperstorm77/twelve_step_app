@@ -7,7 +7,7 @@ import 'mobile_google_auth_service.dart';
 // --------------------------------------------------------------------------
 // Enhanced Google Drive Service - Best of Breed
 // --------------------------------------------------------------------------
-// 
+//
 // Combines the clean architecture from evening_ritual with the robust
 // conflict detection and timestamp-based sync from twelve_step_app.
 //
@@ -23,25 +23,30 @@ import 'mobile_google_auth_service.dart';
 /// Generic and reusable across different projects
 class EnhancedGoogleDriveService {
   final MobileGoogleAuthService _authService;
-  
+
   GoogleDriveCrudClient? _driveClient;
   bool _syncEnabled;
-  
+
   // Debouncing for uploads
   Timer? _uploadTimer;
   final Duration _uploadDelay;
-  
+
   // Timestamp tracking for conflict detection
   DateTime? _localLastModified;
   final Function(DateTime)? _onSaveTimestamp;
   final Future<DateTime?> Function()? _onLoadTimestamp;
 
   // Events
-  final StreamController<bool> _syncStateController = StreamController.broadcast();
-  final StreamController<String> _uploadController = StreamController.broadcast();
-  final StreamController<String> _downloadController = StreamController.broadcast();
-  final StreamController<String> _errorController = StreamController.broadcast();
-  final StreamController<SyncConflictInfo> _conflictController = StreamController.broadcast();
+  final StreamController<bool> _syncStateController =
+      StreamController.broadcast();
+  final StreamController<String> _uploadController =
+      StreamController.broadcast();
+  final StreamController<String> _downloadController =
+      StreamController.broadcast();
+  final StreamController<String> _errorController =
+      StreamController.broadcast();
+  final StreamController<SyncConflictInfo> _conflictController =
+      StreamController.broadcast();
 
   EnhancedGoogleDriveService({
     required GoogleDriveConfig config,
@@ -49,18 +54,18 @@ class EnhancedGoogleDriveService {
     Duration uploadDelay = const Duration(milliseconds: 700),
     Function(DateTime)? onSaveTimestamp,
     Future<DateTime?> Function()? onLoadTimestamp,
-  })  : _syncEnabled = syncEnabled,
-        _uploadDelay = uploadDelay,
-        _onSaveTimestamp = onSaveTimestamp,
-        _onLoadTimestamp = onLoadTimestamp,
-        _authService = MobileGoogleAuthService(config: config);
+  }) : _syncEnabled = syncEnabled,
+       _uploadDelay = uploadDelay,
+       _onSaveTimestamp = onSaveTimestamp,
+       _onLoadTimestamp = onLoadTimestamp,
+       _authService = MobileGoogleAuthService(config: config);
 
   // Getters
   bool get syncEnabled => _syncEnabled;
   bool get isAuthenticated => _authService.isSignedIn;
   MobileGoogleAuthService get authService => _authService;
   DateTime? get localLastModified => _localLastModified;
-  
+
   // Streams
   Stream<bool> get onSyncStateChanged => _syncStateController.stream;
   Stream<String> get onUpload => _uploadController.stream;
@@ -71,31 +76,43 @@ class EnhancedGoogleDriveService {
   /// Initialize the service
   Future<void> initialize() async {
     await _authService.initializeAuth();
-    
+
     // Load local timestamp
     if (_onLoadTimestamp != null) {
       _localLastModified = await _onLoadTimestamp();
     }
-    
+
     if (_authService.isSignedIn) {
       await _createDriveClient();
       // Auto-enable sync if already signed in
       setSyncEnabled(true);
-      if (kDebugMode) debugPrint('EnhancedGoogleDriveService: Auto-sync enabled for existing session');
+      if (kDebugMode) {
+        debugPrint(
+          'EnhancedGoogleDriveService: Auto-sync enabled for existing session',
+        );
+      }
     }
-    
+
     // Listen to auth changes
     _authService.listenToAuthChanges((account) async {
       if (account != null) {
         await _createDriveClient();
         // Auto-enable sync when authentication state changes to signed in
         setSyncEnabled(true);
-        if (kDebugMode) debugPrint('EnhancedGoogleDriveService: Auto-sync enabled on auth state change');
+        if (kDebugMode) {
+          debugPrint(
+            'EnhancedGoogleDriveService: Auto-sync enabled on auth state change',
+          );
+        }
       } else {
         _driveClient = null;
         // Keep sync disabled when signed out
         setSyncEnabled(false);
-        if (kDebugMode) debugPrint('EnhancedGoogleDriveService: Auto-sync disabled on sign out');
+        if (kDebugMode) {
+          debugPrint(
+            'EnhancedGoogleDriveService: Auto-sync disabled on sign out',
+          );
+        }
       }
     });
   }
@@ -107,7 +124,11 @@ class EnhancedGoogleDriveService {
       await _createDriveClient();
       // Auto-enable sync when user signs in
       setSyncEnabled(true);
-      if (kDebugMode) debugPrint('EnhancedGoogleDriveService: Auto-sync enabled after successful sign-in');
+      if (kDebugMode) {
+        debugPrint(
+          'EnhancedGoogleDriveService: Auto-sync enabled after successful sign-in',
+        );
+      }
     }
     return success;
   }
@@ -140,14 +161,14 @@ class EnhancedGoogleDriveService {
 
     try {
       await _driveClient!.upsertFile(content);
-      
+
       // Save timestamp
       final uploadTime = timestamp ?? DateTime.now().toUtc();
       _localLastModified = uploadTime;
       if (_onSaveTimestamp != null) {
         _onSaveTimestamp(uploadTime);
       }
-      
+
       _uploadController.add('Upload successful');
     } catch (e) {
       final errorMsg = 'Upload failed: $e';
@@ -170,7 +191,7 @@ class EnhancedGoogleDriveService {
       if (content != null) {
         _downloadController.add('Download successful');
         if (kDebugMode) print('Drive download successful');
-        
+
         return DownloadResult(
           content: content,
           timestamp: null, // App-specific services can extract this
@@ -300,10 +321,7 @@ class DownloadResult {
   final String content;
   final DateTime? timestamp;
 
-  DownloadResult({
-    required this.content,
-    this.timestamp,
-  });
+  DownloadResult({required this.content, this.timestamp});
 }
 
 /// Information about a sync conflict

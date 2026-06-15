@@ -1,11 +1,11 @@
 // --------------------------------------------------------------------------
 // Mobile Google Authentication Service - Android/iOS Only
 // --------------------------------------------------------------------------
-// 
+//
 // PLATFORM SUPPORT: Android and iOS only
 // This service depends on google_sign_in which is only available on mobile platforms.
 // For desktop platforms (Windows/macOS/Linux), use desktop_drive_auth instead.
-// 
+//
 // Usage: Only import and use this service when PlatformHelper.isMobile returns true.
 // --------------------------------------------------------------------------
 
@@ -19,39 +19,42 @@ import 'drive_crud_client.dart';
 class MobileGoogleAuthService {
   final GoogleSignIn _googleSignIn;
   final GoogleDriveConfig _config;
-  
+
   GoogleSignInAccount? _currentUser;
   String? _accessToken;
 
   MobileGoogleAuthService({required GoogleDriveConfig config})
-      : _config = config,
-        // Scopes MUST match the set requested by the interactive sign-in path
-        // in data_management_tab_mobile.dart (['email', driveAppdataScope]).
-        // If they diverge, signInSilently() on this instance can return null
-        // even though the cached account from the tab is still valid, which
-        // silently breaks background uploads.
-        _googleSignIn = Platform.isIOS
-            ? GoogleSignIn(
-                scopes: ['email', config.scope],
-                // iOS requires iOS OAuth client for Drive API access
-                serverClientId: '628217349107-2u1kqe686mqd9a2mncfs4hr9sgmq4f9k.apps.googleusercontent.com',
-              )
-            : GoogleSignIn(scopes: ['email', config.scope]); // Android uses default (no serverClientId)
+    : _config = config,
+      // Scopes MUST match the set requested by the interactive sign-in path
+      // in data_management_tab_mobile.dart (['email', driveAppdataScope]).
+      // If they diverge, signInSilently() on this instance can return null
+      // even though the cached account from the tab is still valid, which
+      // silently breaks background uploads.
+      _googleSignIn = Platform.isIOS
+          ? GoogleSignIn(
+              scopes: ['email', config.scope],
+              // iOS requires iOS OAuth client for Drive API access
+              serverClientId:
+                  '628217349107-2u1kqe686mqd9a2mncfs4hr9sgmq4f9k.apps.googleusercontent.com',
+            )
+          : GoogleSignIn(
+              scopes: ['email', config.scope],
+            ); // Android uses default (no serverClientId)
 
   /// Current authenticated user
   GoogleSignInAccount? get currentUser => _currentUser;
-  
+
   /// Current access token
   String? get accessToken => _accessToken;
-  
+
   /// Drive configuration
   GoogleDriveConfig get config => _config;
-  
+
   /// Check if user is signed in
   bool get isSignedIn => _currentUser != null && _accessToken != null;
 
   /// Stream of authentication state changes
-  Stream<GoogleSignInAccount?> get onAuthStateChanged => 
+  Stream<GoogleSignInAccount?> get onAuthStateChanged =>
       _googleSignIn.onCurrentUserChanged;
 
   /// Initialize and attempt silent sign-in
@@ -92,7 +95,7 @@ class MobileGoogleAuthService {
   /// Create authenticated Drive client
   Future<GoogleDriveCrudClient?> createDriveClient() async {
     if (!isSignedIn) return null;
-    
+
     return GoogleDriveCrudClient.create(
       accessToken: _accessToken!,
       config: _config,
@@ -124,7 +127,9 @@ class MobileGoogleAuthService {
           return _accessToken != null;
         }
       } catch (e) {
-        if (kDebugMode) print('Token refresh: silent account recovery failed: $e');
+        if (kDebugMode) {
+          print('Token refresh: silent account recovery failed: $e');
+        }
       }
       return false;
     }
@@ -149,10 +154,10 @@ class MobileGoogleAuthService {
   /// Update internal auth state
   Future<void> _updateAuthState(GoogleSignInAccount account) async {
     _currentUser = account;
-    
+
     final auth = await account.authentication;
     _accessToken = auth.accessToken;
-    
+
     if (_accessToken == null) {
       throw Exception('Failed to get access token');
     }

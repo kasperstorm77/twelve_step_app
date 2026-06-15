@@ -48,7 +48,9 @@ class _MorningRitualTodayTabState extends State<MorningRitualTodayTab> {
     // away / switching apps / restarting the app).
     _maybeRestoreProgress();
     // Listen to ritual items box for changes (e.g., after sync)
-    MorningRitualService.ritualItemsBox.listenable().addListener(_onRitualItemsChanged);
+    MorningRitualService.ritualItemsBox.listenable().addListener(
+      _onRitualItemsChanged,
+    );
   }
 
   @override
@@ -69,7 +71,9 @@ class _MorningRitualTodayTabState extends State<MorningRitualTodayTab> {
     FlutterRingtonePlayer().stop();
     // Ensure wake lock is disabled when leaving the page
     WakelockPlus.disable();
-    MorningRitualService.ritualItemsBox.listenable().removeListener(_onRitualItemsChanged);
+    MorningRitualService.ritualItemsBox.listenable().removeListener(
+      _onRitualItemsChanged,
+    );
     super.dispose();
   }
 
@@ -119,7 +123,9 @@ class _MorningRitualTodayTabState extends State<MorningRitualTodayTab> {
   void _maybeRestoreProgress() {
     if (!_isToday) return;
     // A finished ritual is stored as a real entry — that view wins.
-    if (MorningRitualService.getEntryByDate(widget.selectedDate) != null) return;
+    if (MorningRitualService.getEntryByDate(widget.selectedDate) != null) {
+      return;
+    }
     if (_ritualItems.isEmpty) return;
 
     final progress = MorningRitualService.loadProgress(DateTime.now());
@@ -159,7 +165,11 @@ class _MorningRitualTodayTabState extends State<MorningRitualTodayTab> {
   bool get _isToday {
     final now = DateTime.now();
     final today = DateTime(now.year, now.month, now.day);
-    final selected = DateTime(widget.selectedDate.year, widget.selectedDate.month, widget.selectedDate.day);
+    final selected = DateTime(
+      widget.selectedDate.year,
+      widget.selectedDate.month,
+      widget.selectedDate.day,
+    );
     return today == selected;
   }
 
@@ -208,7 +218,7 @@ class _MorningRitualTodayTabState extends State<MorningRitualTodayTab> {
   void _startTimer() {
     // Enable wake lock to keep screen on during timer
     WakelockPlus.enable();
-    
+
     setState(() {
       _timerRunning = true;
       _timerPaused = false;
@@ -269,9 +279,9 @@ class _MorningRitualTodayTabState extends State<MorningRitualTodayTab> {
           ios: IosSounds.alarm,
           looping: false,
           volume: 1.0,
-          asAlarm: true,  // Uses alarm audio stream for proper volume control
+          asAlarm: true, // Uses alarm audio stream for proper volume control
         );
-        
+
         // Stop after 2 seconds (alarm sound can be long)
         Future.delayed(const Duration(seconds: 2), () {
           FlutterRingtonePlayer().stop();
@@ -339,7 +349,9 @@ class _MorningRitualTodayTabState extends State<MorningRitualTodayTab> {
         context: context,
         builder: (context) => AlertDialog(
           title: Text(t(context, 'morning_ritual_timer_early_complete_title')),
-          content: Text(t(context, 'morning_ritual_timer_early_complete_message')),
+          content: Text(
+            t(context, 'morning_ritual_timer_early_complete_message'),
+          ),
           actions: [
             TextButton(
               onPressed: () => Navigator.pop(context, false),
@@ -526,7 +538,9 @@ class _MorningRitualTodayTabState extends State<MorningRitualTodayTab> {
   @override
   Widget build(BuildContext context) {
     // Check if there's already an entry for this date
-    final existingEntry = MorningRitualService.getEntryByDate(widget.selectedDate);
+    final existingEntry = MorningRitualService.getEntryByDate(
+      widget.selectedDate,
+    );
 
     if (existingEntry != null) {
       return _buildCompletedView(existingEntry);
@@ -563,10 +577,13 @@ class _MorningRitualTodayTabState extends State<MorningRitualTodayTab> {
             ),
             const SizedBox(height: 8),
             Text(
-              t(context, 'morning_ritual_items_count').replaceAll('%count%', _ritualItems.length.toString()),
+              t(
+                context,
+                'morning_ritual_items_count',
+              ).replaceAll('%count%', _ritualItems.length.toString()),
               style: Theme.of(context).textTheme.bodyLarge?.copyWith(
-                    color: Theme.of(context).colorScheme.onSurfaceVariant,
-                  ),
+                color: Theme.of(context).colorScheme.onSurfaceVariant,
+              ),
             ),
             const SizedBox(height: 32),
             ElevatedButton.icon(
@@ -574,7 +591,10 @@ class _MorningRitualTodayTabState extends State<MorningRitualTodayTab> {
               icon: const Icon(Icons.play_arrow),
               label: Text(t(context, 'morning_ritual_start')),
               style: ElevatedButton.styleFrom(
-                padding: const EdgeInsets.symmetric(horizontal: 32, vertical: 16),
+                padding: const EdgeInsets.symmetric(
+                  horizontal: 32,
+                  vertical: 16,
+                ),
               ),
             ),
             if (_ritualItems.isEmpty) ...[
@@ -582,8 +602,8 @@ class _MorningRitualTodayTabState extends State<MorningRitualTodayTab> {
               Text(
                 t(context, 'morning_ritual_add_items_hint'),
                 style: Theme.of(context).textTheme.bodySmall?.copyWith(
-                      color: Theme.of(context).colorScheme.error,
-                    ),
+                  color: Theme.of(context).colorScheme.error,
+                ),
                 textAlign: TextAlign.center,
               ),
             ],
@@ -598,7 +618,12 @@ class _MorningRitualTodayTabState extends State<MorningRitualTodayTab> {
     if (item == null) return const SizedBox.shrink();
 
     return SingleChildScrollView(
-      padding: EdgeInsets.fromLTRB(16, 16, 16, MediaQuery.of(context).padding.bottom + 32),
+      padding: EdgeInsets.fromLTRB(
+        16,
+        16,
+        16,
+        MediaQuery.of(context).padding.bottom + 32,
+      ),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.stretch,
         children: [
@@ -621,7 +646,9 @@ class _MorningRitualTodayTabState extends State<MorningRitualTodayTab> {
               child: Column(
                 children: [
                   Icon(
-                    item.type == RitualItemType.timer ? Icons.timer : Icons.menu_book,
+                    item.type == RitualItemType.timer
+                        ? Icons.timer
+                        : Icons.menu_book,
                     size: 48,
                     color: Theme.of(context).colorScheme.primary,
                   ),
@@ -638,9 +665,9 @@ class _MorningRitualTodayTabState extends State<MorningRitualTodayTab> {
                     Text(
                       _formatTime(_remainingSeconds),
                       style: Theme.of(context).textTheme.displayLarge?.copyWith(
-                            fontWeight: FontWeight.bold,
-                            fontFamily: 'monospace',
-                          ),
+                        fontWeight: FontWeight.bold,
+                        fontFamily: 'monospace',
+                      ),
                     ),
                     const SizedBox(height: 24),
                     // Timer controls
@@ -651,26 +678,34 @@ class _MorningRitualTodayTabState extends State<MorningRitualTodayTab> {
                           ElevatedButton.icon(
                             onPressed: _startTimer,
                             icon: const Icon(Icons.play_arrow),
-                            label: Text(t(context, 'morning_ritual_timer_start')),
+                            label: Text(
+                              t(context, 'morning_ritual_timer_start'),
+                            ),
                           )
                         else if (_timerRunning)
                           ElevatedButton.icon(
                             onPressed: _pauseTimer,
                             icon: const Icon(Icons.pause),
-                            label: Text(t(context, 'morning_ritual_timer_pause')),
+                            label: Text(
+                              t(context, 'morning_ritual_timer_pause'),
+                            ),
                           )
                         else
                           ElevatedButton.icon(
                             onPressed: _resumeTimer,
                             icon: const Icon(Icons.play_arrow),
-                            label: Text(t(context, 'morning_ritual_timer_resume')),
+                            label: Text(
+                              t(context, 'morning_ritual_timer_resume'),
+                            ),
                           ),
                         const SizedBox(width: 8),
                         if (_timerRunning || _timerPaused)
                           OutlinedButton.icon(
                             onPressed: _stopTimer,
                             icon: const Icon(Icons.stop),
-                            label: Text(t(context, 'morning_ritual_timer_stop')),
+                            label: Text(
+                              t(context, 'morning_ritual_timer_stop'),
+                            ),
                           ),
                       ],
                     ),
@@ -680,14 +715,15 @@ class _MorningRitualTodayTabState extends State<MorningRitualTodayTab> {
                       Container(
                         padding: const EdgeInsets.all(16),
                         decoration: BoxDecoration(
-                          color: Theme.of(context).colorScheme.surfaceContainerHighest,
+                          color: Theme.of(
+                            context,
+                          ).colorScheme.surfaceContainerHighest,
                           borderRadius: BorderRadius.circular(12),
                         ),
                         child: Text(
                           item.prayerText!,
-                          style: Theme.of(context).textTheme.bodyLarge?.copyWith(
-                                fontStyle: FontStyle.italic,
-                              ),
+                          style: Theme.of(context).textTheme.bodyLarge
+                              ?.copyWith(fontStyle: FontStyle.italic),
                           textAlign: TextAlign.center,
                         ),
                       ),
@@ -739,17 +775,14 @@ class _MorningRitualTodayTabState extends State<MorningRitualTodayTab> {
                     label: Text(t(context, 'morning_ritual_previous')),
                   ),
                 ),
-              if (_currentItemIndex > 0)
-                const SizedBox(width: 16),
+              if (_currentItemIndex > 0) const SizedBox(width: 16),
               // Start Over button
               Expanded(
                 child: OutlinedButton.icon(
                   onPressed: _startOver,
                   icon: const Icon(Icons.restart_alt),
                   label: Text(t(context, 'morning_ritual_start_over')),
-                  style: OutlinedButton.styleFrom(
-                    foregroundColor: Colors.red,
-                  ),
+                  style: OutlinedButton.styleFrom(foregroundColor: Colors.red),
                 ),
               ),
             ],
@@ -761,7 +794,12 @@ class _MorningRitualTodayTabState extends State<MorningRitualTodayTab> {
 
   Widget _buildCompletedView(MorningRitualEntry entry) {
     return SingleChildScrollView(
-      padding: EdgeInsets.fromLTRB(16, 16, 16, MediaQuery.of(context).padding.bottom + 32),
+      padding: EdgeInsets.fromLTRB(
+        16,
+        16,
+        16,
+        MediaQuery.of(context).padding.bottom + 32,
+      ),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.stretch,
         children: [
@@ -776,7 +814,9 @@ class _MorningRitualTodayTabState extends State<MorningRitualTodayTab> {
                   Icon(
                     entry.isFullyCompleted ? Icons.check_circle : Icons.info,
                     size: 48,
-                    color: entry.isFullyCompleted ? Colors.green : Colors.orange,
+                    color: entry.isFullyCompleted
+                        ? Colors.green
+                        : Colors.orange,
                   ),
                   const SizedBox(height: 8),
                   Text(
@@ -795,27 +835,29 @@ class _MorningRitualTodayTabState extends State<MorningRitualTodayTab> {
             ),
           ),
           const SizedBox(height: 16),
-          ...entry.items.map((record) => Card(
-                margin: const EdgeInsets.only(bottom: 8),
-                child: ListTile(
-                  leading: Icon(
-                    record.status == RitualItemStatus.completed
-                        ? Icons.check_circle
-                        : record.status == RitualItemStatus.skipped
-                            ? Icons.cancel
-                            : Icons.remove_circle,
-                    color: record.status == RitualItemStatus.completed
-                        ? Colors.green
-                        : Colors.red,
-                  ),
-                  title: Text(
-                    record.originalDurationSeconds != null
-                        ? '${record.ritualItemName} (${record.formattedDuration})'
-                        : record.ritualItemName,
-                  ),
-                  subtitle: Text(t(context, record.status.labelKey())),
+          ...entry.items.map(
+            (record) => Card(
+              margin: const EdgeInsets.only(bottom: 8),
+              child: ListTile(
+                leading: Icon(
+                  record.status == RitualItemStatus.completed
+                      ? Icons.check_circle
+                      : record.status == RitualItemStatus.skipped
+                      ? Icons.cancel
+                      : Icons.remove_circle,
+                  color: record.status == RitualItemStatus.completed
+                      ? Colors.green
+                      : Colors.red,
                 ),
-              )),
+                title: Text(
+                  record.originalDurationSeconds != null
+                      ? '${record.ritualItemName} (${record.formattedDuration})'
+                      : record.ritualItemName,
+                ),
+                subtitle: Text(t(context, record.status.labelKey())),
+              ),
+            ),
+          ),
         ],
       ),
     );
@@ -831,14 +873,16 @@ class _MorningRitualTodayTabState extends State<MorningRitualTodayTab> {
             Icon(
               Icons.event_busy,
               size: 64,
-              color: Theme.of(context).colorScheme.onSurfaceVariant.withValues(alpha: 0.5),
+              color: Theme.of(
+                context,
+              ).colorScheme.onSurfaceVariant.withValues(alpha: 0.5),
             ),
             const SizedBox(height: 16),
             Text(
               t(context, 'morning_ritual_no_entry'),
               style: Theme.of(context).textTheme.bodyLarge?.copyWith(
-                    color: Theme.of(context).colorScheme.onSurfaceVariant,
-                  ),
+                color: Theme.of(context).colorScheme.onSurfaceVariant,
+              ),
               textAlign: TextAlign.center,
             ),
           ],

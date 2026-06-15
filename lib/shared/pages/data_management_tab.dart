@@ -1,7 +1,7 @@
-﻿// --------------------------------------------------------------------------
+// --------------------------------------------------------------------------
 // Data Management Tab - Platform Selector
 // --------------------------------------------------------------------------
-// 
+//
 // This file provides the DataManagementTab widget that automatically selects
 // the correct implementation based on the current platform:
 // - Mobile (Android/iOS): data_management_tab_mobile.dart

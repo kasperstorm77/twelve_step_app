@@ -1,11 +1,11 @@
 // --------------------------------------------------------------------------
 // Windows Data Management Tab
 // --------------------------------------------------------------------------
-// 
+//
 // PLATFORM SUPPORT: Windows only
 // This provides the same Google Drive sync experience as mobile, but using
 // WindowsDriveService with deep link OAuth.
-// 
+//
 // Features match mobile:
 // - Sign in with Google (automatic deep link OAuth)
 // - Automatic sync toggle
@@ -46,7 +46,7 @@ class _DataManagementTabState extends State<DataManagementTab> {
   bool _isSignedIn = false;
   bool _syncEnabled = false;
   bool _initializingAuth = true;
-  
+
   // Backup selection state
   List<Map<String, dynamic>> _availableBackups = [];
   String? _selectedBackupFileName;
@@ -66,13 +66,13 @@ class _DataManagementTabState extends State<DataManagementTab> {
       // Initialize AllAppsDriveService which handles platform-specific logic
       await AllAppsDriveService.instance.initialize();
       final signedIn = AllAppsDriveService.instance.isAuthenticated;
-      
+
       if (mounted) {
         setState(() {
           _isSignedIn = signedIn;
           _initializingAuth = false;
         });
-        
+
         // Reload backups from Drive after auth is confirmed
         if (signedIn) {
           _loadAvailableBackups();
@@ -105,7 +105,7 @@ class _DataManagementTabState extends State<DataManagementTab> {
 
     try {
       List<Map<String, dynamic>> backups;
-      
+
       if (_isSignedIn) {
         // Load from Google Drive when signed in
         backups = await AllAppsDriveService.instance.listAvailableBackups();
@@ -113,16 +113,20 @@ class _DataManagementTabState extends State<DataManagementTab> {
         // Load from local storage when not signed in
         backups = await LocalBackupService.instance.listAvailableBackups();
       }
-      
+
       if (mounted) {
         setState(() {
           _availableBackups = backups;
           _loadingBackups = false;
           // Validate selected backup exists in new list, or select most recent
-          final selectedExists = _selectedBackupFileName != null && 
-              _availableBackups.any((b) => b['fileName'] == _selectedBackupFileName);
+          final selectedExists =
+              _selectedBackupFileName != null &&
+              _availableBackups.any(
+                (b) => b['fileName'] == _selectedBackupFileName,
+              );
           if (!selectedExists && _availableBackups.isNotEmpty) {
-            _selectedBackupFileName = _availableBackups.first['fileName'] as String?;
+            _selectedBackupFileName =
+                _availableBackups.first['fileName'] as String?;
           } else if (_availableBackups.isEmpty) {
             _selectedBackupFileName = null;
           }
@@ -149,31 +153,34 @@ class _DataManagementTabState extends State<DataManagementTab> {
         _selectedBackupFileName = null;
       });
       Hive.box('settings').put('syncEnabled', false);
-      
+
       if (mounted) {
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(content: Text(t(context, 'signed_out'))),
-        );
+        ScaffoldMessenger.of(
+          context,
+        ).showSnackBar(SnackBar(content: Text(t(context, 'signed_out'))));
       }
     } else {
       // Sign in
       final success = await AllAppsDriveService.instance.signIn();
-      
+
       if (success) {
         setState(() {
           _isSignedIn = true;
         });
-        
+
         if (mounted) {
-          ScaffoldMessenger.of(context).showSnackBar(
-            SnackBar(content: Text(t(context, 'signed_in'))),
-          );
-          
+          ScaffoldMessenger.of(
+            context,
+          ).showSnackBar(SnackBar(content: Text(t(context, 'signed_in'))));
+
           // Only show sync enable dialog if user hasn't already configured sync
           // Check if they've ever been prompted (syncPrompted flag) or if sync is already enabled
           final settingsBox = Hive.box('settings');
-          final alreadyPrompted = settingsBox.get('syncPromptedWindows', defaultValue: false);
-          
+          final alreadyPrompted = settingsBox.get(
+            'syncPromptedWindows',
+            defaultValue: false,
+          );
+
           // Check for backups FIRST (used for both prompt logic and loading backup list)
           List<Map<String, dynamic>> backups = [];
           try {
@@ -183,8 +190,10 @@ class _DataManagementTabState extends State<DataManagementTab> {
               setState(() {
                 _availableBackups = backups;
                 _loadingBackups = false;
-                if (_availableBackups.isNotEmpty && _selectedBackupFileName == null) {
-                  _selectedBackupFileName = _availableBackups.first['fileName'] as String?;
+                if (_availableBackups.isNotEmpty &&
+                    _selectedBackupFileName == null) {
+                  _selectedBackupFileName =
+                      _availableBackups.first['fileName'] as String?;
                 }
               });
             }
@@ -192,17 +201,23 @@ class _DataManagementTabState extends State<DataManagementTab> {
             if (kDebugMode) print('_handleSignIn: Error loading backups: $e');
             if (mounted) setState(() => _loadingBackups = false);
           }
-          
+
           if (!alreadyPrompted && !_syncEnabled) {
             if (backups.isEmpty) {
-              if (kDebugMode) print('_handleSignIn: No data on Drive, skipping fetch prompt');
+              if (kDebugMode) {
+                print('_handleSignIn: No data on Drive, skipping fetch prompt');
+              }
               // Mark as prompted and enable sync anyway so new data will be backed up
               Hive.box('settings').put('syncPromptedWindows', true);
               Hive.box('settings').put('syncEnabled', true);
               setState(() => _syncEnabled = true);
               await AllAppsDriveService.instance.setSyncEnabled(true);
             } else {
-              if (kDebugMode) print('_handleSignIn: Found ${backups.length} backup(s) on Drive, showing prompt');
+              if (kDebugMode) {
+                print(
+                  '_handleSignIn: Found ${backups.length} backup(s) on Drive, showing prompt',
+                );
+              }
               _showSyncEnableDialog();
             }
           } else {
@@ -223,24 +238,30 @@ class _DataManagementTabState extends State<DataManagementTab> {
   /// Check if remote data is newer than local and prompt user to fetch if so
   Future<void> _checkAndPromptIfRemoteNewer() async {
     if (!mounted) return;
-    
+
     try {
       if (kDebugMode) {
         print('_checkAndPromptIfRemoteNewer: Starting check...');
-        print('_checkAndPromptIfRemoteNewer: isAuthenticated=${AllAppsDriveService.instance.isAuthenticated}');
-        print('_checkAndPromptIfRemoteNewer: syncEnabled=${AllAppsDriveService.instance.syncEnabled}');
+        print(
+          '_checkAndPromptIfRemoteNewer: isAuthenticated=${AllAppsDriveService.instance.isAuthenticated}',
+        );
+        print(
+          '_checkAndPromptIfRemoteNewer: syncEnabled=${AllAppsDriveService.instance.syncEnabled}',
+        );
       }
-      
+
       final isNewer = await AllAppsDriveService.instance.isRemoteNewer();
-      
-      if (kDebugMode) print('_checkAndPromptIfRemoteNewer: Remote is newer = $isNewer');
-      
+
+      if (kDebugMode) {
+        print('_checkAndPromptIfRemoteNewer: Remote is newer = $isNewer');
+      }
+
       if (!isNewer || !mounted) {
         // Local is up to date - make sure uploads are unblocked
         AllAppsDriveService.instance.unblockUploads();
         return;
       }
-      
+
       // Remote has newer data - prompt user
       final shouldFetch = await showDialog<bool>(
         context: context,
@@ -248,9 +269,9 @@ class _DataManagementTabState extends State<DataManagementTab> {
         builder: (dialogContext) => AlertDialog(
           title: Text(
             t(context, 'newer_data_available'),
-            style: Theme.of(context).textTheme.titleMedium?.copyWith(
-              fontWeight: FontWeight.bold,
-            ),
+            style: Theme.of(
+              context,
+            ).textTheme.titleMedium?.copyWith(fontWeight: FontWeight.bold),
           ),
           content: Text(t(context, 'newer_data_prompt')),
           actions: [
@@ -265,7 +286,7 @@ class _DataManagementTabState extends State<DataManagementTab> {
           ],
         ),
       );
-      
+
       if (shouldFetch == true && mounted) {
         await _restoreFromBackup();
         // After successful restore, unblock uploads
@@ -273,7 +294,9 @@ class _DataManagementTabState extends State<DataManagementTab> {
       } else {
         // User chose to keep local data - unblock uploads so local changes sync
         AllAppsDriveService.instance.unblockUploads();
-        if (kDebugMode) print('User chose to keep local data - uploads unblocked');
+        if (kDebugMode) {
+          print('User chose to keep local data - uploads unblocked');
+        }
       }
     } catch (e) {
       if (kDebugMode) print('_checkAndPromptIfRemoteNewer: Error - $e');
@@ -288,9 +311,9 @@ class _DataManagementTabState extends State<DataManagementTab> {
       builder: (dialogContext) => AlertDialog(
         title: Text(
           t(context, 'enable_sync'),
-          style: Theme.of(context).textTheme.titleMedium?.copyWith(
-            fontWeight: FontWeight.bold,
-          ),
+          style: Theme.of(
+            context,
+          ).textTheme.titleMedium?.copyWith(fontWeight: FontWeight.bold),
         ),
         content: Text(t(context, 'enable_sync_prompt')),
         actions: [
@@ -307,12 +330,12 @@ class _DataManagementTabState extends State<DataManagementTab> {
               // Mark as prompted so we don't show again
               Hive.box('settings').put('syncPromptedWindows', true);
               Navigator.pop(dialogContext);
-              
+
               // Enable sync
               setState(() => _syncEnabled = true);
               await Hive.box('settings').put('syncEnabled', true);
               await AllAppsDriveService.instance.setSyncEnabled(true);
-              
+
               // Now ask if they want to fetch existing data from Drive
               if (mounted && _availableBackups.isNotEmpty) {
                 _showFetchDataPrompt();
@@ -333,9 +356,9 @@ class _DataManagementTabState extends State<DataManagementTab> {
       builder: (dialogContext) => AlertDialog(
         title: Text(
           t(context, 'data_found_on_drive'),
-          style: Theme.of(context).textTheme.titleMedium?.copyWith(
-            fontWeight: FontWeight.bold,
-          ),
+          style: Theme.of(
+            context,
+          ).textTheme.titleMedium?.copyWith(fontWeight: FontWeight.bold),
         ),
         content: Text(t(context, 'fetch_existing_data_prompt')),
         actions: [
@@ -381,14 +404,14 @@ class _DataManagementTabState extends State<DataManagementTab> {
     try {
       String? content;
       String? backupFileName = _selectedBackupFileName;
-      
+
       // If no backup selected, find the most recent one
       if (backupFileName == null || backupFileName.isEmpty) {
         var backups = _availableBackups;
         if (backups.isEmpty) {
           backups = await AllAppsDriveService.instance.listAvailableBackups();
         }
-        
+
         if (backups.isEmpty) {
           if (mounted) {
             ScaffoldMessenger.of(context).hideCurrentSnackBar();
@@ -399,15 +422,23 @@ class _DataManagementTabState extends State<DataManagementTab> {
           return;
         }
         backupFileName = backups.first['fileName'] as String?;
-        if (kDebugMode) print('_fetchFromDriveDirectly: Using most recent backup: $backupFileName');
+        if (kDebugMode) {
+          print(
+            '_fetchFromDriveDirectly: Using most recent backup: $backupFileName',
+          );
+        }
       }
-      
+
       if (backupFileName == null || backupFileName.isEmpty) {
-        if (kDebugMode) print('_fetchFromDriveDirectly: No backup file name available');
+        if (kDebugMode) {
+          print('_fetchFromDriveDirectly: No backup file name available');
+        }
         return;
       }
-      
-      content = await AllAppsDriveService.instance.downloadBackupContent(backupFileName);
+
+      content = await AllAppsDriveService.instance.downloadBackupContent(
+        backupFileName,
+      );
 
       if (content == null) {
         if (mounted) {
@@ -421,31 +452,43 @@ class _DataManagementTabState extends State<DataManagementTab> {
 
       final data = jsonDecode(content) as Map<String, dynamic>;
       final restoreResult = await _importData(data);
-      
+
       if (!mounted) return;
-      
+
       ScaffoldMessenger.of(context).hideCurrentSnackBar();
-      
+
       if (restoreResult.success) {
         final c = restoreResult.counts;
         ScaffoldMessenger.of(context).showSnackBar(
           SnackBar(
-            content: Text(t(context, 'fetch_success_count')
-                .replaceFirst('%entries%', c.entries.toString())
-                .replaceFirst('%iams%', c.iAmDefinitions.toString())
-                .replaceFirst('%people%', c.people.toString())
-                .replaceFirst('%reflections%', c.reflections.toString())
-                .replaceFirst('%gratitude%', c.gratitude.toString())
-                .replaceFirst('%agnosticism%', c.agnosticism.toString())
-                .replaceFirst('%ritualItems%', c.morningRitualItems.toString())
-                .replaceFirst('%ritualEntries%', c.morningRitualEntries.toString())
-                .replaceFirst('%notifications%', c.notifications.toString())),
+            content: Text(
+              t(context, 'fetch_success_count')
+                  .replaceFirst('%entries%', c.entries.toString())
+                  .replaceFirst('%iams%', c.iAmDefinitions.toString())
+                  .replaceFirst('%people%', c.people.toString())
+                  .replaceFirst('%reflections%', c.reflections.toString())
+                  .replaceFirst('%gratitude%', c.gratitude.toString())
+                  .replaceFirst('%agnosticism%', c.agnosticism.toString())
+                  .replaceFirst(
+                    '%ritualItems%',
+                    c.morningRitualItems.toString(),
+                  )
+                  .replaceFirst(
+                    '%ritualEntries%',
+                    c.morningRitualEntries.toString(),
+                  )
+                  .replaceFirst('%notifications%', c.notifications.toString()),
+            ),
             duration: const Duration(seconds: 4),
           ),
         );
       } else {
         ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(content: Text('${t(context, 'import_failed')}: ${restoreResult.error}')),
+          SnackBar(
+            content: Text(
+              '${t(context, 'import_failed')}: ${restoreResult.error}',
+            ),
+          ),
         );
       }
     } catch (e) {
@@ -461,14 +504,14 @@ class _DataManagementTabState extends State<DataManagementTab> {
 
   Future<void> _toggleSync(bool? value) async {
     if (value == null) return;
-    
+
     setState(() {
       _syncEnabled = value;
     });
-    
+
     await Hive.box('settings').put('syncEnabled', value);
     await AllAppsDriveService.instance.setSyncEnabled(value);
-    
+
     if (value && _isSignedIn) {
       // Trigger initial sync - check if remote is newer first
       await _performSync();
@@ -477,17 +520,19 @@ class _DataManagementTabState extends State<DataManagementTab> {
 
   Future<void> _performSync() async {
     if (!_isSignedIn) return;
-    
+
     try {
       // Upload current data to Drive
       // Note: Auto-restore is disabled for data safety. User can manually restore from backup.
       final entriesBox = Hive.box<InventoryEntry>('entries');
-      await AllAppsDriveService.instance.uploadFromBoxWithNotification(entriesBox);
-      
+      await AllAppsDriveService.instance.uploadFromBoxWithNotification(
+        entriesBox,
+      );
+
       if (mounted) {
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(content: Text(t(context, 'sync_complete'))),
-        );
+        ScaffoldMessenger.of(
+          context,
+        ).showSnackBar(SnackBar(content: Text(t(context, 'sync_complete'))));
       }
     } catch (e) {
       if (kDebugMode) print('Sync failed: $e');
@@ -503,12 +548,12 @@ class _DataManagementTabState extends State<DataManagementTab> {
   Future<void> _createLocalBackup() async {
     try {
       await LocalBackupService.instance.createBackupNow();
-      
+
       if (!mounted) return;
-      ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(content: Text(t(context, 'backup_created'))),
-      );
-      
+      ScaffoldMessenger.of(
+        context,
+      ).showSnackBar(SnackBar(content: Text(t(context, 'backup_created'))));
+
       // Refresh the backup list
       await _loadAvailableBackups();
     } catch (e) {
@@ -546,7 +591,7 @@ class _DataManagementTabState extends State<DataManagementTab> {
     try {
       String? content;
       String? backupFileName = _selectedBackupFileName;
-      
+
       if (_isSignedIn) {
         // Restore from Google Drive
         // If no backup selected, find the most recent one
@@ -556,7 +601,7 @@ class _DataManagementTabState extends State<DataManagementTab> {
           if (backups.isEmpty) {
             backups = await AllAppsDriveService.instance.listAvailableBackups();
           }
-          
+
           if (backups.isEmpty) {
             if (mounted) {
               ScaffoldMessenger.of(context).showSnackBar(
@@ -567,15 +612,23 @@ class _DataManagementTabState extends State<DataManagementTab> {
           }
           // Backups are sorted newest first
           backupFileName = backups.first['fileName'] as String?;
-          if (kDebugMode) print('_restoreFromBackup: Using most recent Drive backup: $backupFileName');
+          if (kDebugMode) {
+            print(
+              '_restoreFromBackup: Using most recent Drive backup: $backupFileName',
+            );
+          }
         }
-        
+
         if (backupFileName == null || backupFileName.isEmpty) {
-          if (kDebugMode) print('_restoreFromBackup: No backup file name available');
+          if (kDebugMode) {
+            print('_restoreFromBackup: No backup file name available');
+          }
           return;
         }
-        
-        content = await AllAppsDriveService.instance.downloadBackupContent(backupFileName);
+
+        content = await AllAppsDriveService.instance.downloadBackupContent(
+          backupFileName,
+        );
       } else {
         // Restore from local backup
         // If no backup selected, find the most recent one
@@ -584,7 +637,7 @@ class _DataManagementTabState extends State<DataManagementTab> {
           if (backups.isEmpty) {
             backups = await LocalBackupService.instance.listAvailableBackups();
           }
-          
+
           if (backups.isEmpty) {
             if (mounted) {
               ScaffoldMessenger.of(context).showSnackBar(
@@ -595,15 +648,23 @@ class _DataManagementTabState extends State<DataManagementTab> {
           }
           // Backups are sorted newest first
           backupFileName = backups.first['fileName'] as String?;
-          if (kDebugMode) print('_restoreFromBackup: Using most recent local backup: $backupFileName');
+          if (kDebugMode) {
+            print(
+              '_restoreFromBackup: Using most recent local backup: $backupFileName',
+            );
+          }
         }
-        
+
         if (backupFileName == null || backupFileName.isEmpty) {
-          if (kDebugMode) print('_restoreFromBackup: No local backup file name available');
+          if (kDebugMode) {
+            print('_restoreFromBackup: No local backup file name available');
+          }
           return;
         }
-        
-        content = await LocalBackupService.instance.downloadBackupContent(backupFileName);
+
+        content = await LocalBackupService.instance.downloadBackupContent(
+          backupFileName,
+        );
       }
 
       if (content == null) {
@@ -619,27 +680,39 @@ class _DataManagementTabState extends State<DataManagementTab> {
       final restoreResult = await _importData(data);
 
       if (!mounted) return;
-      
+
       if (restoreResult.success) {
         final c = restoreResult.counts;
         ScaffoldMessenger.of(context).showSnackBar(
           SnackBar(
-            content: Text(t(context, 'fetch_success_count')
-                .replaceFirst('%entries%', c.entries.toString())
-                .replaceFirst('%iams%', c.iAmDefinitions.toString())
-                .replaceFirst('%people%', c.people.toString())
-                .replaceFirst('%reflections%', c.reflections.toString())
-                .replaceFirst('%gratitude%', c.gratitude.toString())
-                .replaceFirst('%agnosticism%', c.agnosticism.toString())
-                .replaceFirst('%ritualItems%', c.morningRitualItems.toString())
-                .replaceFirst('%ritualEntries%', c.morningRitualEntries.toString())
-                .replaceFirst('%notifications%', c.notifications.toString())),
+            content: Text(
+              t(context, 'fetch_success_count')
+                  .replaceFirst('%entries%', c.entries.toString())
+                  .replaceFirst('%iams%', c.iAmDefinitions.toString())
+                  .replaceFirst('%people%', c.people.toString())
+                  .replaceFirst('%reflections%', c.reflections.toString())
+                  .replaceFirst('%gratitude%', c.gratitude.toString())
+                  .replaceFirst('%agnosticism%', c.agnosticism.toString())
+                  .replaceFirst(
+                    '%ritualItems%',
+                    c.morningRitualItems.toString(),
+                  )
+                  .replaceFirst(
+                    '%ritualEntries%',
+                    c.morningRitualEntries.toString(),
+                  )
+                  .replaceFirst('%notifications%', c.notifications.toString()),
+            ),
             duration: const Duration(seconds: 4),
           ),
         );
       } else {
         ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(content: Text('${t(context, 'import_failed')}: ${restoreResult.error}')),
+          SnackBar(
+            content: Text(
+              '${t(context, 'import_failed')}: ${restoreResult.error}',
+            ),
+          ),
         );
       }
     } catch (e) {
@@ -656,10 +729,11 @@ class _DataManagementTabState extends State<DataManagementTab> {
     try {
       final data = _prepareExportData();
       final jsonString = const JsonEncoder.withIndent('  ').convert(data);
-      
+
       final result = await FilePicker.platform.saveFile(
         dialogTitle: t(context, 'export_data'),
-        fileName: 'twelve_steps_backup_${DateTime.now().toIso8601String().split('T')[0]}.json',
+        fileName:
+            'twelve_steps_backup_${DateTime.now().toIso8601String().split('T')[0]}.json',
         type: FileType.custom,
         allowedExtensions: ['json'],
       );
@@ -667,11 +741,11 @@ class _DataManagementTabState extends State<DataManagementTab> {
       if (result != null) {
         final file = File(result);
         await file.writeAsString(jsonString);
-        
+
         if (mounted) {
-          ScaffoldMessenger.of(context).showSnackBar(
-            SnackBar(content: Text(t(context, 'export_success'))),
-          );
+          ScaffoldMessenger.of(
+            context,
+          ).showSnackBar(SnackBar(content: Text(t(context, 'export_success'))));
         }
       }
     } catch (e) {
@@ -697,9 +771,9 @@ class _DataManagementTabState extends State<DataManagementTab> {
       builder: (context) => AlertDialog(
         title: Text(
           t(context, 'warning'),
-          style: Theme.of(context).textTheme.titleMedium?.copyWith(
-            fontWeight: FontWeight.bold,
-          ),
+          style: Theme.of(
+            context,
+          ).textTheme.titleMedium?.copyWith(fontWeight: FontWeight.bold),
         ),
         content: Text(t(context, 'import_warning')),
         actions: [
@@ -734,27 +808,39 @@ class _DataManagementTabState extends State<DataManagementTab> {
       final restoreResult = await _importData(data);
 
       if (!mounted) return;
-      
+
       if (restoreResult.success) {
         final c = restoreResult.counts;
         ScaffoldMessenger.of(context).showSnackBar(
           SnackBar(
-            content: Text(t(context, 'fetch_success_count')
-                .replaceFirst('%entries%', c.entries.toString())
-                .replaceFirst('%iams%', c.iAmDefinitions.toString())
-                .replaceFirst('%people%', c.people.toString())
-                .replaceFirst('%reflections%', c.reflections.toString())
-                .replaceFirst('%gratitude%', c.gratitude.toString())
-                .replaceFirst('%agnosticism%', c.agnosticism.toString())
-                .replaceFirst('%ritualItems%', c.morningRitualItems.toString())
-                .replaceFirst('%ritualEntries%', c.morningRitualEntries.toString())
-                .replaceFirst('%notifications%', c.notifications.toString())),
+            content: Text(
+              t(context, 'fetch_success_count')
+                  .replaceFirst('%entries%', c.entries.toString())
+                  .replaceFirst('%iams%', c.iAmDefinitions.toString())
+                  .replaceFirst('%people%', c.people.toString())
+                  .replaceFirst('%reflections%', c.reflections.toString())
+                  .replaceFirst('%gratitude%', c.gratitude.toString())
+                  .replaceFirst('%agnosticism%', c.agnosticism.toString())
+                  .replaceFirst(
+                    '%ritualItems%',
+                    c.morningRitualItems.toString(),
+                  )
+                  .replaceFirst(
+                    '%ritualEntries%',
+                    c.morningRitualEntries.toString(),
+                  )
+                  .replaceFirst('%notifications%', c.notifications.toString()),
+            ),
             duration: const Duration(seconds: 4),
           ),
         );
       } else {
         ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(content: Text('${t(context, 'import_failed')}: ${restoreResult.error}')),
+          SnackBar(
+            content: Text(
+              '${t(context, 'import_failed')}: ${restoreResult.error}',
+            ),
+          ),
         );
       }
     } catch (e) {
@@ -780,22 +866,27 @@ class _DataManagementTabState extends State<DataManagementTab> {
   @override
   Widget build(BuildContext context) {
     if (_initializingAuth) {
-      return const Center(
-        child: CircularProgressIndicator(),
-      );
+      return const Center(child: CircularProgressIndicator());
     }
 
-    final buttonText = _isSignedIn 
+    final buttonText = _isSignedIn
         ? t(context, 'sign_out_google')
         : t(context, 'sign_in_google');
 
     return ListView(
-      padding: EdgeInsets.fromLTRB(16, 16, 16, MediaQuery.of(context).padding.bottom + 16),
+      padding: EdgeInsets.fromLTRB(
+        16,
+        16,
+        16,
+        MediaQuery.of(context).padding.bottom + 16,
+      ),
       children: [
         // Google Sign-In button
         ElevatedButton.icon(
           onPressed: _handleSignIn,
-          icon: _isSignedIn ? const Icon(Icons.logout) : const Icon(Icons.login),
+          icon: _isSignedIn
+              ? const Icon(Icons.logout)
+              : const Icon(Icons.login),
           label: Text(buttonText),
           style: ElevatedButton.styleFrom(
             backgroundColor: Colors.blue.shade700,
@@ -835,20 +926,20 @@ class _DataManagementTabState extends State<DataManagementTab> {
           ),
         ),
         const SizedBox(height: 12),
-        
+
         ElevatedButton(
           onPressed: _exportJson,
           child: Text(t(context, 'export_json')),
         ),
         const SizedBox(height: 12),
-        
+
         ElevatedButton(
           onPressed: _importJson,
           child: Text(t(context, 'import_json')),
         ),
-        
+
         const SizedBox(height: 24),
-        
+
         // Backup selection dropdown and restore button
         // Shows Drive backups when signed in, Local backups when not
         Card(
@@ -904,9 +995,9 @@ class _DataManagementTabState extends State<DataManagementTab> {
                 if (_availableBackups.isEmpty && !_loadingBackups)
                   Text(
                     t(context, 'no_backups_available'),
-                    style: Theme.of(context).textTheme.bodySmall?.copyWith(
-                      color: Colors.grey,
-                    ),
+                    style: Theme.of(
+                      context,
+                    ).textTheme.bodySmall?.copyWith(color: Colors.grey),
                   )
                 else
                   DropdownButtonFormField<String>(
@@ -914,7 +1005,10 @@ class _DataManagementTabState extends State<DataManagementTab> {
                     initialValue: _selectedBackupFileName,
                     decoration: InputDecoration(
                       border: const OutlineInputBorder(),
-                      contentPadding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
+                      contentPadding: const EdgeInsets.symmetric(
+                        horizontal: 12,
+                        vertical: 8,
+                      ),
                       labelText: t(context, 'restore_point_latest'),
                     ),
                     items: [
@@ -946,7 +1040,11 @@ class _DataManagementTabState extends State<DataManagementTab> {
                           value: fileName,
                           child: Row(
                             children: [
-                              const Icon(Icons.history, size: 20, color: Colors.blue),
+                              const Icon(
+                                Icons.history,
+                                size: 20,
+                                color: Colors.blue,
+                              ),
                               const SizedBox(width: 8),
                               Expanded(
                                 child: Text(
@@ -989,11 +1087,11 @@ class _DataManagementTabState extends State<DataManagementTab> {
           ),
         ),
         const SizedBox(height: 16),
-        
+
         // Clear all data button
         const Divider(),
         const SizedBox(height: 16),
-        
+
         ElevatedButton(
           onPressed: _confirmClearAll,
           style: ElevatedButton.styleFrom(
@@ -1012,9 +1110,9 @@ class _DataManagementTabState extends State<DataManagementTab> {
       builder: (dialogContext) => AlertDialog(
         title: Text(
           t(context, 'confirm_clear'),
-          style: Theme.of(context).textTheme.titleMedium?.copyWith(
-            fontWeight: FontWeight.bold,
-          ),
+          style: Theme.of(
+            context,
+          ).textTheme.titleMedium?.copyWith(fontWeight: FontWeight.bold),
         ),
         content: Text(t(context, 'clear_warning')),
         actions: [
@@ -1034,16 +1132,16 @@ class _DataManagementTabState extends State<DataManagementTab> {
     if (confirmed == true) {
       await _clearAllData();
       if (!mounted) return;
-      ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(content: Text(t(context, 'all_cleared'))),
-      );
+      ScaffoldMessenger.of(
+        context,
+      ).showSnackBar(SnackBar(content: Text(t(context, 'all_cleared'))));
     }
   }
 
   Future<void> _clearAllData() async {
     // Create safety backup before destructive clear operation
     await BackupRestoreService.createPreRestoreSafetyBackup();
-    
+
     await Hive.box<InventoryEntry>('entries').clear();
     await Hive.box<IAmDefinition>('i_am_definitions').clear();
     await Hive.box<Person>('people_box').clear();

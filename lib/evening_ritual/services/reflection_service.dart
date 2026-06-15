@@ -5,7 +5,9 @@ import '../../shared/services/all_apps_drive_service.dart';
 import '../../fourth_step/models/inventory_entry.dart';
 
 class ReflectionService {
-  static final Box<ReflectionEntry> _box = Hive.box<ReflectionEntry>('reflections_box');
+  static final Box<ReflectionEntry> _box = Hive.box<ReflectionEntry>(
+    'reflections_box',
+  );
 
   static List<ReflectionEntry> getAllReflections() {
     return _box.values.toList()..sort((a, b) => b.date.compareTo(a.date));
@@ -14,21 +16,27 @@ class ReflectionService {
   static List<ReflectionEntry> getReflectionsByDate(DateTime date) {
     final dateOnly = DateTime(date.year, date.month, date.day);
     return _box.values
-        .where((reflection) =>
-            reflection.date.year == dateOnly.year &&
-            reflection.date.month == dateOnly.month &&
-            reflection.date.day == dateOnly.day)
+        .where(
+          (reflection) =>
+              reflection.date.year == dateOnly.year &&
+              reflection.date.month == dateOnly.month &&
+              reflection.date.day == dateOnly.day,
+        )
         .toList();
   }
 
   static List<ReflectionEntry> getReflectionsByMonth(DateTime month) {
     final startOfMonth = DateTime(month.year, month.month, 1);
     final endOfMonth = DateTime(month.year, month.month + 1, 0);
-    
+
     return _box.values
-        .where((reflection) =>
-            reflection.date.isAfter(startOfMonth.subtract(const Duration(days: 1))) &&
-            reflection.date.isBefore(endOfMonth.add(const Duration(days: 1))))
+        .where(
+          (reflection) =>
+              reflection.date.isAfter(
+                startOfMonth.subtract(const Duration(days: 1)),
+              ) &&
+              reflection.date.isBefore(endOfMonth.add(const Duration(days: 1))),
+        )
         .toList()
       ..sort((a, b) => b.date.compareTo(a.date));
   }
@@ -60,7 +68,11 @@ class ReflectionService {
   static Map<DateTime, List<ReflectionEntry>> getReflectionsByDay() {
     final Map<DateTime, List<ReflectionEntry>> map = {};
     for (var reflection in _box.values) {
-      final dateKey = DateTime(reflection.date.year, reflection.date.month, reflection.date.day);
+      final dateKey = DateTime(
+        reflection.date.year,
+        reflection.date.month,
+        reflection.date.day,
+      );
       map.putIfAbsent(dateKey, () => []).add(reflection);
     }
     return map;
@@ -68,10 +80,12 @@ class ReflectionService {
 
   static bool hasReflectionsForDate(DateTime date) {
     final dateOnly = DateTime(date.year, date.month, date.day);
-    return _box.values.any((reflection) =>
-        reflection.date.year == dateOnly.year &&
-        reflection.date.month == dateOnly.month &&
-        reflection.date.day == dateOnly.day);
+    return _box.values.any(
+      (reflection) =>
+          reflection.date.year == dateOnly.year &&
+          reflection.date.month == dateOnly.month &&
+          reflection.date.day == dateOnly.day,
+    );
   }
 
   /// Trigger background sync after changes

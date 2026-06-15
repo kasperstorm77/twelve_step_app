@@ -44,12 +44,9 @@ class GoogleDriveCrudClient {
   Future<String?> findFile() async {
     final query = "name='${_config.fileName}' and trashed=false";
     final spaces = _config.parentFolder;
-    
-    final result = await _driveApi.files.list(
-      q: query,
-      spaces: spaces,
-    );
-    
+
+    final result = await _driveApi.files.list(q: query, spaces: spaces);
+
     final files = result.files;
     return (files != null && files.isNotEmpty) ? files.first.id : null;
   }
@@ -80,10 +77,12 @@ class GoogleDriveCrudClient {
 
   /// Read file content by ID
   Future<String?> readFile(String fileId) async {
-    final media = await _driveApi.files.get(
-      fileId,
-      downloadOptions: drive_api.DownloadOptions.fullMedia,
-    ) as drive_api.Media?;
+    final media =
+        await _driveApi.files.get(
+              fileId,
+              downloadOptions: drive_api.DownloadOptions.fullMedia,
+            )
+            as drive_api.Media?;
 
     if (media != null) {
       final bytes = await media.stream.expand((chunk) => chunk).toList();
@@ -100,12 +99,12 @@ class GoogleDriveCrudClient {
     if (maxBytes <= 0) return '';
 
     final end = maxBytes - 1;
-    final uri = Uri.parse('https://www.googleapis.com/drive/v3/files/$fileId?alt=media');
+    final uri = Uri.parse(
+      'https://www.googleapis.com/drive/v3/files/$fileId?alt=media',
+    );
     final response = await _authClient.get(
       uri,
-      headers: {
-        'Range': 'bytes=0-$end',
-      },
+      headers: {'Range': 'bytes=0-$end'},
     );
 
     if (response.statusCode == 206 || response.statusCode == 200) {
@@ -130,7 +129,10 @@ class GoogleDriveCrudClient {
       fileMetadata.parents = [_config.parentFolder!];
     }
 
-    final created = await _driveApi.files.create(fileMetadata, uploadMedia: media);
+    final created = await _driveApi.files.create(
+      fileMetadata,
+      uploadMedia: media,
+    );
     return created.id!;
   }
 
@@ -159,7 +161,7 @@ class GoogleDriveCrudClient {
   /// Create or update file (upsert operation)
   Future<String> upsertFile(String content) async {
     final existingFileId = await findFile();
-    
+
     if (existingFileId != null) {
       try {
         return await updateFile(existingFileId, content);
@@ -192,12 +194,9 @@ class GoogleDriveCrudClient {
   Future<List<drive_api.File>> listFiles({String? query}) async {
     final searchQuery = query ?? "trashed=false";
     final spaces = _config.parentFolder;
-    
-    final result = await _driveApi.files.list(
-      q: searchQuery,
-      spaces: spaces,
-    );
-    
+
+    final result = await _driveApi.files.list(q: searchQuery, spaces: spaces);
+
     return result.files ?? [];
   }
 
@@ -219,19 +218,21 @@ class GoogleDriveCrudClient {
   /// Find backup files matching a pattern (e.g., "twelve_steps_backup_*.json")
   Future<List<drive_api.File>> findBackupFiles(String fileNamePattern) async {
     // Extract the base name without extension and wildcard
-    final baseName = fileNamePattern.replaceAll('*', '').replaceAll('.json', '');
-    
+    final baseName = fileNamePattern
+        .replaceAll('*', '')
+        .replaceAll('.json', '');
+
     // Query for files that start with the base name
     final query = "name contains '$baseName' and trashed=false";
     final spaces = _config.parentFolder;
-    
+
     final result = await _driveApi.files.list(
       q: query,
       spaces: spaces,
       orderBy: 'name desc', // Most recent first (by name/date)
       $fields: 'files(id, name, createdTime, modifiedTime)',
     );
-    
+
     return result.files ?? [];
   }
 
@@ -241,8 +242,10 @@ class GoogleDriveCrudClient {
     final media = drive_api.Media(Stream.fromIterable([bytes]), bytes.length);
 
     // Generate dated filename with timestamp (e.g., twelve_steps_backup_2025-11-23_14-30-15.json)
-    final dateStr = '${date.year}-${date.month.toString().padLeft(2, '0')}-${date.day.toString().padLeft(2, '0')}';
-    final timeStr = '${date.hour.toString().padLeft(2, '0')}-${date.minute.toString().padLeft(2, '0')}-${date.second.toString().padLeft(2, '0')}';
+    final dateStr =
+        '${date.year}-${date.month.toString().padLeft(2, '0')}-${date.day.toString().padLeft(2, '0')}';
+    final timeStr =
+        '${date.hour.toString().padLeft(2, '0')}-${date.minute.toString().padLeft(2, '0')}-${date.second.toString().padLeft(2, '0')}';
     final baseName = _config.fileName.replaceAll('.json', '');
     final datedFileName = '${baseName}_${dateStr}_$timeStr.json';
 
@@ -255,7 +258,10 @@ class GoogleDriveCrudClient {
       fileMetadata.parents = [_config.parentFolder!];
     }
 
-    final created = await _driveApi.files.create(fileMetadata, uploadMedia: media);
+    final created = await _driveApi.files.create(
+      fileMetadata,
+      uploadMedia: media,
+    );
     return created.id!;
   }
 
@@ -263,12 +269,9 @@ class GoogleDriveCrudClient {
   Future<String?> readBackupFile(String fileName) async {
     final query = "name='$fileName' and trashed=false";
     final spaces = _config.parentFolder;
-    
-    final result = await _driveApi.files.list(
-      q: query,
-      spaces: spaces,
-    );
-    
+
+    final result = await _driveApi.files.list(q: query, spaces: spaces);
+
     final files = result.files;
     if (files != null && files.isNotEmpty) {
       return await readFile(files.first.id!);

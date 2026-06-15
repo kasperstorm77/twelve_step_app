@@ -10,7 +10,7 @@ enum ColumnType {
   @HiveField(1)
   no,
   @HiveField(2)
-  maybe
+  maybe,
 }
 
 @HiveType(typeId: 3) // Changed from 1 to avoid conflict with IAmDefinition
@@ -43,20 +43,16 @@ class Person extends HiveObject {
     required this.column,
     this.amendsDone = false,
     int? sortOrder,
-  })  : internalId = internalId ?? const Uuid().v4(),
-        sortOrder = sortOrder ?? DateTime.now().millisecondsSinceEpoch,
-        lastModified = DateTime.now();
+  }) : internalId = internalId ?? const Uuid().v4(),
+       sortOrder = sortOrder ?? DateTime.now().millisecondsSinceEpoch,
+       lastModified = DateTime.now();
 
   factory Person.create({
     required String name,
     String? amends,
     required ColumnType column,
   }) {
-    return Person(
-      name: name,
-      amends: amends,
-      column: column,
-    );
+    return Person(name: name, amends: amends, column: column);
   }
 
   Person copyWith({
@@ -102,14 +98,14 @@ class Person extends HiveObject {
 
   // JSON serialization for Drive sync
   Map<String, dynamic> toJson() => {
-        'internalId': internalId,
-        'name': name,
-        'amends': amends,
-        'column': columnToString(column),
-        'amendsDone': amendsDone,
-        'lastModified': lastModified.toIso8601String(),
-        'sortOrder': sortOrder,
-      };
+    'internalId': internalId,
+    'name': name,
+    'amends': amends,
+    'column': columnToString(column),
+    'amendsDone': amendsDone,
+    'lastModified': lastModified.toIso8601String(),
+    'sortOrder': sortOrder,
+  };
 
   factory Person.fromJson(Map<String, dynamic> json) {
     return Person(

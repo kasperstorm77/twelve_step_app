@@ -8,7 +8,8 @@ class MorningRitualSettingsTab extends StatefulWidget {
   const MorningRitualSettingsTab({super.key});
 
   @override
-  State<MorningRitualSettingsTab> createState() => MorningRitualSettingsTabState();
+  State<MorningRitualSettingsTab> createState() =>
+      MorningRitualSettingsTabState();
 }
 
 class MorningRitualSettingsTabState extends State<MorningRitualSettingsTab> {
@@ -31,8 +32,8 @@ class MorningRitualSettingsTabState extends State<MorningRitualSettingsTab> {
               child: Text(
                 t(context, 'morning_ritual_settings_desc'),
                 style: Theme.of(context).textTheme.bodyMedium?.copyWith(
-                      color: Theme.of(context).colorScheme.onSurfaceVariant,
-                    ),
+                  color: Theme.of(context).colorScheme.onSurfaceVariant,
+                ),
                 textAlign: TextAlign.center,
               ),
             ),
@@ -47,13 +48,19 @@ class MorningRitualSettingsTabState extends State<MorningRitualSettingsTab> {
                             Icon(
                               Icons.playlist_add,
                               size: 64,
-                              color: Theme.of(context).colorScheme.onSurfaceVariant.withValues(alpha: 0.5),
+                              color: Theme.of(context)
+                                  .colorScheme
+                                  .onSurfaceVariant
+                                  .withValues(alpha: 0.5),
                             ),
                             const SizedBox(height: 16),
                             Text(
                               t(context, 'morning_ritual_no_items'),
-                              style: Theme.of(context).textTheme.bodyLarge?.copyWith(
-                                    color: Theme.of(context).colorScheme.onSurfaceVariant,
+                              style: Theme.of(context).textTheme.bodyLarge
+                                  ?.copyWith(
+                                    color: Theme.of(
+                                      context,
+                                    ).colorScheme.onSurfaceVariant,
                                   ),
                               textAlign: TextAlign.center,
                             ),
@@ -70,7 +77,10 @@ class MorningRitualSettingsTabState extends State<MorningRitualSettingsTab> {
                       ),
                       itemCount: items.length,
                       onReorder: (oldIndex, newIndex) {
-                        MorningRitualService.reorderRitualItems(oldIndex, newIndex);
+                        MorningRitualService.reorderRitualItems(
+                          oldIndex,
+                          newIndex,
+                        );
                       },
                       itemBuilder: (context, index) {
                         final item = items[index];
@@ -98,7 +108,11 @@ class MorningRitualSettingsTabState extends State<MorningRitualSettingsTab> {
                                   onPressed: () => _showItemDialog(item: item),
                                 ),
                                 IconButton(
-                                  icon: const Icon(Icons.delete, size: 20, color: Colors.red),
+                                  icon: const Icon(
+                                    Icons.delete,
+                                    size: 20,
+                                    color: Colors.red,
+                                  ),
                                   onPressed: () => _confirmDelete(item),
                                 ),
                                 ReorderableDragStartListener(
@@ -121,7 +135,9 @@ class MorningRitualSettingsTabState extends State<MorningRitualSettingsTab> {
   void _showItemDialog({RitualItem? item}) {
     final isEdit = item != null;
     final nameController = TextEditingController(text: item?.name ?? '');
-    final prayerTextController = TextEditingController(text: item?.prayerText ?? '');
+    final prayerTextController = TextEditingController(
+      text: item?.prayerText ?? '',
+    );
     final minutesController = TextEditingController(
       text: ((item?.durationSeconds ?? 300) ~/ 60).toString(),
     );
@@ -138,7 +154,12 @@ class MorningRitualSettingsTabState extends State<MorningRitualSettingsTab> {
       context: context,
       builder: (dialogContext) => StatefulBuilder(
         builder: (context, setDialogState) => AlertDialog(
-          title: Text(t(context, isEdit ? 'morning_ritual_edit_item' : 'morning_ritual_add_item')),
+          title: Text(
+            t(
+              context,
+              isEdit ? 'morning_ritual_edit_item' : 'morning_ritual_add_item',
+            ),
+          ),
           content: SizedBox(
             width: double.maxFinite,
             child: SingleChildScrollView(
@@ -170,7 +191,9 @@ class MorningRitualSettingsTabState extends State<MorningRitualSettingsTab> {
                         child: Row(
                           children: [
                             Icon(
-                              type == RitualItemType.timer ? Icons.timer : Icons.menu_book,
+                              type == RitualItemType.timer
+                                  ? Icons.timer
+                                  : Icons.menu_book,
                               size: 20,
                             ),
                             const SizedBox(width: 8),
@@ -258,25 +281,39 @@ class MorningRitualSettingsTabState extends State<MorningRitualSettingsTab> {
                         key: ValueKey<String?>(soundId),
                         initialValue: soundId,
                         decoration: InputDecoration(
-                          labelText: t(context, 'morning_ritual_alarm_sound_choice'),
+                          labelText: t(
+                            context,
+                            'morning_ritual_alarm_sound_choice',
+                          ),
                           border: const OutlineInputBorder(),
                         ),
                         items: [
                           DropdownMenuItem(
                             value: null,
-                            child: Text(t(context, 'morning_ritual_alarm_sound_default')),
+                            child: Text(
+                              t(context, 'morning_ritual_alarm_sound_default'),
+                            ),
                           ),
                           DropdownMenuItem(
                             value: 'system_default_notification',
-                            child: Text(t(context, 'morning_ritual_alarm_sound_notification')),
+                            child: Text(
+                              t(
+                                context,
+                                'morning_ritual_alarm_sound_notification',
+                              ),
+                            ),
                           ),
                           DropdownMenuItem(
                             value: 'system_default_alarm',
-                            child: Text(t(context, 'morning_ritual_alarm_sound_alarm')),
+                            child: Text(
+                              t(context, 'morning_ritual_alarm_sound_alarm'),
+                            ),
                           ),
                           DropdownMenuItem(
                             value: 'system_default_ringtone',
-                            child: Text(t(context, 'morning_ritual_alarm_sound_ringtone')),
+                            child: Text(
+                              t(context, 'morning_ritual_alarm_sound_ringtone'),
+                            ),
                           ),
                         ],
                         onChanged: (value) {
@@ -311,35 +348,59 @@ class MorningRitualSettingsTabState extends State<MorningRitualSettingsTab> {
               onPressed: () async {
                 if (nameController.text.trim().isEmpty) {
                   ScaffoldMessenger.of(context).showSnackBar(
-                    SnackBar(content: Text(t(context, 'morning_ritual_name_required'))),
+                    SnackBar(
+                      content: Text(t(context, 'morning_ritual_name_required')),
+                    ),
                   );
                   return;
                 }
 
-                final durationMinutes = int.tryParse(minutesController.text) ?? 0;
-                final durationSeconds = int.tryParse(secondsController.text) ?? 0;
+                final durationMinutes =
+                    int.tryParse(minutesController.text) ?? 0;
+                final durationSeconds =
+                    int.tryParse(secondsController.text) ?? 0;
                 final totalSeconds = (durationMinutes * 60) + durationSeconds;
 
                 if (isEdit) {
                   final updated = item.copyWith(
                     name: nameController.text.trim(),
                     type: selectedType,
-                    durationSeconds: selectedType == RitualItemType.timer ? totalSeconds : null,
-                    prayerText: selectedType == RitualItemType.prayer ? prayerTextController.text : null,
-                    vibrateEnabled: selectedType == RitualItemType.timer ? vibrateEnabled : true,
-                    soundEnabled: selectedType == RitualItemType.timer ? soundEnabled : true,
-                    soundId: selectedType == RitualItemType.timer ? soundId : null,
+                    durationSeconds: selectedType == RitualItemType.timer
+                        ? totalSeconds
+                        : null,
+                    prayerText: selectedType == RitualItemType.prayer
+                        ? prayerTextController.text
+                        : null,
+                    vibrateEnabled: selectedType == RitualItemType.timer
+                        ? vibrateEnabled
+                        : true,
+                    soundEnabled: selectedType == RitualItemType.timer
+                        ? soundEnabled
+                        : true,
+                    soundId: selectedType == RitualItemType.timer
+                        ? soundId
+                        : null,
                   );
                   await MorningRitualService.updateRitualItem(updated);
                 } else {
                   final newItem = RitualItem(
                     name: nameController.text.trim(),
                     type: selectedType,
-                    durationSeconds: selectedType == RitualItemType.timer ? totalSeconds : null,
-                    prayerText: selectedType == RitualItemType.prayer ? prayerTextController.text : null,
-                    vibrateEnabled: selectedType == RitualItemType.timer ? vibrateEnabled : true,
-                    soundEnabled: selectedType == RitualItemType.timer ? soundEnabled : true,
-                    soundId: selectedType == RitualItemType.timer ? soundId : null,
+                    durationSeconds: selectedType == RitualItemType.timer
+                        ? totalSeconds
+                        : null,
+                    prayerText: selectedType == RitualItemType.prayer
+                        ? prayerTextController.text
+                        : null,
+                    vibrateEnabled: selectedType == RitualItemType.timer
+                        ? vibrateEnabled
+                        : true,
+                    soundEnabled: selectedType == RitualItemType.timer
+                        ? soundEnabled
+                        : true,
+                    soundId: selectedType == RitualItemType.timer
+                        ? soundId
+                        : null,
                   );
                   await MorningRitualService.addRitualItem(newItem);
                 }
@@ -360,7 +421,12 @@ class MorningRitualSettingsTabState extends State<MorningRitualSettingsTab> {
       context: context,
       builder: (dialogContext) => AlertDialog(
         title: Text(t(context, 'morning_ritual_delete_item')),
-        content: Text(t(context, 'morning_ritual_delete_confirm').replaceAll('%name%', item.name)),
+        content: Text(
+          t(
+            context,
+            'morning_ritual_delete_confirm',
+          ).replaceAll('%name%', item.name),
+        ),
         actions: [
           TextButton(
             onPressed: () => Navigator.of(dialogContext).pop(),

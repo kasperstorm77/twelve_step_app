@@ -67,7 +67,7 @@ class _GeneralSettingsTabState extends State<GeneralSettingsTab> {
     // Validate that start time is before end time
     final startMinutes = _morningStartTime.hour * 60 + _morningStartTime.minute;
     final endMinutes = _morningEndTime.hour * 60 + _morningEndTime.minute;
-    
+
     if (startMinutes >= endMinutes) {
       ScaffoldMessenger.of(context).showSnackBar(
         SnackBar(
@@ -94,15 +94,15 @@ class _GeneralSettingsTabState extends State<GeneralSettingsTab> {
     });
 
     if (mounted) {
-      ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(content: Text(t(context, 'settings_saved'))),
-      );
+      ScaffoldMessenger.of(
+        context,
+      ).showSnackBar(SnackBar(content: Text(t(context, 'settings_saved'))));
     }
   }
 
   Future<void> _selectTime(bool isStartTime) async {
     final initialTime = isStartTime ? _morningStartTime : _morningEndTime;
-    
+
     final picked = await showTimePicker(
       context: context,
       initialTime: initialTime,
@@ -154,7 +154,7 @@ class _GeneralSettingsTabState extends State<GeneralSettingsTab> {
                     ),
                   ),
                   const SizedBox(height: 16),
-                  
+
                   // Toggle
                   SwitchListTile(
                     title: Text(t(context, 'load_morning_ritual_toggle')),
@@ -166,37 +166,37 @@ class _GeneralSettingsTabState extends State<GeneralSettingsTab> {
                       });
                     },
                   ),
-                  
+
                   const Divider(),
-                  
+
                   // Start Time
                   ListTile(
                     title: Text(t(context, 'morning_start_time')),
                     subtitle: Text(_formatTime(_morningStartTime)),
                     trailing: const Icon(Icons.access_time),
                     enabled: _loadMorningRitualEnabled,
-                    onTap: _loadMorningRitualEnabled 
-                        ? () => _selectTime(true) 
+                    onTap: _loadMorningRitualEnabled
+                        ? () => _selectTime(true)
                         : null,
                   ),
-                  
+
                   // End Time
                   ListTile(
                     title: Text(t(context, 'morning_end_time')),
                     subtitle: Text(_formatTime(_morningEndTime)),
                     trailing: const Icon(Icons.access_time),
                     enabled: _loadMorningRitualEnabled,
-                    onTap: _loadMorningRitualEnabled 
-                        ? () => _selectTime(false) 
+                    onTap: _loadMorningRitualEnabled
+                        ? () => _selectTime(false)
                         : null,
                   ),
                 ],
               ),
             ),
           ),
-          
+
           const SizedBox(height: 24),
-          
+
           // Save Button
           SizedBox(
             width: double.infinity,
@@ -209,7 +209,7 @@ class _GeneralSettingsTabState extends State<GeneralSettingsTab> {
               ),
             ),
           ),
-          
+
           if (_hasUnsavedChanges) ...[
             const SizedBox(height: 8),
             Text(

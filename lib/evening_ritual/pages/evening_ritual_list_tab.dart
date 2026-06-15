@@ -8,10 +8,7 @@ import '../../shared/localizations.dart';
 class EveningRitualListTab extends StatefulWidget {
   final Function(DateTime) onDateSelected;
 
-  const EveningRitualListTab({
-    super.key,
-    required this.onDateSelected,
-  });
+  const EveningRitualListTab({super.key, required this.onDateSelected});
 
   @override
   State<EveningRitualListTab> createState() => _EveningRitualListTabState();
@@ -37,7 +34,7 @@ class _EveningRitualListTabState extends State<EveningRitualListTab> {
       valueListenable: ReflectionService.getBox().listenable(),
       builder: (context, Box<ReflectionEntry> box, _) {
         final allEntries = ReflectionService.getAllReflections();
-        
+
         if (allEntries.isEmpty) {
           return Center(
             child: Column(
@@ -46,20 +43,26 @@ class _EveningRitualListTabState extends State<EveningRitualListTab> {
                 Icon(
                   Icons.calendar_today,
                   size: 64,
-                  color: Theme.of(context).colorScheme.primary.withValues(alpha: 0.3),
+                  color: Theme.of(
+                    context,
+                  ).colorScheme.primary.withValues(alpha: 0.3),
                 ),
                 const SizedBox(height: 16),
                 Text(
                   t(context, 'no_reflections'),
                   style: Theme.of(context).textTheme.titleMedium?.copyWith(
-                    color: Theme.of(context).colorScheme.onSurface.withValues(alpha: 0.5),
+                    color: Theme.of(
+                      context,
+                    ).colorScheme.onSurface.withValues(alpha: 0.5),
                   ),
                 ),
                 const SizedBox(height: 8),
                 Text(
                   t(context, 'no_reflections_hint'),
                   style: Theme.of(context).textTheme.bodySmall?.copyWith(
-                    color: Theme.of(context).colorScheme.onSurface.withValues(alpha: 0.5),
+                    color: Theme.of(
+                      context,
+                    ).colorScheme.onSurface.withValues(alpha: 0.5),
                   ),
                   textAlign: TextAlign.center,
                 ),
@@ -71,7 +74,11 @@ class _EveningRitualListTabState extends State<EveningRitualListTab> {
         // Group by date
         final Map<DateTime, List<ReflectionEntry>> groupedByDate = {};
         for (final entry in allEntries) {
-          final dateOnly = DateTime(entry.date.year, entry.date.month, entry.date.day);
+          final dateOnly = DateTime(
+            entry.date.year,
+            entry.date.month,
+            entry.date.day,
+          );
           groupedByDate.putIfAbsent(dateOnly, () => []).add(entry);
         }
 
@@ -79,7 +86,12 @@ class _EveningRitualListTabState extends State<EveningRitualListTab> {
           ..sort((a, b) => b.compareTo(a));
 
         return ListView.builder(
-          padding: EdgeInsets.fromLTRB(12, 8, 12, MediaQuery.of(context).padding.bottom + 32),
+          padding: EdgeInsets.fromLTRB(
+            12,
+            8,
+            12,
+            MediaQuery.of(context).padding.bottom + 32,
+          ),
           itemCount: sortedDates.length,
           itemBuilder: (context, index) {
             final date = sortedDates[index];
@@ -92,10 +104,19 @@ class _EveningRitualListTabState extends State<EveningRitualListTab> {
     );
   }
 
-  Widget _buildDateCard(BuildContext context, DateTime date, List<ReflectionEntry> entries, bool isExpanded) {
-    final regularEntries = entries.where((e) => e.thinkingFocus == null).toList();
-    final thinkingEntry = entries.where((e) => e.thinkingFocus != null).firstOrNull;
-    
+  Widget _buildDateCard(
+    BuildContext context,
+    DateTime date,
+    List<ReflectionEntry> entries,
+    bool isExpanded,
+  ) {
+    final regularEntries = entries
+        .where((e) => e.thinkingFocus == null)
+        .toList();
+    final thinkingEntry = entries
+        .where((e) => e.thinkingFocus != null)
+        .firstOrNull;
+
     return Card(
       margin: const EdgeInsets.symmetric(vertical: 6),
       child: InkWell(
@@ -110,7 +131,10 @@ class _EveningRitualListTabState extends State<EveningRitualListTab> {
                   // Date indicator
                   Container(
                     width: 50,
-                    padding: const EdgeInsets.symmetric(vertical: 6, horizontal: 4),
+                    padding: const EdgeInsets.symmetric(
+                      vertical: 6,
+                      horizontal: 4,
+                    ),
                     decoration: BoxDecoration(
                       color: Theme.of(context).colorScheme.primaryContainer,
                       borderRadius: BorderRadius.circular(8),
@@ -119,23 +143,29 @@ class _EveningRitualListTabState extends State<EveningRitualListTab> {
                       children: [
                         Text(
                           DateFormat.MMM().format(date),
-                          style: Theme.of(context).textTheme.labelSmall?.copyWith(
-                            color: Theme.of(context).colorScheme.onPrimaryContainer,
-                            fontWeight: FontWeight.bold,
-                          ),
+                          style: Theme.of(context).textTheme.labelSmall
+                              ?.copyWith(
+                                color: Theme.of(
+                                  context,
+                                ).colorScheme.onPrimaryContainer,
+                                fontWeight: FontWeight.bold,
+                              ),
                         ),
                         Text(
                           DateFormat.d().format(date),
-                          style: Theme.of(context).textTheme.titleMedium?.copyWith(
-                            color: Theme.of(context).colorScheme.onPrimaryContainer,
-                            fontWeight: FontWeight.bold,
-                          ),
+                          style: Theme.of(context).textTheme.titleMedium
+                              ?.copyWith(
+                                color: Theme.of(
+                                  context,
+                                ).colorScheme.onPrimaryContainer,
+                                fontWeight: FontWeight.bold,
+                              ),
                         ),
                       ],
                     ),
                   ),
                   const SizedBox(width: 10),
-                  
+
                   // Content summary
                   Expanded(
                     child: Column(
@@ -145,23 +175,30 @@ class _EveningRitualListTabState extends State<EveningRitualListTab> {
                           children: [
                             Text(
                               DateFormat.EEEE().format(date),
-                              style: Theme.of(context).textTheme.titleSmall?.copyWith(
-                                fontWeight: FontWeight.bold,
-                              ),
+                              style: Theme.of(context).textTheme.titleSmall
+                                  ?.copyWith(fontWeight: FontWeight.bold),
                             ),
                             const SizedBox(width: 6),
                             Container(
-                              padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 1),
+                              padding: const EdgeInsets.symmetric(
+                                horizontal: 6,
+                                vertical: 1,
+                              ),
                               decoration: BoxDecoration(
-                                color: Theme.of(context).colorScheme.secondaryContainer,
+                                color: Theme.of(
+                                  context,
+                                ).colorScheme.secondaryContainer,
                                 borderRadius: BorderRadius.circular(12),
                               ),
                               child: Text(
                                 '${regularEntries.length}',
-                                style: Theme.of(context).textTheme.bodySmall?.copyWith(
-                                  color: Theme.of(context).colorScheme.onSecondaryContainer,
-                                  fontWeight: FontWeight.bold,
-                                ),
+                                style: Theme.of(context).textTheme.bodySmall
+                                    ?.copyWith(
+                                      color: Theme.of(
+                                        context,
+                                      ).colorScheme.onSecondaryContainer,
+                                      fontWeight: FontWeight.bold,
+                                    ),
                               ),
                             ),
                           ],
@@ -177,12 +214,17 @@ class _EveningRitualListTabState extends State<EveningRitualListTab> {
                                 Text(
                                   t(context, 'thinking_focus_question'),
                                   style: TextStyle(
-                                    color: Theme.of(context).colorScheme.primary,
+                                    color: Theme.of(
+                                      context,
+                                    ).colorScheme.primary,
                                     fontWeight: FontWeight.w600,
                                   ),
                                 ),
                                 Text(
-                                  _getSliderLabel(context, thinkingEntry.thinkingFocus!),
+                                  _getSliderLabel(
+                                    context,
+                                    thinkingEntry.thinkingFocus!,
+                                  ),
                                   style: Theme.of(context).textTheme.bodyMedium,
                                 ),
                               ],
@@ -192,52 +234,69 @@ class _EveningRitualListTabState extends State<EveningRitualListTab> {
                         if (regularEntries.isNotEmpty) ...[
                           if (isExpanded)
                             // Show all entries when expanded
-                            ...regularEntries.map((entry) => Padding(
-                              padding: const EdgeInsets.only(top: 2),
-                              child: Column(
-                                crossAxisAlignment: CrossAxisAlignment.start,
-                                children: [
-                                  Text(
-                                    t(context, entry.type.labelKey()),
-                                    style: TextStyle(
-                                      color: Theme.of(context).colorScheme.primary,
-                                      fontWeight: FontWeight.w600,
-                                    ),
-                                  ),
-                                  if (entry.detail != null && entry.detail!.isNotEmpty)
+                            ...regularEntries.map(
+                              (entry) => Padding(
+                                padding: const EdgeInsets.only(top: 2),
+                                child: Column(
+                                  crossAxisAlignment: CrossAxisAlignment.start,
+                                  children: [
                                     Text(
-                                      entry.detail!,
-                                      style: Theme.of(context).textTheme.bodyMedium,
+                                      t(context, entry.type.labelKey()),
+                                      style: TextStyle(
+                                        color: Theme.of(
+                                          context,
+                                        ).colorScheme.primary,
+                                        fontWeight: FontWeight.w600,
+                                      ),
                                     ),
-                                ],
+                                    if (entry.detail != null &&
+                                        entry.detail!.isNotEmpty)
+                                      Text(
+                                        entry.detail!,
+                                        style: Theme.of(
+                                          context,
+                                        ).textTheme.bodyMedium,
+                                      ),
+                                  ],
+                                ),
                               ),
-                            ))
+                            )
                           else
                             // Show limited entries when collapsed (first entry only, 1 line)
-                            ...regularEntries.take(1).map((entry) => Padding(
-                              padding: const EdgeInsets.only(top: 2),
-                              child: Column(
-                                crossAxisAlignment: CrossAxisAlignment.start,
-                                children: [
-                                  Text(
-                                    t(context, entry.type.labelKey()),
-                                    style: TextStyle(
-                                      color: Theme.of(context).colorScheme.primary,
-                                      fontWeight: FontWeight.w600,
+                            ...regularEntries
+                                .take(1)
+                                .map(
+                                  (entry) => Padding(
+                                    padding: const EdgeInsets.only(top: 2),
+                                    child: Column(
+                                      crossAxisAlignment:
+                                          CrossAxisAlignment.start,
+                                      children: [
+                                        Text(
+                                          t(context, entry.type.labelKey()),
+                                          style: TextStyle(
+                                            color: Theme.of(
+                                              context,
+                                            ).colorScheme.primary,
+                                            fontWeight: FontWeight.w600,
+                                          ),
+                                          maxLines: 1,
+                                          overflow: TextOverflow.ellipsis,
+                                        ),
+                                        if (entry.detail != null &&
+                                            entry.detail!.isNotEmpty)
+                                          Text(
+                                            entry.detail!,
+                                            style: Theme.of(
+                                              context,
+                                            ).textTheme.bodyMedium,
+                                            maxLines: 1,
+                                            overflow: TextOverflow.ellipsis,
+                                          ),
+                                      ],
                                     ),
-                                    maxLines: 1,
-                                    overflow: TextOverflow.ellipsis,
                                   ),
-                                  if (entry.detail != null && entry.detail!.isNotEmpty)
-                                    Text(
-                                      entry.detail!,
-                                      style: Theme.of(context).textTheme.bodyMedium,
-                                      maxLines: 1,
-                                      overflow: TextOverflow.ellipsis,
-                                    ),
-                                ],
-                              ),
-                            )),
+                                ),
                           // Always show more/less button
                           GestureDetector(
                             onTap: () {
@@ -252,13 +311,16 @@ class _EveningRitualListTabState extends State<EveningRitualListTab> {
                             child: Padding(
                               padding: const EdgeInsets.only(top: 4),
                               child: Text(
-                                isExpanded 
+                                isExpanded
                                     ? t(context, 'show_less')
                                     : t(context, 'show_more'),
-                                style: Theme.of(context).textTheme.bodySmall?.copyWith(
-                                  fontStyle: FontStyle.italic,
-                                  color: Theme.of(context).colorScheme.primary,
-                                ),
+                                style: Theme.of(context).textTheme.bodySmall
+                                    ?.copyWith(
+                                      fontStyle: FontStyle.italic,
+                                      color: Theme.of(
+                                        context,
+                                      ).colorScheme.primary,
+                                    ),
                               ),
                             ),
                           ),
@@ -305,19 +367,25 @@ class _EveningRitualListTabState extends State<EveningRitualListTab> {
     );
   }
 
-  void _confirmDeleteDay(BuildContext context, DateTime date, List<ReflectionEntry> entries) {
+  void _confirmDeleteDay(
+    BuildContext context,
+    DateTime date,
+    List<ReflectionEntry> entries,
+  ) {
     showDialog(
       context: context,
       builder: (context) => AlertDialog(
         title: Text(
           t(context, 'delete_day'),
-          style: Theme.of(context).textTheme.titleMedium?.copyWith(
-            fontWeight: FontWeight.bold,
-          ),
+          style: Theme.of(
+            context,
+          ).textTheme.titleMedium?.copyWith(fontWeight: FontWeight.bold),
         ),
-        content: Text(t(context, 'confirm_delete_day')
-            .replaceAll('{date}', DateFormat.yMMMMd().format(date))
-            .replaceAll('{count}', '${entries.length}')),
+        content: Text(
+          t(context, 'confirm_delete_day')
+              .replaceAll('{date}', DateFormat.yMMMMd().format(date))
+              .replaceAll('{count}', '${entries.length}'),
+        ),
         actions: [
           TextButton(
             onPressed: () => Navigator.of(context).pop(),

@@ -14,7 +14,7 @@ import 'app_settings_service.dart';
 // --------------------------------------------------------------------------
 // Sync Payload Builder - Centralized JSON Export
 // --------------------------------------------------------------------------
-// 
+//
 // Single source of truth for building the Drive sync JSON payload.
 // Used by AllAppsDriveService for both immediate and debounced uploads.
 // --------------------------------------------------------------------------
@@ -26,7 +26,7 @@ class SyncPayloadBuilder {
   static const String schemaVersion = '8.0';
 
   /// Build the complete export payload from all Hive boxes.
-  /// 
+  ///
   /// [entriesBox] is optional; if null, uses the default 'entries' box.
   /// Returns a Map that can be encoded to JSON.
   static Map<String, dynamic> buildPayload({Box<InventoryEntry>? entriesBox}) {
@@ -77,10 +77,7 @@ class SyncPayloadBuilder {
   static List<Map<String, dynamic>> _exportIAmDefinitions() {
     final box = Hive.box<IAmDefinition>('i_am_definitions');
     return box.values.map((def) {
-      final map = <String, dynamic>{
-        'id': def.id,
-        'name': def.name,
-      };
+      final map = <String, dynamic>{'id': def.id, 'name': def.name};
       if (def.reasonToExist != null && def.reasonToExist!.isNotEmpty) {
         map['reasonToExist'] = def.reasonToExist;
       }

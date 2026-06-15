@@ -33,7 +33,7 @@ class _AppWidgetState extends State<AppWidget> with WidgetsBindingObserver {
     _localeProvider = Modular.get<LocaleProvider>();
     _localeProvider.addListener(_onLocaleChanged);
     WidgetsBinding.instance.addObserver(this);
-    
+
     // Check for newer remote data after first frame
     WidgetsBinding.instance.addPostFrameCallback((_) {
       _checkAndPromptIfUploadsBlocked();
@@ -61,7 +61,11 @@ class _AppWidgetState extends State<AppWidget> with WidgetsBindingObserver {
     if (AppSettingsService.shouldForceMorningRitual()) {
       final currentAppId = AppSwitcherService.getSelectedAppId();
       if (currentAppId != AvailableApps.morningRitual) {
-        if (kDebugMode) print('AppWidget: Within morning ritual window (first time today), switching to morning ritual');
+        if (kDebugMode) {
+          print(
+            'AppWidget: Within morning ritual window (first time today), switching to morning ritual',
+          );
+        }
         await AppSwitcherService.setSelectedAppId(AvailableApps.morningRitual);
         await AppSettingsService.markMorningRitualForced();
         // Trigger rebuild to show morning ritual
@@ -83,27 +87,29 @@ class _AppWidgetState extends State<AppWidget> with WidgetsBindingObserver {
   Future<void> _checkAndPromptIfUploadsBlocked() async {
     if (_checkedForNewerData) return;
     _checkedForNewerData = true;
-    
+
     // Wait a moment for the UI to be ready
     await Future.delayed(const Duration(milliseconds: 500));
-    
+
     if (!mounted) return;
-    
+
     // Check if uploads are blocked (set in main.dart when remote is newer)
     if (!AllAppsDriveService.instance.uploadsBlocked) {
       if (kDebugMode) print('AppWidget: Uploads not blocked, no prompt needed');
       return;
     }
-    
-    if (kDebugMode) print('AppWidget: Uploads are blocked - showing newer data prompt');
-    
+
+    if (kDebugMode) {
+      print('AppWidget: Uploads are blocked - showing newer data prompt');
+    }
+
     // Get a valid context for showing the dialog
     var navigatorContext = Modular.routerDelegate.navigatorKey.currentContext;
     if (navigatorContext == null) {
       if (kDebugMode) print('AppWidget: No navigator context available');
       return;
     }
-    
+
     // Show prompt to user (navigatorContext is freshly fetched from Modular, not the widget's context)
     final shouldFetch = await showDialog<bool>(
       context: navigatorContext,
@@ -123,7 +129,7 @@ class _AppWidgetState extends State<AppWidget> with WidgetsBindingObserver {
         ],
       ),
     );
-    
+
     if (shouldFetch == true) {
       // Re-fetch context after async gap
       navigatorContext = Modular.routerDelegate.navigatorKey.currentContext;
@@ -137,7 +143,9 @@ class _AppWidgetState extends State<AppWidget> with WidgetsBindingObserver {
     } else {
       // User chose to keep local data - unblock uploads
       AllAppsDriveService.instance.unblockUploads();
-      if (kDebugMode) print('AppWidget: User chose to keep local data - uploads unblocked');
+      if (kDebugMode) {
+        print('AppWidget: User chose to keep local data - uploads unblocked');
+      }
     }
   }
 
@@ -159,46 +167,39 @@ class _AppWidgetState extends State<AppWidget> with WidgetsBindingObserver {
           duration: const Duration(seconds: 2),
         ),
       );
-      
+
       // Get most recent backup
       final backups = await AllAppsDriveService.instance.listAvailableBackups();
       if (backups.isEmpty) {
-        messenger.showSnackBar(
-          SnackBar(content: Text(noBackupText)),
-        );
+        messenger.showSnackBar(SnackBar(content: Text(noBackupText)));
         AllAppsDriveService.instance.unblockUploads();
         return;
       }
-      
+
       final backupFileName = backups.first['fileName'] as String;
-      final content = await AllAppsDriveService.instance.downloadBackupContent(backupFileName);
-      
+      final content = await AllAppsDriveService.instance.downloadBackupContent(
+        backupFileName,
+      );
+
       if (content == null) {
-        messenger.showSnackBar(
-          SnackBar(content: Text(fetchFailedText)),
-        );
+        messenger.showSnackBar(SnackBar(content: Text(fetchFailedText)));
         AllAppsDriveService.instance.unblockUploads();
         return;
       }
-      
+
       // Import the data
       await _importDataFromJson(content);
-      
+
       // Success - unblock uploads
       AllAppsDriveService.instance.unblockUploads();
-      
-      messenger.showSnackBar(
-        SnackBar(content: Text(fetchSuccessText)),
-      );
-      
+
+      messenger.showSnackBar(SnackBar(content: Text(fetchSuccessText)));
+
       // Trigger UI rebuild to show restored data
       if (mounted) setState(() {});
-      
     } catch (e) {
       if (kDebugMode) print('AppWidget: Restore failed: $e');
-      messenger.showSnackBar(
-        SnackBar(content: Text('$fetchFailedText: $e')),
-      );
+      messenger.showSnackBar(SnackBar(content: Text('$fetchFailedText: $e')));
       // Unblock on error to avoid permanently blocking
       AllAppsDriveService.instance.unblockUploads();
     }
@@ -222,19 +223,14 @@ class _AppWidgetState extends State<AppWidget> with WidgetsBindingObserver {
       title: 'AA 4Step Inventory',
       debugShowCheckedModeBanner: false,
       locale: _localeProvider.locale,
-      supportedLocales: const [
-        Locale('en'),
-        Locale('da'),
-      ],
+      supportedLocales: const [Locale('en'), Locale('da')],
       localizationsDelegates: const [
         GlobalMaterialLocalizations.delegate,
         GlobalWidgetsLocalizations.delegate,
         GlobalCupertinoLocalizations.delegate,
       ],
       theme: ThemeData(
-        textTheme: GoogleFonts.poppinsTextTheme(
-          Theme.of(context).textTheme,
-        ),
+        textTheme: GoogleFonts.poppinsTextTheme(Theme.of(context).textTheme),
         primarySwatch: Colors.blue,
       ),
       routerConfig: Modular.routerConfig,

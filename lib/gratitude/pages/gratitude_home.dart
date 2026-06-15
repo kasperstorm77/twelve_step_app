@@ -16,7 +16,8 @@ class GratitudeHome extends StatefulWidget {
   State<GratitudeHome> createState() => _GratitudeHomeState();
 }
 
-class _GratitudeHomeState extends State<GratitudeHome> with SingleTickerProviderStateMixin {
+class _GratitudeHomeState extends State<GratitudeHome>
+    with SingleTickerProviderStateMixin {
   late final TabController _tabController;
 
   @override
@@ -46,9 +47,7 @@ class _GratitudeHomeState extends State<GratitudeHome> with SingleTickerProvider
   void _openDataManagement() async {
     await Navigator.push(
       context,
-      MaterialPageRoute(
-        builder: (context) => const DataManagementPage(),
-      ),
+      MaterialPageRoute(builder: (context) => const DataManagementPage()),
     );
     // Force rebuild after returning from Data Management
     // to ensure restored data is displayed
@@ -66,9 +65,9 @@ class _GratitudeHomeState extends State<GratitudeHome> with SingleTickerProvider
       builder: (dialogContext) => AlertDialog(
         title: Text(
           t(context, 'select_app'),
-          style: Theme.of(context).textTheme.titleMedium?.copyWith(
-            fontWeight: FontWeight.bold,
-          ),
+          style: Theme.of(
+            context,
+          ).textTheme.titleMedium?.copyWith(fontWeight: FontWeight.bold),
         ),
         content: SingleChildScrollView(
           child: Column(
@@ -89,18 +88,25 @@ class _GratitudeHomeState extends State<GratitudeHome> with SingleTickerProvider
                   child: Row(
                     children: [
                       Icon(
-                        isSelected ? Icons.radio_button_checked : Icons.radio_button_unchecked,
-                        color: isSelected ? Theme.of(context).colorScheme.primary : null,
+                        isSelected
+                            ? Icons.radio_button_checked
+                            : Icons.radio_button_unchecked,
+                        color: isSelected
+                            ? Theme.of(context).colorScheme.primary
+                            : null,
                         size: 20,
                       ),
                       const SizedBox(width: 12),
                       Expanded(
                         child: Text(
                           app.name,
-                          style: Theme.of(context).textTheme.bodyMedium?.copyWith(
-                            fontWeight: isSelected ? FontWeight.w600 : null,
-                            color: isSelected ? Theme.of(context).colorScheme.primary : null,
-                          ),
+                          style: Theme.of(context).textTheme.bodyMedium
+                              ?.copyWith(
+                                fontWeight: isSelected ? FontWeight.w600 : null,
+                                color: isSelected
+                                    ? Theme.of(context).colorScheme.primary
+                                    : null,
+                              ),
                         ),
                       ),
                     ],
@@ -120,13 +126,14 @@ class _GratitudeHomeState extends State<GratitudeHome> with SingleTickerProvider
     );
   }
 
-
-
   @override
   Widget build(BuildContext context) {
     return Scaffold(
       appBar: AppBar(
-        title: Text(t(context, 'gratitude_title'), style: const TextStyle(fontSize: 18)),
+        title: Text(
+          t(context, 'gratitude_title'),
+          style: const TextStyle(fontSize: 18),
+        ),
         actions: [
           IconButton(
             icon: const Icon(Icons.apps),
@@ -138,10 +145,7 @@ class _GratitudeHomeState extends State<GratitudeHome> with SingleTickerProvider
             icon: const Icon(Icons.help_outline),
             tooltip: t(context, 'help'),
             onPressed: () {
-              AppHelpService.showHelpDialog(
-                context,
-                AvailableApps.gratitude,
-              );
+              AppHelpService.showHelpDialog(context, AvailableApps.gratitude);
             },
             visualDensity: VisualDensity.compact,
           ),
@@ -153,8 +157,14 @@ class _GratitudeHomeState extends State<GratitudeHome> with SingleTickerProvider
           PopupMenuButton<String>(
             onSelected: _changeLanguage,
             itemBuilder: (context) => [
-              PopupMenuItem(value: 'en', child: Text(t(context, 'lang_english'))),
-              PopupMenuItem(value: 'da', child: Text(t(context, 'lang_danish'))),
+              PopupMenuItem(
+                value: 'en',
+                child: Text(t(context, 'lang_english')),
+              ),
+              PopupMenuItem(
+                value: 'da',
+                child: Text(t(context, 'lang_danish')),
+              ),
             ],
             icon: const Icon(Icons.language),
             padding: EdgeInsets.zero,
@@ -174,9 +184,7 @@ class _GratitudeHomeState extends State<GratitudeHome> with SingleTickerProvider
           controller: _tabController,
           children: [
             const GratitudeTodayTab(),
-            GratitudeListTab(
-              onDateSelected: _onDateSelected,
-            ),
+            GratitudeListTab(onDateSelected: _onDateSelected),
           ],
         ),
       ),

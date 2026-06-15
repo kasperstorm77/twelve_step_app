@@ -17,7 +17,12 @@ class EighthStepSettingsTab extends StatelessWidget {
           people.sort((a, b) => a.name.compareTo(b.name));
 
           return ListView.builder(
-            padding: EdgeInsets.fromLTRB(12, 8, 12, MediaQuery.of(context).padding.bottom + 16),
+            padding: EdgeInsets.fromLTRB(
+              12,
+              8,
+              12,
+              MediaQuery.of(context).padding.bottom + 16,
+            ),
             itemCount: people.length,
             itemBuilder: (context, index) {
               final person = people[index];
@@ -154,7 +159,10 @@ class PersonListItem extends StatelessWidget {
                               fontWeight: FontWeight.w600,
                             ),
                           ),
-                          Text(person.amends!, style: theme.textTheme.bodyMedium),
+                          Text(
+                            person.amends!,
+                            style: theme.textTheme.bodyMedium,
+                          ),
                         ],
                       ),
                     ),
@@ -187,7 +195,9 @@ class PersonListItem extends StatelessWidget {
                           ),
                         ),
                         Text(
-                          person.amendsDone ? t(context, 'eighth_step_yes') : t(context, 'eighth_step_no'),
+                          person.amendsDone
+                              ? t(context, 'eighth_step_yes')
+                              : t(context, 'eighth_step_no'),
                           style: theme.textTheme.bodyMedium,
                         ),
                       ],
@@ -196,14 +206,8 @@ class PersonListItem extends StatelessWidget {
                 ],
               ),
             ),
-            IconButton(
-              icon: const Icon(Icons.edit),
-              onPressed: onEdit,
-            ),
-            IconButton(
-              icon: const Icon(Icons.delete),
-              onPressed: onDelete,
-            ),
+            IconButton(icon: const Icon(Icons.edit), onPressed: onEdit),
+            IconButton(icon: const Icon(Icons.delete), onPressed: onDelete),
           ],
         ),
       ),
@@ -213,7 +217,13 @@ class PersonListItem extends StatelessWidget {
 
 class PersonEditDialog extends StatefulWidget {
   final Person? person;
-  final Function(String name, String? amends, ColumnType column, bool amendsDone) onSave;
+  final Function(
+    String name,
+    String? amends,
+    ColumnType column,
+    bool amendsDone,
+  )
+  onSave;
   final VoidCallback? onDelete;
 
   const PersonEditDialog({
@@ -247,10 +257,12 @@ class _PersonEditDialogState extends State<PersonEditDialog> {
   Widget build(BuildContext context) {
     return AlertDialog(
       title: Text(
-        widget.person == null ? t(context, 'add_person') : t(context, 'edit_person'),
-        style: Theme.of(context).textTheme.titleMedium?.copyWith(
-          fontWeight: FontWeight.bold,
-        ),
+        widget.person == null
+            ? t(context, 'add_person')
+            : t(context, 'edit_person'),
+        style: Theme.of(
+          context,
+        ).textTheme.titleMedium?.copyWith(fontWeight: FontWeight.bold),
       ),
       content: SizedBox(
         width: double.maxFinite,
@@ -271,85 +283,85 @@ class _PersonEditDialogState extends State<PersonEditDialog> {
                     if (value == null || value.isEmpty) {
                       return t(context, 'person_name_required');
                     }
-                  return null;
-                },
-                onSaved: (value) => _name = value!,
-              ),
-              const SizedBox(height: 16),
-              TextFormField(
-                initialValue: _amends,
-                decoration: InputDecoration(
-                  labelText: t(context, 'amends_needed'),
-                  hintText: t(context, 'optional'),
-                  border: const OutlineInputBorder(),
+                    return null;
+                  },
+                  onSaved: (value) => _name = value!,
                 ),
-                onSaved: (value) => _amends = value,
-                maxLines: 3,
-              ),
-              const SizedBox(height: 16),
-              DropdownButtonFormField<ColumnType>(
-                initialValue: _column,
-                decoration: InputDecoration(
-                  labelText: t(context, 'column'),
-                  border: const OutlineInputBorder(),
-                ),
-                items: ColumnType.values.map((column) {
-                  String label;
-                  switch (column) {
-                    case ColumnType.yes:
-                      label = t(context, 'eighth_step_yes');
-                      break;
-                    case ColumnType.no:
-                      label = t(context, 'eighth_step_no');
-                      break;
-                    case ColumnType.maybe:
-                      label = t(context, 'eighth_step_maybe');
-                      break;
-                  }
-                  return DropdownMenuItem<ColumnType>(
-                    value: column,
-                    child: Text(label),
-                  );
-                }).toList(),
-                onChanged: (value) {
-                  setState(() {
-                    _column = value!;
-                  });
-                },
-              ),
-              const SizedBox(height: 16),
-              Text(
-                t(context, 'amends_done_question'),
-                style: TextStyle(
-                  color: Theme.of(context).colorScheme.primary,
-                  fontWeight: FontWeight.w600,
-                ),
-              ),
-              const SizedBox(height: 8),
-              Row(
-                mainAxisAlignment: MainAxisAlignment.start,
-                children: [
-                  ChoiceChip(
-                    label: Text(t(context, 'eighth_step_yes')),
-                    selected: _amendsDone,
-                    onSelected: (selected) {
-                      setState(() {
-                        _amendsDone = true;
-                      });
-                    },
+                const SizedBox(height: 16),
+                TextFormField(
+                  initialValue: _amends,
+                  decoration: InputDecoration(
+                    labelText: t(context, 'amends_needed'),
+                    hintText: t(context, 'optional'),
+                    border: const OutlineInputBorder(),
                   ),
-                  const SizedBox(width: 8),
-                  ChoiceChip(
-                    label: Text(t(context, 'eighth_step_no')),
-                    selected: !_amendsDone,
-                    onSelected: (selected) {
-                      setState(() {
-                        _amendsDone = false;
-                      });
-                    },
+                  onSaved: (value) => _amends = value,
+                  maxLines: 3,
+                ),
+                const SizedBox(height: 16),
+                DropdownButtonFormField<ColumnType>(
+                  initialValue: _column,
+                  decoration: InputDecoration(
+                    labelText: t(context, 'column'),
+                    border: const OutlineInputBorder(),
                   ),
-                ],
-              ),
+                  items: ColumnType.values.map((column) {
+                    String label;
+                    switch (column) {
+                      case ColumnType.yes:
+                        label = t(context, 'eighth_step_yes');
+                        break;
+                      case ColumnType.no:
+                        label = t(context, 'eighth_step_no');
+                        break;
+                      case ColumnType.maybe:
+                        label = t(context, 'eighth_step_maybe');
+                        break;
+                    }
+                    return DropdownMenuItem<ColumnType>(
+                      value: column,
+                      child: Text(label),
+                    );
+                  }).toList(),
+                  onChanged: (value) {
+                    setState(() {
+                      _column = value!;
+                    });
+                  },
+                ),
+                const SizedBox(height: 16),
+                Text(
+                  t(context, 'amends_done_question'),
+                  style: TextStyle(
+                    color: Theme.of(context).colorScheme.primary,
+                    fontWeight: FontWeight.w600,
+                  ),
+                ),
+                const SizedBox(height: 8),
+                Row(
+                  mainAxisAlignment: MainAxisAlignment.start,
+                  children: [
+                    ChoiceChip(
+                      label: Text(t(context, 'eighth_step_yes')),
+                      selected: _amendsDone,
+                      onSelected: (selected) {
+                        setState(() {
+                          _amendsDone = true;
+                        });
+                      },
+                    ),
+                    const SizedBox(width: 8),
+                    ChoiceChip(
+                      label: Text(t(context, 'eighth_step_no')),
+                      selected: !_amendsDone,
+                      onSelected: (selected) {
+                        setState(() {
+                          _amendsDone = false;
+                        });
+                      },
+                    ),
+                  ],
+                ),
               ],
             ),
           ),
@@ -362,7 +374,10 @@ class _PersonEditDialogState extends State<PersonEditDialog> {
               Navigator.of(context).pop();
               _showDeleteConfirmation(context);
             },
-            child: Text(t(context, 'delete'), style: TextStyle(color: Theme.of(context).colorScheme.error)),
+            child: Text(
+              t(context, 'delete'),
+              style: TextStyle(color: Theme.of(context).colorScheme.error),
+            ),
           ),
         if (widget.person != null && widget.onDelete != null)
           const SizedBox(width: 16),

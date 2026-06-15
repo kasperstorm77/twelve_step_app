@@ -53,8 +53,8 @@ class ReflectionEntry extends HiveObject {
     required this.type,
     this.detail,
     this.thinkingFocus,
-  })  : internalId = internalId ?? const Uuid().v4(),
-        lastModified = DateTime.now();
+  }) : internalId = internalId ?? const Uuid().v4(),
+       lastModified = DateTime.now();
 
   // Safe getters
   String get safeDetail => detail ?? '';
@@ -76,13 +76,13 @@ class ReflectionEntry extends HiveObject {
 
   // JSON serialization for Drive sync
   Map<String, dynamic> toJson() => {
-        'internalId': internalId,
-        'date': date.toIso8601String().substring(0, 10),
-        'type': type.index,
-        'detail': detail,
-        'thinkingFocus': thinkingFocus,
-        'lastModified': lastModified.toIso8601String(),
-      };
+    'internalId': internalId,
+    'date': date.toIso8601String().substring(0, 10),
+    'type': type.index,
+    'detail': detail,
+    'thinkingFocus': thinkingFocus,
+    'lastModified': lastModified.toIso8601String(),
+  };
 
   factory ReflectionEntry.fromJson(Map<String, dynamic> json) {
     return ReflectionEntry(

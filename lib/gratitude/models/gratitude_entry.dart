@@ -35,11 +35,11 @@ class GratitudeEntry extends HiveObject {
   bool get canDelete => canEdit;
 
   Map<String, dynamic> toJson() => {
-        'date': date.toIso8601String(),
-        'gratitudeTowards': gratitudeTowards,
-        'createdAt': createdAt.toIso8601String(),
-        'gratefulFor': gratefulFor,
-      };
+    'date': date.toIso8601String(),
+    'gratitudeTowards': gratitudeTowards,
+    'createdAt': createdAt.toIso8601String(),
+    'gratefulFor': gratefulFor,
+  };
 
   factory GratitudeEntry.fromJson(Map<String, dynamic> json) {
     return GratitudeEntry(

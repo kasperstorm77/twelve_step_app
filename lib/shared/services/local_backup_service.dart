@@ -12,7 +12,7 @@ import 'sync_payload_builder.dart';
 /// - Same file naming pattern (twelve_steps_backup_YYYY-MM-DD_HH-MM-SS.json)
 /// - Same retention policy (today: all backups, previous 7 days: one per day)
 /// - Same list/create/restore interface
-/// 
+///
 /// Used when user is not signed into Google Drive, providing offline backup capability.
 /// Drive backups always take precedence when user is signed in.
 class LocalBackupService {
@@ -26,11 +26,11 @@ class LocalBackupService {
 
   /// Base filename (matches Drive backup naming)
   static const String _baseFileName = 'twelve_steps_backup';
-  
+
   /// Debounce timer for scheduling backups
   Timer? _backupDebounceTimer;
   static const Duration _backupDebounceDelay = Duration(milliseconds: 1000);
-  
+
   /// Flag to prevent concurrent backups
   bool _backupInProgress = false;
 
@@ -47,24 +47,30 @@ class LocalBackupService {
   /// Schedule a debounced backup (mirrors Drive's scheduleUploadFromBox)
   void scheduleBackup() {
     if (kDebugMode) print('LocalBackupService: scheduleBackup called');
-    
+
     // Cancel any pending backup and reset the timer
     _backupDebounceTimer?.cancel();
-    
+
     _backupDebounceTimer = Timer(_backupDebounceDelay, () async {
       await _performDebouncedBackup();
     });
-    
-    if (kDebugMode) print('LocalBackupService: Backup scheduled (debounced ${_backupDebounceDelay.inMilliseconds}ms)');
+
+    if (kDebugMode) {
+      print(
+        'LocalBackupService: Backup scheduled (debounced ${_backupDebounceDelay.inMilliseconds}ms)',
+      );
+    }
   }
 
   /// Internal method to perform the actual backup after debounce
   Future<void> _performDebouncedBackup() async {
     if (_backupInProgress) {
-      if (kDebugMode) print('LocalBackupService: Backup skipped - already in progress');
+      if (kDebugMode) {
+        print('LocalBackupService: Backup skipped - already in progress');
+      }
       return;
     }
-    
+
     _backupInProgress = true;
 
     try {
@@ -88,17 +94,19 @@ class LocalBackupService {
   Future<void> _createDatedBackup(String content) async {
     final now = DateTime.now();
     final backupDir = await _getBackupDirectory();
-    
+
     // Generate dated filename with timestamp (e.g., twelve_steps_backup_2025-12-03_14-30-15.json)
-    final dateStr = '${now.year}-${now.month.toString().padLeft(2, '0')}-${now.day.toString().padLeft(2, '0')}';
-    final timeStr = '${now.hour.toString().padLeft(2, '0')}-${now.minute.toString().padLeft(2, '0')}-${now.second.toString().padLeft(2, '0')}';
+    final dateStr =
+        '${now.year}-${now.month.toString().padLeft(2, '0')}-${now.day.toString().padLeft(2, '0')}';
+    final timeStr =
+        '${now.hour.toString().padLeft(2, '0')}-${now.minute.toString().padLeft(2, '0')}-${now.second.toString().padLeft(2, '0')}';
     final fileName = '${_baseFileName}_${dateStr}_$timeStr.json';
-    
+
     final file = File('${backupDir.path}/$fileName');
     await file.writeAsString(content);
-    
+
     if (kDebugMode) print('LocalBackupService: Created backup: $fileName');
-    
+
     // Clean up old backups after creating new one
     await _cleanupOldBackups();
   }
@@ -109,7 +117,7 @@ class LocalBackupService {
     try {
       final backupDir = await _getBackupDirectory();
       final files = await backupDir.list().toList();
-      
+
       final backupFiles = <File>[];
       for (final entity in files) {
         if (entity is File && entity.path.endsWith('.json')) {
@@ -119,13 +127,13 @@ class LocalBackupService {
           }
         }
       }
-      
+
       if (backupFiles.isEmpty) return;
-      
+
       final now = DateTime.now();
       final today = DateTime(now.year, now.month, now.day);
       final cutoffDate = today.subtract(const Duration(days: 7));
-      
+
       // Group backups by date
       final backupsByDate = <DateTime, List<File>>{};
       for (final file in backupFiles) {
@@ -135,21 +143,23 @@ class LocalBackupService {
           backupsByDate.putIfAbsent(dateOnly, () => []).add(file);
         }
       }
-      
+
       // Process each date
       for (final entry in backupsByDate.entries) {
         final date = entry.key;
         final files = entry.value;
-        
+
         // Delete backups older than 7 days
         if (date.isBefore(cutoffDate)) {
           for (final file in files) {
             await file.delete();
-            if (kDebugMode) print('LocalBackupService: Deleted old backup: ${file.path}');
+            if (kDebugMode) {
+              print('LocalBackupService: Deleted old backup: ${file.path}');
+            }
           }
           continue;
         }
-        
+
         // For previous days (not today), keep only the latest backup
         if (date.isBefore(today) && files.length > 1) {
           // Sort by date extracted from filename (newest first)
@@ -159,11 +169,15 @@ class LocalBackupService {
             if (dateA == null || dateB == null) return 0;
             return dateB.compareTo(dateA);
           });
-          
+
           // Keep first (newest), delete rest
           for (int i = 1; i < files.length; i++) {
             await files[i].delete();
-            if (kDebugMode) print('LocalBackupService: Deleted duplicate backup: ${files[i].path}');
+            if (kDebugMode) {
+              print(
+                'LocalBackupService: Deleted duplicate backup: ${files[i].path}',
+              );
+            }
           }
         }
         // Today's backups: keep all
@@ -175,21 +189,23 @@ class LocalBackupService {
 
   /// Extract date from filename (e.g., twelve_steps_backup_2025-12-03_14-30-15.json)
   DateTime? _extractDateFromFileName(String fileName) {
-    final regex = RegExp(r'(\d{4})-(\d{2})-(\d{2})(?:_(\d{2})-(\d{2})-(\d{2}))?');
+    final regex = RegExp(
+      r'(\d{4})-(\d{2})-(\d{2})(?:_(\d{2})-(\d{2})-(\d{2}))?',
+    );
     final match = regex.firstMatch(fileName);
-    
+
     if (match != null) {
       final year = int.parse(match.group(1)!);
       final month = int.parse(match.group(2)!);
       final day = int.parse(match.group(3)!);
-      
+
       int hour = 0, minute = 0, second = 0;
       if (match.group(4) != null) {
         hour = int.parse(match.group(4)!);
         minute = int.parse(match.group(5)!);
         second = int.parse(match.group(6)!);
       }
-      
+
       return DateTime(year, month, day, hour, minute, second);
     }
     return null;
@@ -198,39 +214,41 @@ class LocalBackupService {
   /// List available local backup files (mirrors Drive's listAvailableBackups)
   Future<List<Map<String, dynamic>>> listAvailableBackups() async {
     if (kDebugMode) print('LocalBackupService.listAvailableBackups() called');
-    
+
     try {
       // NOTE: Cleanup is NOT run here - only after creating a new backup.
       // This ensures users can see and restore from old backups.
-      
+
       final backupDir = await _getBackupDirectory();
       final files = await backupDir.list().toList();
-      
+
       final backups = <Map<String, dynamic>>[];
-      
+
       for (final entity in files) {
         if (entity is File && entity.path.endsWith('.json')) {
           final fileName = entity.path.split('/').last;
           if (!fileName.startsWith(_baseFileName)) continue;
-          
+
           final date = _extractDateFromFileName(fileName);
           if (date == null) continue;
-          
+
           final dateOnly = DateTime(date.year, date.month, date.day);
-          
+
           // Format display date with time for current day, date only for previous days
           final now = DateTime.now();
           final today = DateTime(now.year, now.month, now.day);
-          
+
           String displayDate;
           if (dateOnly.isAtSameMomentAs(today)) {
             // Show time for today's backups
-            displayDate = '${date.year}-${date.month.toString().padLeft(2, '0')}-${date.day.toString().padLeft(2, '0')} ${date.hour.toString().padLeft(2, '0')}:${date.minute.toString().padLeft(2, '0')}';
+            displayDate =
+                '${date.year}-${date.month.toString().padLeft(2, '0')}-${date.day.toString().padLeft(2, '0')} ${date.hour.toString().padLeft(2, '0')}:${date.minute.toString().padLeft(2, '0')}';
           } else {
             // Show only date for previous days
-            displayDate = '${date.year}-${date.month.toString().padLeft(2, '0')}-${date.day.toString().padLeft(2, '0')}';
+            displayDate =
+                '${date.year}-${date.month.toString().padLeft(2, '0')}-${date.day.toString().padLeft(2, '0')}';
           }
-          
+
           backups.add({
             'fileName': fileName,
             'filePath': entity.path,
@@ -240,11 +258,15 @@ class LocalBackupService {
           });
         }
       }
-      
+
       // Sort by date descending (newest first)
-      backups.sort((a, b) => (b['date'] as DateTime).compareTo(a['date'] as DateTime));
-      
-      if (kDebugMode) print('LocalBackupService: Found ${backups.length} local backups');
+      backups.sort(
+        (a, b) => (b['date'] as DateTime).compareTo(a['date'] as DateTime),
+      );
+
+      if (kDebugMode) {
+        print('LocalBackupService: Found ${backups.length} local backups');
+      }
       return backups;
     } catch (e) {
       if (kDebugMode) print('LocalBackupService: Failed to list backups: $e');
@@ -257,7 +279,7 @@ class LocalBackupService {
     try {
       final backupDir = await _getBackupDirectory();
       final file = File('${backupDir.path}/$fileName');
-      
+
       if (await file.exists()) {
         return await file.readAsString();
       }
@@ -272,7 +294,7 @@ class LocalBackupService {
   Future<String?> downloadLatestBackupContent() async {
     final backups = await listAvailableBackups();
     if (backups.isEmpty) return null;
-    
+
     final latestFileName = backups.first['fileName'] as String;
     return await downloadBackupContent(latestFileName);
   }
@@ -282,7 +304,7 @@ class LocalBackupService {
     try {
       final backupDir = await _getBackupDirectory();
       final files = await backupDir.list().toList();
-      
+
       int deletedCount = 0;
       for (final entity in files) {
         if (entity is File && entity.path.endsWith('.json')) {
@@ -290,11 +312,15 @@ class LocalBackupService {
           deletedCount++;
         }
       }
-      
-      if (kDebugMode) print('LocalBackupService: Deleted $deletedCount backup files');
+
+      if (kDebugMode) {
+        print('LocalBackupService: Deleted $deletedCount backup files');
+      }
       return deletedCount;
     } catch (e) {
-      if (kDebugMode) print('LocalBackupService: Failed to delete all backups: $e');
+      if (kDebugMode) {
+        print('LocalBackupService: Failed to delete all backups: $e');
+      }
       return 0;
     }
   }
@@ -308,12 +334,16 @@ class LocalBackupService {
   /// Create a backup immediately (non-debounced, for manual backup button)
   Future<void> createBackupNow() async {
     if (_backupInProgress) {
-      if (kDebugMode) print('LocalBackupService: Manual backup skipped - already in progress');
+      if (kDebugMode) {
+        print(
+          'LocalBackupService: Manual backup skipped - already in progress',
+        );
+      }
       return;
     }
-    
+
     _backupInProgress = true;
-    
+
     try {
       final content = _buildBackupContent();
       await _createDatedBackup(content);

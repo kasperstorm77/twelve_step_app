@@ -59,9 +59,10 @@ final Map<String, Map<String, String>> localizedValues = {
     'app_gratitude_name': 'Gratitude',
     'app_gratitude_desc': 'Daily gratitude journal',
     'app_agnosticism_name': 'Agnosticism',
-    'app_agnosticism_desc': 'What I haven\'t given to God & corrective attitudes',
-      'app_notifications_name': 'Notifications',
-      'app_notifications_desc': 'Reminders, alerts, and nudges',
+    'app_agnosticism_desc':
+        'What I haven\'t given to God & corrective attitudes',
+    'app_notifications_name': 'Notifications',
+    'app_notifications_desc': 'Reminders, alerts, and nudges',
     'googlefetch': 'Fetch data from Google Drive and overwrite local data',
     'sync_google_drive': 'Sync with Google Drive',
     'sign_in_google': 'Sign In with Google',
@@ -72,7 +73,8 @@ final Map<String, Map<String, String>> localizedValues = {
     'signed_in': 'Signed in to Google',
     'signed_out': 'Signed out',
     'enable_sync': 'Enable Sync?',
-    'enable_sync_prompt': 'Would you like to enable automatic Google Drive sync to keep your data backed up?',
+    'enable_sync_prompt':
+        'Would you like to enable automatic Google Drive sync to keep your data backed up?',
     'not_now': 'Not Now',
     'keep_local': 'Keep Local',
     'enable': 'Enable',
@@ -80,16 +82,19 @@ final Map<String, Map<String, String>> localizedValues = {
     'sync_failed': 'Sync failed',
     'sync_enabled': 'Sync enabled',
     'newer_data_available': 'Newer Data Available',
-    'newer_data_prompt': 'Google Drive has newer data than your device. Would you like to fetch it?',
+    'newer_data_prompt':
+        'Google Drive has newer data than your device. Would you like to fetch it?',
     'data_found_on_drive': 'Data Found on Drive',
-    'fetch_existing_data_prompt': 'You have existing data on Google Drive. Would you like to fetch it, or start fresh?',
+    'fetch_existing_data_prompt':
+        'You have existing data on Google Drive. Would you like to fetch it, or start fresh?',
     'start_fresh': 'Start Fresh',
     'warning': 'Warning',
     'continue': 'Continue',
     'export_success': 'Export successful',
     'drive_upload_success': 'Drive upload successful (%s entries)',
     'no_entries': 'No entries',
-    'confirm_google_fetch': 'Fetch data from Google Drive and overwrite local data?',
+    'confirm_google_fetch':
+        'Fetch data from Google Drive and overwrite local data?',
     'fetch': 'Fetch',
     'fetching_data': 'Fetching data from Google Drive...',
     'select_restore_point': 'Select Restore Point',
@@ -99,20 +104,24 @@ final Map<String, Map<String, String>> localizedValues = {
     'restore_from_backup': 'Restore from Backup',
     'loading_backups': 'Loading backups...',
     'no_backups_available': 'No backups available',
-    'local_backup_note': 'Local backups are stored on this device. Sign in to Google Drive for cloud backup.',
+    'local_backup_note':
+        'Local backups are stored on this device. Sign in to Google Drive for cloud backup.',
     'create_local_backup': 'Create Local Backup',
     'backup_created': 'Backup created successfully',
     'backup_failed': 'Backup failed',
-    'part_tooltip': 'Have I been Selfish, dishonest, self-seeking or frightened?',
+    'part_tooltip':
+        'Have I been Selfish, dishonest, self-seeking or frightened?',
     'close': 'Close',
     'edit': 'Edit',
     'switch_app': 'Switch App',
     'refresh_backups': 'Refresh backups',
     'delete_all_backups': 'Delete All Backups',
-    'confirm_delete_all_backups': 'This will delete ALL backup files from Google Drive. This action cannot be undone. Continue?',
+    'confirm_delete_all_backups':
+        'This will delete ALL backup files from Google Drive. This action cannot be undone. Continue?',
     'back_to_list': 'Back to list',
     'sign_in_to_enable_sync': 'Sign in with Google to enable sync',
-    'cannot_delete_i_am_in_use': 'Cannot delete "%name%" because it is used by %count% entries.\n\nPlease remove or change the I Am for those entries first.',
+    'cannot_delete_i_am_in_use':
+        'Cannot delete "%name%" because it is used by %count% entries.\n\nPlease remove or change the I Am for those entries first.',
     'resentment': 'I\'m resentful at',
     'switch_list_view': 'Switch to List View',
     'switch_table_view': 'Switch to Table View',
@@ -139,10 +148,14 @@ final Map<String, Map<String, String>> localizedValues = {
     'my_part': 'My part',
     'shortcoming_field': 'Shortcoming(s)',
     // Tooltip for column 3 (Affects my) - varies by category
-    'affects_my_tooltip_resentment': 'Which part of self caused my resentment?\n\nWas it my self-esteem, my security, my ambitions, my personal or sex relations that had been interfered with?',
-    'affects_my_tooltip_fear': 'Which part of self caused my fear?\n\nWas it my self-esteem, my security, my ambitions, my personal or sex relations that had been interfered with?',
-    'affects_my_tooltip_harms': '1. Did I arouse jealousy?\n2. Did I arouse suspicion?\n3. Did I arouse bitterness?',
-    'affects_my_tooltip_sexual_harms': '1. Did I arouse jealousy?\n2. Did I arouse suspicion?\n3. Did I arouse bitterness?',
+    'affects_my_tooltip_resentment':
+        'Which part of self caused my resentment?\n\nWas it my self-esteem, my security, my ambitions, my personal or sex relations that had been interfered with?',
+    'affects_my_tooltip_fear':
+        'Which part of self caused my fear?\n\nWas it my self-esteem, my security, my ambitions, my personal or sex relations that had been interfered with?',
+    'affects_my_tooltip_harms':
+        '1. Did I arouse jealousy?\n2. Did I arouse suspicion?\n3. Did I arouse bitterness?',
+    'affects_my_tooltip_sexual_harms':
+        '1. Did I arouse jealousy?\n2. Did I arouse suspicion?\n3. Did I arouse bitterness?',
     // Table view generic headers
     'field1_header': 'Who/What',
     'field2_header': 'Cause/Action',
@@ -163,7 +176,8 @@ final Map<String, Map<String, String>> localizedValues = {
     'compact_prefix_shortcoming': 'Shortcoming:',
     // Error and status messages
     'failed_load_backups': 'Failed to load backups',
-    'sign_in_no_token': 'Google sign-in succeeded but no access token was returned',
+    'sign_in_no_token':
+        'Google sign-in succeeded but no access token was returned',
     'drive_init_failed': 'Drive initialization failed',
     'drive_not_available': 'Google Drive sync not available',
     'fetch_failed': 'Fetch failed',
@@ -175,7 +189,8 @@ final Map<String, Map<String, String>> localizedValues = {
     'sign_in_failed': 'Sign-in failed',
     'sign_in_cancelled': 'Sign-in failed or cancelled',
     'no_data_found': 'No data found in Google Drive',
-    'fetch_success_count': 'Restored: %entries% inventory, %iams% I Am, %people% people, %reflections% reflections, %gratitude% gratitude, %agnosticism% barriers, %ritualItems% ritual items, %ritualEntries% ritual entries, %notifications% notifications',
+    'fetch_success_count':
+        'Restored: %entries% inventory, %iams% I Am, %people% people, %reflections% reflections, %gratitude% gratitude, %agnosticism% barriers, %ritualItems% ritual items, %ritualEntries% ritual entries, %notifications% notifications',
     'no_entries_found': 'No entries found in Google Drive',
     'offline_backups': 'Offline Backups',
     'save_json_export': 'Save JSON Export',
@@ -186,14 +201,16 @@ final Map<String, Map<String, String>> localizedValues = {
     'clear_warning': 'This will delete all data permanently. Continue?',
     'clear': 'Clear',
     'all_cleared': 'All data cleared',
-    'import_success_count': 'Restored: %entries% inventory, %iams% I Am, %people% people, %reflections% reflections, %gratitude% gratitude, %agnosticism% barriers, %ritualItems% ritual items, %ritualEntries% ritual entries, %notifications% notifications',
+    'import_success_count':
+        'Restored: %entries% inventory, %iams% I Am, %people% people, %reflections% reflections, %gratitude% gratitude, %agnosticism% barriers, %ritualItems% ritual items, %ritualEntries% ritual entries, %notifications% notifications',
     // Language names (keep as-is, these are proper nouns)
     'lang_english': 'English',
     'lang_danish': 'Dansk',
     'yes': 'Yes',
     'no': 'No',
     'morning_ritual_timer_early_complete_title': 'Are you sure?',
-    'morning_ritual_timer_early_complete_message': 'Meditation is good for you?',
+    'morning_ritual_timer_early_complete_message':
+        'Meditation is good for you?',
     'morning_ritual_alarm_settings': 'Alarm settings',
     'morning_ritual_alarm_vibrate': 'Vibrate',
     'morning_ritual_alarm_sound': 'Sound',
@@ -229,7 +246,8 @@ final Map<String, Map<String, String>> localizedValues = {
     'upload_to_drive_manual': 'Upload to Google Drive (Manual)',
     'google_authorization': 'Google Authorization',
     'copied_url': 'I\'ve Copied the URL',
-    'import_warning': 'This will REPLACE all current data (entries and I Am definitions) with the imported data.\n\nMake sure you have exported your current data first!\n\nContinue with import?',
+    'import_warning':
+        'This will REPLACE all current data (entries and I Am definitions) with the imported data.\n\nMake sure you have exported your current data first!\n\nContinue with import?',
     // Evening Ritual
     'evening_ritual_title': 'Evening Ritual',
     'evening_ritual_form_tab': 'Today',
@@ -243,7 +261,8 @@ final Map<String, Map<String, String>> localizedValues = {
     'reflection_type_kind_loving': 'I was kind and loving toward',
     'reflection_type_could_do_better': 'I could have done better by',
     'reflection_type_gods_forgiveness': 'God\'s forgiveness (what I ask for)',
-    'reflection_type_corrective_measures': 'Corrective measures (what will I do tomorrow)',
+    'reflection_type_corrective_measures':
+        'Corrective measures (what will I do tomorrow)',
     'add_reflection': 'Add Reflection',
     'edit_reflection': 'Edit Reflection',
     'reflection_detail': 'Detail',
@@ -260,13 +279,15 @@ final Map<String, Map<String, String>> localizedValues = {
     'save_reflection': 'Save',
     'reflection_saved': 'Reflection saved',
     'no_reflections': 'No reflections yet',
-    'no_reflections_hint': 'Tap the calendar to add your first evening reflection',
+    'no_reflections_hint':
+        'Tap the calendar to add your first evening reflection',
     'reflection_entries_count': '%d entries',
     'delete_reflection': 'Delete Reflection',
     'delete_reflection_confirm': 'Delete this reflection?',
     'reflection_deleted': 'Reflection deleted',
     'select_reflection_type': 'Select reflection type',
-    'past_date_read_only': 'This date is in the past and cannot be edited. Only today\'s entry can be modified.',
+    'past_date_read_only':
+        'This date is in the past and cannot be edited. Only today\'s entry can be modified.',
     'delete_day': 'Delete All Reflections',
     'confirm_delete_day': 'Delete all {count} reflections for {date}?',
     'day_deleted': 'All reflections deleted',
@@ -283,7 +304,8 @@ final Map<String, Map<String, String>> localizedValues = {
     'gratitude_for_hint': 'What about them are you grateful for?',
     'gratitude_no_entries': 'No gratitude entries yet',
     'gratitude_no_entries_today': 'No gratitude entries for today',
-    'gratitude_no_entries_hint': 'Start your gratitude journal in the Today tab',
+    'gratitude_no_entries_hint':
+        'Start your gratitude journal in the Today tab',
     'gratitude_entries_count': '%d entries',
     'gratitude_delete_title': 'Delete Gratitude',
     'gratitude_delete_confirm': 'Delete this gratitude entry?',
@@ -310,65 +332,85 @@ final Map<String, Map<String, String>> localizedValues = {
     'agnosticism_add': 'Add',
     'agnosticism_archive': 'Archive',
     'agnosticism_archive_title': 'Archive Pair',
-    'agnosticism_archive_confirm': 'Archive this pair? It will be moved to the archive.',
+    'agnosticism_archive_confirm':
+        'Archive this pair? It will be moved to the archive.',
     'agnosticism_pair_archived': 'Pair archived',
     'agnosticism_restore': 'Restore',
     'agnosticism_pair_restored': 'Pair restored',
-    'agnosticism_max_pairs_error': 'Maximum 5 active pairs allowed. Archive one first.',
+    'agnosticism_max_pairs_error':
+        'Maximum 5 active pairs allowed. Archive one first.',
     'agnosticism_delete_title': 'Delete Pair',
-    'agnosticism_delete_confirm': 'Permanently delete this pair? This cannot be undone.',
+    'agnosticism_delete_confirm':
+        'Permanently delete this pair? This cannot be undone.',
     'agnosticism_pair_deleted': 'Pair deleted',
     'agnosticism_archived_on': 'Archived on',
     // Help Content - 4th Step
     'help_4th_step_title': '4th Step Inventory - Purpose & Guidance',
     'help_4th_step_purpose_title': 'Why This Inventory?',
-    'help_4th_step_purpose': 'The 4th Step asks us to make "a searching and fearless moral inventory." This tool helps identify resentments - the root of our spiritual illness. By examining what hurt us and our part in it, we prepare for freedom from the bondage of self.',
+    'help_4th_step_purpose':
+        'The 4th Step asks us to make "a searching and fearless moral inventory." This tool helps identify resentments - the root of our spiritual illness. By examining what hurt us and our part in it, we prepare for freedom from the bondage of self.',
     'help_4th_step_fields_title': 'Understanding the Fields',
-    'help_4th_step_fields': '• "I\'m resentful at" - The person, institution, or principle\n• "The Cause" - What they did or said that hurt\n• "Affects my" - Which part of self was threatened (self-esteem, security, ambitions, relationships, sex)\n• "My take" - Where was I selfish, dishonest, self-seeking, or frightened?\n• "Shortcomings" - Character defects revealed (fear, pride, anger, etc.)',
+    'help_4th_step_fields':
+        '• "I\'m resentful at" - The person, institution, or principle\n• "The Cause" - What they did or said that hurt\n• "Affects my" - Which part of self was threatened (self-esteem, security, ambitions, relationships, sex)\n• "My take" - Where was I selfish, dishonest, self-seeking, or frightened?\n• "Shortcomings" - Character defects revealed (fear, pride, anger, etc.)',
     'help_4th_step_i_am_title': 'The "I Am" Concept',
-    'help_4th_step_i_am': '"I Am" definitions represent core identities tied to resentments (e.g., "I am the son", "I am the employee"). These help track patterns where specific roles trigger recurring character defects. This reveals which identities need spiritual realignment.',
+    'help_4th_step_i_am':
+        '"I Am" definitions represent core identities tied to resentments (e.g., "I am the son", "I am the employee"). These help track patterns where specific roles trigger recurring character defects. This reveals which identities need spiritual realignment.',
     // Help Content - 8th Step
     'help_8th_step_title': '8th Step Amends List - Purpose & Guidance',
     'help_8th_step_purpose_title': 'Why Make This List?',
-    'help_8th_step_purpose': 'Step 8 asks us to make "a list of all persons we had harmed, and became willing to make amends to them all." This prepares us for Step 9. Willingness, not action yet - we\'re building readiness to clean up our side of the street.',
+    'help_8th_step_purpose':
+        'Step 8 asks us to make "a list of all persons we had harmed, and became willing to make amends to them all." This prepares us for Step 9. Willingness, not action yet - we\'re building readiness to clean up our side of the street.',
     'help_8th_step_fields_title': 'Understanding the Columns',
-    'help_8th_step_fields': '• Name - The person harmed\n• Column (optional) - Reference to 4th Step column (if resentment existed)\n• Amends Needed - What harm did I cause? What do I need to make right?\n• Amends Done - Track when you\'ve completed the 9th Step amend',
+    'help_8th_step_fields':
+        '• Name - The person harmed\n• Column (optional) - Reference to 4th Step column (if resentment existed)\n• Amends Needed - What harm did I cause? What do I need to make right?\n• Amends Done - Track when you\'ve completed the 9th Step amend',
     // Help Content - Evening Ritual
     'help_evening_ritual_title': 'Evening Ritual - Purpose & Guidance',
     'help_evening_ritual_purpose_title': 'Why Review Each Day?',
-    'help_evening_ritual_purpose': 'The Big Book (p.86) instructs: "Review the day. Were we resentful, selfish, dishonest or afraid?" This daily practice keeps us spiritually fit, catching defects quickly before they compound. Regular inventory prevents the build-up that leads to relapse.',
+    'help_evening_ritual_purpose':
+        'The Big Book (p.86) instructs: "Review the day. Were we resentful, selfish, dishonest or afraid?" This daily practice keeps us spiritually fit, catching defects quickly before they compound. Regular inventory prevents the build-up that leads to relapse.',
     'help_evening_ritual_reflection_types_title': 'The Ten Categories',
-    'help_evening_ritual_reflection_types': 'Track daily where you:\n• Were resentful, selfish, dishonest, or afraid\n• Owe apologies or kept secrets\n• Showed kindness or could improve\n• Seek God\'s forgiveness\n• Plan corrective actions for tomorrow\n\nThese categories align with Big Book guidance for daily review.',
+    'help_evening_ritual_reflection_types':
+        'Track daily where you:\n• Were resentful, selfish, dishonest, or afraid\n• Owe apologies or kept secrets\n• Showed kindness or could improve\n• Seek God\'s forgiveness\n• Plan corrective actions for tomorrow\n\nThese categories align with Big Book guidance for daily review.',
     'help_evening_ritual_focus_title': 'Self vs. Others Focus',
-    'help_evening_ritual_focus': 'The slider tracks: "Where was my attention today?" Recovery shifts us from self-centeredness to being useful to others. Daily tracking reveals patterns - am I growing in selflessness or slipping into self-absorption?',
+    'help_evening_ritual_focus':
+        'The slider tracks: "Where was my attention today?" Recovery shifts us from self-centeredness to being useful to others. Daily tracking reveals patterns - am I growing in selflessness or slipping into self-absorption?',
     // Help Content - Gratitude
     'help_gratitude_title': 'Gratitude Journal - Purpose & Guidance',
     'help_gratitude_purpose_title': 'Why Practice Gratitude?',
-    'help_gratitude_purpose': 'Gratitude is the antidote to resentment and self-pity. The Big Book states we cannot be helpful when harboring resentment. Daily gratitude rewires our minds toward abundance rather than lack, shifting focus from what\'s wrong to what\'s right. This builds spiritual fitness.',
+    'help_gratitude_purpose':
+        'Gratitude is the antidote to resentment and self-pity. The Big Book states we cannot be helpful when harboring resentment. Daily gratitude rewires our minds toward abundance rather than lack, shifting focus from what\'s wrong to what\'s right. This builds spiritual fitness.',
     'help_gratitude_practice_title': 'The Daily Practice',
-    'help_gratitude_practice': 'Each day, record what you\'re grateful for using two fields: "Gratitude towards" (person, place, or thing) and "Grateful for" (what specifically about them). For example: towards "My sponsor" grateful for "Their patience and wisdom during my struggle." This structure helps you be specific and see patterns of grace in your life.',
+    'help_gratitude_practice':
+        'Each day, record what you\'re grateful for using two fields: "Gratitude towards" (person, place, or thing) and "Grateful for" (what specifically about them). For example: towards "My sponsor" grateful for "Their patience and wisdom during my struggle." This structure helps you be specific and see patterns of grace in your life.',
     // Help Content - Agnosticism
     'help_agnosticism_title': 'Agnosticism Papers - Purpose & Guidance',
     'help_agnosticism_purpose_title': 'Why This Exercise?',
-    'help_agnosticism_purpose': 'This tool helps identify what we\'re still holding onto instead of surrendering to God, and the God-given corrective attitudes that replace our defects. It\'s a practical application of Step 3 - turning our will and lives over to the care of God.',
+    'help_agnosticism_purpose':
+        'This tool helps identify what we\'re still holding onto instead of surrendering to God, and the God-given corrective attitudes that replace our defects. It\'s a practical application of Step 3 - turning our will and lives over to the care of God.',
     'help_agnosticism_barriers_title': 'Not given to god',
-    'help_agnosticism_barriers': 'List what you haven\'t surrendered: resentments, fears, self-will, control, outcomes, relationships, finances, pride, etc. These are the things you\'re still trying to manage yourself instead of trusting God.',
+    'help_agnosticism_barriers':
+        'List what you haven\'t surrendered: resentments, fears, self-will, control, outcomes, relationships, finances, pride, etc. These are the things you\'re still trying to manage yourself instead of trusting God.',
     'help_agnosticism_powers_title': 'God-given corrective attitude',
-    'help_agnosticism_powers': 'For each thing not surrendered, identify the God-given attitude that corrects it: acceptance instead of control, trust instead of fear, humility instead of pride, gratitude instead of resentment, faith instead of worry.',
+    'help_agnosticism_powers':
+        'For each thing not surrendered, identify the God-given attitude that corrects it: acceptance instead of control, trust instead of fear, humility instead of pride, gratitude instead of resentment, faith instead of worry.',
     'help_agnosticism_process_title': 'The Process',
-    'help_agnosticism_process': 'Create up to 5 pairs. Each pair connects something you\'re holding onto with the corrective attitude God provides. Flip the paper to see both sides. When surrender happens and the attitude is adopted, archive the pair and add new ones as you grow.',
+    'help_agnosticism_process':
+        'Create up to 5 pairs. Each pair connects something you\'re holding onto with the corrective attitude God provides. Flip the paper to see both sides. When surrender happens and the attitude is adopted, archive the pair and add new ones as you grow.',
     // Morning Ritual
     'morning_ritual_title': 'Morning Ritual',
     'morning_ritual_today_tab': 'Today',
     'morning_ritual_history_tab': 'History',
-    'morning_ritual_settings_desc': 'Define your morning ritual by adding timers and prayers. Drag to reorder.',
-    'morning_ritual_no_items': 'No ritual items defined yet.\nTap + to add your first item.',
+    'morning_ritual_settings_desc':
+        'Define your morning ritual by adding timers and prayers. Drag to reorder.',
+    'morning_ritual_no_items':
+        'No ritual items defined yet.\nTap + to add your first item.',
     'morning_ritual_add_item': 'Add Ritual Item',
     'morning_ritual_edit_item': 'Edit Ritual Item',
     'morning_ritual_delete_item': 'Delete Ritual Item',
     'morning_ritual_delete_confirm': 'Delete "%name%"? This cannot be undone.',
     'morning_ritual_item_name': 'Item Name',
-    'morning_ritual_item_name_hint': 'e.g., 5 minute meditation, 3rd Step Prayer',
+    'morning_ritual_item_name_hint':
+        'e.g., 5 minute meditation, 3rd Step Prayer',
     'morning_ritual_item_type': 'Type',
     'morning_ritual_type_timer': 'Timer',
     'morning_ritual_type_prayer': 'Prayer',
@@ -382,7 +424,8 @@ final Map<String, Map<String, String>> localizedValues = {
     'morning_ritual_items_count': '%count% items in your ritual',
     'morning_ritual_start': 'Start Ritual',
     'morning_ritual_add_items_hint': 'Add items in the Settings tab first',
-    'morning_ritual_no_items_to_start': 'No ritual items defined. Add items in Settings first.',
+    'morning_ritual_no_items_to_start':
+        'No ritual items defined. Add items in Settings first.',
     'morning_ritual_timer_start': 'Start',
     'morning_ritual_timer_pause': 'Pause',
     'morning_ritual_timer_resume': 'Resume',
@@ -402,29 +445,36 @@ final Map<String, Map<String, String>> localizedValues = {
     'morning_ritual_no_entry': 'No ritual entry for this date',
     'morning_ritual_select_date': 'Select a date to view details',
     'morning_ritual_no_history': 'No morning rituals yet',
-    'morning_ritual_no_history_hint': 'Complete your first morning ritual to see your history here.',
+    'morning_ritual_no_history_hint':
+        'Complete your first morning ritual to see your history here.',
     'morning_ritual_delete_entry': 'Delete Entry',
-    'morning_ritual_delete_entry_confirm': 'Are you sure you want to delete the morning ritual entry for {date}?',
+    'morning_ritual_delete_entry_confirm':
+        'Are you sure you want to delete the morning ritual entry for {date}?',
     'morning_ritual_entry_deleted': 'Entry deleted',
     'morning_ritual_previous': 'Previous',
     'morning_ritual_start_over': 'Start Over',
-    'morning_ritual_start_over_confirm': 'Start over from the beginning? Your current progress will be lost.',
+    'morning_ritual_start_over_confirm':
+        'Start over from the beginning? Your current progress will be lost.',
     'more': 'more',
     'show_less': 'Show less',
     'show_more': 'Show more',
     // Help Content - Morning Ritual
     'help_morning_ritual_title': 'Morning Ritual - Purpose & Guidance',
     'help_morning_ritual_purpose_title': 'Why a Morning Ritual?',
-    'help_morning_ritual_purpose': 'The Big Book (p.86-88) describes the morning routine: "On awakening let us think about the twenty-four hours ahead... Before we begin, we ask God to direct our thinking." This tool helps establish a consistent morning practice of prayer and meditation.',
+    'help_morning_ritual_purpose':
+        'The Big Book (p.86-88) describes the morning routine: "On awakening let us think about the twenty-four hours ahead... Before we begin, we ask God to direct our thinking." This tool helps establish a consistent morning practice of prayer and meditation.',
     'help_morning_ritual_items_title': 'Timers & Prayers',
-    'help_morning_ritual_items': 'Create your ritual with two types of items:\n• Timers - For meditation or silent prayer (with alarm when complete)\n• Prayers - Display text for prayers like the 3rd Step, 7th Step, or St. Francis Prayer\n\nArrange items in the order you want to perform them.',
+    'help_morning_ritual_items':
+        'Create your ritual with two types of items:\n• Timers - For meditation or silent prayer (with alarm when complete)\n• Prayers - Display text for prayers like the 3rd Step, 7th Step, or St. Francis Prayer\n\nArrange items in the order you want to perform them.',
     'help_morning_ritual_practice_title': 'Daily Practice',
-    'help_morning_ritual_practice': 'Each morning, start your ritual from the Today tab. Complete or skip each item as you go. Your history is tracked on the calendar - green checkmarks for completed items, red X for skipped or missed. Consistency builds spiritual discipline.',
-    
+    'help_morning_ritual_practice':
+        'Each morning, start your ritual from the Today tab. Complete or skip each item as you go. Your history is tracked on the calendar - green checkmarks for completed items, red X for skipped or missed. Consistency builds spiritual discipline.',
+
     // General Settings - Morning Ritual Auto-Load
     'morning_ritual_settings': 'Morning Ritual Auto-Load',
     'load_morning_ritual_toggle': 'Load Morning Ritual in the morning',
-    'load_morning_ritual_desc': 'Automatically open Morning Ritual app during the configured time window',
+    'load_morning_ritual_desc':
+        'Automatically open Morning Ritual app during the configured time window',
     'morning_start_time': 'Morning start time',
     'morning_end_time': 'Morning end time',
     'morning_time_error': 'Start time must be before end time',
@@ -437,7 +487,8 @@ final Map<String, Map<String, String>> localizedValues = {
     'notifications_add_title': 'Add notification',
     'notifications_edit_title': 'Edit notification',
     'notifications_empty_title': 'No notifications yet',
-    'notifications_empty_body': 'Create reminders for daily or weekly routines.',
+    'notifications_empty_body':
+        'Create reminders for daily or weekly routines.',
     'notifications_field_title': 'Title',
     'notifications_field_body': 'Body (optional)',
     'notifications_field_schedule': 'Schedule',
@@ -452,7 +503,8 @@ final Map<String, Map<String, String>> localizedValues = {
     'notifications_validation_title': 'Title is required',
     'notifications_validation_weekdays': 'Select at least one weekday',
     'notifications_delete_title': 'Delete notification?',
-    'notifications_delete_message': 'This will remove the reminder permanently. Continue?',
+    'notifications_delete_message':
+        'This will remove the reminder permanently. Continue?',
     'weekday_mon': 'Mon',
     'weekday_tue': 'Tue',
     'weekday_wed': 'Wed',
@@ -463,38 +515,40 @@ final Map<String, Map<String, String>> localizedValues = {
     'save': 'Save',
   },
   'da': {
-      'app_notifications_name': 'Notifikationer',
-      'app_notifications_desc': 'Påmindelser, advarsler og små skub',
-      // Notifications
-      'notifications_title': 'Notifikationer',
-      'notifications_add': 'Tilføj notifikation',
-      'notifications_add_title': 'Tilføj notifikation',
-      'notifications_edit_title': 'Rediger notifikation',
-      'notifications_empty_title': 'Ingen notifikationer endnu',
-      'notifications_empty_body': 'Opret påmindelser til daglige eller ugentlige rutiner.',
-      'notifications_field_title': 'Titel',
-      'notifications_field_body': 'Besked (valgfri)',
-      'notifications_field_schedule': 'Plan',
-      'notifications_field_time': 'Tid',
-      'notifications_field_weekdays': 'Ugedage',
-      'notifications_field_enabled': 'Aktiveret',
-      'notifications_alert_settings': 'Alarmindstillinger',
-      'notifications_field_vibrate': 'Vibration',
-      'notifications_field_sound': 'Lyd',
-      'notifications_schedule_daily': 'Dagligt',
-      'notifications_schedule_weekly': 'Ugentligt',
-      'notifications_validation_title': 'Titel er påkrævet',
-      'notifications_validation_weekdays': 'Vælg mindst én ugedag',
-      'notifications_delete_title': 'Slet notifikation?',
-      'notifications_delete_message': 'Dette fjerner påmindelsen permanent. Fortsæt?',
-      'weekday_mon': 'Man',
-      'weekday_tue': 'Tir',
-      'weekday_wed': 'Ons',
-      'weekday_thu': 'Tor',
-      'weekday_fri': 'Fre',
-      'weekday_sat': 'Lør',
-      'weekday_sun': 'Søn',
-      'save': 'Gem',
+    'app_notifications_name': 'Notifikationer',
+    'app_notifications_desc': 'Påmindelser, advarsler og små skub',
+    // Notifications
+    'notifications_title': 'Notifikationer',
+    'notifications_add': 'Tilføj notifikation',
+    'notifications_add_title': 'Tilføj notifikation',
+    'notifications_edit_title': 'Rediger notifikation',
+    'notifications_empty_title': 'Ingen notifikationer endnu',
+    'notifications_empty_body':
+        'Opret påmindelser til daglige eller ugentlige rutiner.',
+    'notifications_field_title': 'Titel',
+    'notifications_field_body': 'Besked (valgfri)',
+    'notifications_field_schedule': 'Plan',
+    'notifications_field_time': 'Tid',
+    'notifications_field_weekdays': 'Ugedage',
+    'notifications_field_enabled': 'Aktiveret',
+    'notifications_alert_settings': 'Alarmindstillinger',
+    'notifications_field_vibrate': 'Vibration',
+    'notifications_field_sound': 'Lyd',
+    'notifications_schedule_daily': 'Dagligt',
+    'notifications_schedule_weekly': 'Ugentligt',
+    'notifications_validation_title': 'Titel er påkrævet',
+    'notifications_validation_weekdays': 'Vælg mindst én ugedag',
+    'notifications_delete_title': 'Slet notifikation?',
+    'notifications_delete_message':
+        'Dette fjerner påmindelsen permanent. Fortsæt?',
+    'weekday_mon': 'Man',
+    'weekday_tue': 'Tir',
+    'weekday_wed': 'Ons',
+    'weekday_thu': 'Tor',
+    'weekday_fri': 'Fre',
+    'weekday_sat': 'Lør',
+    'weekday_sun': 'Søn',
+    'save': 'Gem',
     'app_title': '4. Trins liste',
     'form_title': 'Form',
     'entries_title': 'Liste',
@@ -552,7 +606,8 @@ final Map<String, Map<String, String>> localizedValues = {
     'app_gratitude_name': 'Taknemmelighed',
     'app_gratitude_desc': 'Daglig taknemmeligheds dagbog',
     'app_agnosticism_name': 'Agnosticisme',
-    'app_agnosticism_desc': 'Hvad jeg ikke har overgivet & korrigerende holdninger',
+    'app_agnosticism_desc':
+        'Hvad jeg ikke har overgivet & korrigerende holdninger',
     'googlefetch': 'Hent data fra Google Drive og overskriv lokale data',
     'sync_google_drive': 'Synkroniser med Google Drive',
     'sign_in_google': 'Log ind med Google',
@@ -563,7 +618,8 @@ final Map<String, Map<String, String>> localizedValues = {
     'signed_in': 'Logget ind på Google',
     'signed_out': 'Logget ud',
     'enable_sync': 'Aktiver Synkronisering?',
-    'enable_sync_prompt': 'Vil du aktivere automatisk Google Drive synkronisering for at holde dine data sikkerhedskopieret?',
+    'enable_sync_prompt':
+        'Vil du aktivere automatisk Google Drive synkronisering for at holde dine data sikkerhedskopieret?',
     'not_now': 'Ikke Nu',
     'keep_local': 'Behold Lokal',
     'enable': 'Aktiver',
@@ -571,16 +627,19 @@ final Map<String, Map<String, String>> localizedValues = {
     'sync_failed': 'Synkronisering fejlede',
     'sync_enabled': 'Synkronisering aktiveret',
     'newer_data_available': 'Nyere Data Tilgængelig',
-    'newer_data_prompt': 'Google Drive har nyere data end din enhed. Vil du hente det?',
+    'newer_data_prompt':
+        'Google Drive har nyere data end din enhed. Vil du hente det?',
     'data_found_on_drive': 'Data Fundet på Drive',
-    'fetch_existing_data_prompt': 'Du har eksisterende data på Google Drive. Vil du hente det, eller starte forfra?',
+    'fetch_existing_data_prompt':
+        'Du har eksisterende data på Google Drive. Vil du hente det, eller starte forfra?',
     'start_fresh': 'Start Forfra',
     'warning': 'Advarsel',
     'continue': 'Fortsæt',
     'export_success': 'Eksport fuldført',
     'drive_upload_success': 'Drive upload succes (%s indtastninger)',
     'no_entries': 'Ingen indtastninger',
-    'confirm_google_fetch': 'Hent data fra Google Drive og overskriv lokale data?',
+    'confirm_google_fetch':
+        'Hent data fra Google Drive og overskriv lokale data?',
     'fetch': 'Hent',
     'fetching_data': 'Henter data fra Google Drive...',
     'select_restore_point': 'Vælg Gendannelsespunkt',
@@ -590,7 +649,8 @@ final Map<String, Map<String, String>> localizedValues = {
     'restore_from_backup': 'Gendan fra Backup',
     'loading_backups': 'Indlæser backups...',
     'no_backups_available': 'Ingen backups tilgængelige',
-    'local_backup_note': 'Lokale backups gemmes på denne enhed. Log ind på Google Drive for sky-backup.',
+    'local_backup_note':
+        'Lokale backups gemmes på denne enhed. Log ind på Google Drive for sky-backup.',
     'create_local_backup': 'Opret Lokal Backup',
     'backup_created': 'Backup oprettet',
     'backup_failed': 'Backup mislykkedes',
@@ -600,10 +660,13 @@ final Map<String, Map<String, String>> localizedValues = {
     'switch_app': 'Skift App',
     'refresh_backups': 'Opdater backups',
     'delete_all_backups': 'Slet alle backups',
-    'confirm_delete_all_backups': 'Dette vil slette ALLE backup-filer fra Google Drive. Denne handling kan ikke fortrydes. Fortsæt?',
+    'confirm_delete_all_backups':
+        'Dette vil slette ALLE backup-filer fra Google Drive. Denne handling kan ikke fortrydes. Fortsæt?',
     'back_to_list': 'Tilbage til listen',
-    'sign_in_to_enable_sync': 'Log ind med Google for at aktivere synkronisering',
-    'cannot_delete_i_am_in_use': 'Kan ikke slette "%name%" fordi den bruges af %count% indtastninger.\n\nFjern eller ændr "Jeg er" for disse indtastninger først.',
+    'sign_in_to_enable_sync':
+        'Log ind med Google for at aktivere synkronisering',
+    'cannot_delete_i_am_in_use':
+        'Kan ikke slette "%name%" fordi den bruges af %count% indtastninger.\n\nFjern eller ændr "Jeg er" for disse indtastninger først.',
     'resentment': 'Jeg er vred på',
     'switch_list_view': 'Skift til Listevisning',
     'switch_table_view': 'Skift til Tabelvisning',
@@ -630,10 +693,14 @@ final Map<String, Map<String, String>> localizedValues = {
     'my_part': 'Min del',
     'shortcoming_field': 'Karakterdefekt(er)',
     // Tooltip for column 3 (Affects my) - varies by category
-    'affects_my_tooltip_resentment': 'Hvilken del af mig forårsagede min vrede?\n\nVar det min selvfølelse, min tryghed, mine ambitioner, mine personlige relationer eller seksuelle relationer, der var blevet forstyrret?',
-    'affects_my_tooltip_fear': 'Hvilken del af mig forårsagede min frygt?\n\nVar det min selvfølelse, min tryghed, mine ambitioner, mine personlige relationer eller seksuelle relationer, der var blevet forstyrret?',
-    'affects_my_tooltip_harms': '1. Vakte jeg jalousi?\n2. Vakte jeg mistænksomhed?\n3. Vakte jeg bitterhed?',
-    'affects_my_tooltip_sexual_harms': '1. Vakte jeg jalousi?\n2. Vakte jeg mistænksomhed?\n3. Vakte jeg bitterhed?',
+    'affects_my_tooltip_resentment':
+        'Hvilken del af mig forårsagede min vrede?\n\nVar det min selvfølelse, min tryghed, mine ambitioner, mine personlige relationer eller seksuelle relationer, der var blevet forstyrret?',
+    'affects_my_tooltip_fear':
+        'Hvilken del af mig forårsagede min frygt?\n\nVar det min selvfølelse, min tryghed, mine ambitioner, mine personlige relationer eller seksuelle relationer, der var blevet forstyrret?',
+    'affects_my_tooltip_harms':
+        '1. Vakte jeg jalousi?\n2. Vakte jeg mistænksomhed?\n3. Vakte jeg bitterhed?',
+    'affects_my_tooltip_sexual_harms':
+        '1. Vakte jeg jalousi?\n2. Vakte jeg mistænksomhed?\n3. Vakte jeg bitterhed?',
     // Table view generic headers
     'field1_header': 'Hvem/Hvad',
     'field2_header': 'Årsag/Handling',
@@ -654,7 +721,8 @@ final Map<String, Map<String, String>> localizedValues = {
     'compact_prefix_shortcoming': 'Defekt:',
     // Error and status messages
     'failed_load_backups': 'Kunne ikke indlæse backups',
-    'sign_in_no_token': 'Google login lykkedes, men ingen adgangstoken blev returneret',
+    'sign_in_no_token':
+        'Google login lykkedes, men ingen adgangstoken blev returneret',
     'drive_init_failed': 'Drive initialisering fejlede',
     'drive_not_available': 'Google Drive synkronisering ikke tilgængelig',
     'fetch_failed': 'Hentning fejlede',
@@ -666,7 +734,8 @@ final Map<String, Map<String, String>> localizedValues = {
     'sign_in_failed': 'Login fejlede',
     'sign_in_cancelled': 'Login fejlede eller blev annulleret',
     'no_data_found': 'Ingen data fundet i Google Drive',
-    'fetch_success_count': 'Gendannet: %entries% inventar, %iams% Jeg er, %people% personer, %reflections% refleksioner, %gratitude% taknemmelighed, %agnosticism% barrierer, %ritualItems% ritual elementer, %ritualEntries% ritual indtastninger, %notifications% notifikationer',
+    'fetch_success_count':
+        'Gendannet: %entries% inventar, %iams% Jeg er, %people% personer, %reflections% refleksioner, %gratitude% taknemmelighed, %agnosticism% barrierer, %ritualItems% ritual elementer, %ritualEntries% ritual indtastninger, %notifications% notifikationer',
     'no_entries_found': 'Ingen indtastninger fundet i Google Drive',
     'offline_backups': 'Offline Backups',
     'save_json_export': 'Gem JSON Eksport',
@@ -677,14 +746,16 @@ final Map<String, Map<String, String>> localizedValues = {
     'clear_warning': 'Dette vil slette alle data permanent. Fortsæt?',
     'clear': 'Slet',
     'all_cleared': 'Alle data slettet',
-    'import_success_count': 'Gendannet: %entries% inventar, %iams% Jeg er, %people% personer, %reflections% refleksioner, %gratitude% taknemmelighed, %agnosticism% barrierer, %ritualItems% ritual elementer, %ritualEntries% ritual indtastninger, %notifications% notifikationer',
+    'import_success_count':
+        'Gendannet: %entries% inventar, %iams% Jeg er, %people% personer, %reflections% refleksioner, %gratitude% taknemmelighed, %agnosticism% barrierer, %ritualItems% ritual elementer, %ritualEntries% ritual indtastninger, %notifications% notifikationer',
     // Language names (keep as-is, these are proper nouns)
     'lang_english': 'English',
     'lang_danish': 'Dansk',
     'yes': 'Ja',
     'no': 'Nej',
     'morning_ritual_timer_early_complete_title': 'Er du sikker?',
-    'morning_ritual_timer_early_complete_message': 'Meditation er godt for dig?',
+    'morning_ritual_timer_early_complete_message':
+        'Meditation er godt for dig?',
     'morning_ritual_alarm_settings': 'Alarmindstillinger',
     'morning_ritual_alarm_vibrate': 'Vibration',
     'morning_ritual_alarm_sound': 'Lyd',
@@ -720,7 +791,8 @@ final Map<String, Map<String, String>> localizedValues = {
     'upload_to_drive_manual': 'Upload til Google Drive (Manuel)',
     'google_authorization': 'Google Godkendelse',
     'copied_url': 'Jeg har kopieret URL\'en',
-    'import_warning': 'Dette vil ERSTATTE alle nuværende data med data fra Google Drive.\n\nSørg for at du først har eksporteret dine nuværende data!\n\nFortsæt med import?',
+    'import_warning':
+        'Dette vil ERSTATTE alle nuværende data med data fra Google Drive.\n\nSørg for at du først har eksporteret dine nuværende data!\n\nFortsæt med import?',
     // Evening Ritual (Danish)
     'evening_ritual_title': 'Aftenritual',
     'evening_ritual_form_tab': 'I dag',
@@ -730,11 +802,13 @@ final Map<String, Map<String, String>> localizedValues = {
     'reflection_type_dishonest': 'Jeg var uærlig, da',
     'reflection_type_afraid': 'Jeg var bange, da',
     'reflection_type_apology_owed': 'Jeg skylder en undskyldning til',
-    'reflection_type_kept_to_myself': 'Jeg holdt for mig selv (hvor jeg burde have delt)',
+    'reflection_type_kept_to_myself':
+        'Jeg holdt for mig selv (hvor jeg burde have delt)',
     'reflection_type_kind_loving': 'Jeg var venlig og kærlig overfor',
     'reflection_type_could_do_better': 'Jeg kunne have gjort det bedre ved',
     'reflection_type_gods_forgiveness': 'Guds tilgivelse (hvad jeg beder om)',
-    'reflection_type_corrective_measures': 'Hvad er løsningen? (hvad vil jeg gøre i morgen)',
+    'reflection_type_corrective_measures':
+        'Hvad er løsningen? (hvad vil jeg gøre i morgen)',
     'add_reflection': 'Tilføj Refleksion',
     'edit_reflection': 'Rediger Refleksion',
     'reflection_detail': 'Detalje',
@@ -751,13 +825,15 @@ final Map<String, Map<String, String>> localizedValues = {
     'save_reflection': 'Gem',
     'reflection_saved': 'Refleksion gemt',
     'no_reflections': 'Ingen refleksioner endnu',
-    'no_reflections_hint': 'Tryk på kalenderen for at tilføje din første aftenrefleksion',
+    'no_reflections_hint':
+        'Tryk på kalenderen for at tilføje din første aftenrefleksion',
     'reflection_entries_count': '%d indtastninger',
     'delete_reflection': 'Slet Refleksion',
     'delete_reflection_confirm': 'Slet denne refleksion?',
     'reflection_deleted': 'Refleksion slettet',
     'select_reflection_type': 'Vælg refleksionstype',
-    'past_date_read_only': 'Denne dato er i fortiden og kan ikke redigeres. Kun dagens indtastning kan ændres.',
+    'past_date_read_only':
+        'Denne dato er i fortiden og kan ikke redigeres. Kun dagens indtastning kan ændres.',
     'delete_day': 'Slet Alle Refleksioner',
     'confirm_delete_day': 'Slet alle {count} refleksioner for {date}?',
     'day_deleted': 'Alle refleksioner slettet',
@@ -773,8 +849,10 @@ final Map<String, Map<String, String>> localizedValues = {
     'gratitude_for_label': 'Taknemmelig for',
     'gratitude_for_hint': 'Hvad ved dem er du taknemmelig for?',
     'gratitude_no_entries': 'Ingen taknemmeligheds-indlæg endnu',
-    'gratitude_no_entries_today': 'Ingen taknemmeligheds indtastninger for i dag',
-    'gratitude_no_entries_hint': 'Start din taknemmeligheds dagbog i I dag fanen',
+    'gratitude_no_entries_today':
+        'Ingen taknemmeligheds indtastninger for i dag',
+    'gratitude_no_entries_hint':
+        'Start din taknemmeligheds dagbog i I dag fanen',
     'gratitude_entries_count': '%d indtastninger',
     'gratitude_delete_title': 'Slet Taknemmelighed',
     'gratitude_delete_confirm': 'Slet denne taknemmeligheds indtastning?',
@@ -789,7 +867,8 @@ final Map<String, Map<String, String>> localizedValues = {
     'agnosticism_flip': 'Vend Papir',
     'agnosticism_add_pair': 'Tilføj Par',
     'agnosticism_edit_pair': 'Rediger Par',
-    'agnosticism_empty_paper': 'Ingen par endnu.\nTryk "Tilføj Par" for at starte.',
+    'agnosticism_empty_paper':
+        'Ingen par endnu.\nTryk "Tilføj Par" for at starte.',
     'agnosticism_empty_archive': 'Ingen arkiverede par endnu',
     'agnosticism_barrier': 'Ikke overgivet',
     'agnosticism_power': 'Korrigerende holdning',
@@ -801,65 +880,85 @@ final Map<String, Map<String, String>> localizedValues = {
     'agnosticism_add': 'Tilføj',
     'agnosticism_archive': 'Arkivér',
     'agnosticism_archive_title': 'Arkivér Par',
-    'agnosticism_archive_confirm': 'Arkivér dette par? Det flyttes til arkivet.',
+    'agnosticism_archive_confirm':
+        'Arkivér dette par? Det flyttes til arkivet.',
     'agnosticism_pair_archived': 'Par arkiveret',
     'agnosticism_restore': 'Gendan',
     'agnosticism_pair_restored': 'Par gendannet',
-    'agnosticism_max_pairs_error': 'Maksimalt 5 aktive par tilladt. Arkivér et først.',
+    'agnosticism_max_pairs_error':
+        'Maksimalt 5 aktive par tilladt. Arkivér et først.',
     'agnosticism_delete_title': 'Slet Par',
-    'agnosticism_delete_confirm': 'Slet dette par permanent? Dette kan ikke fortrydes.',
+    'agnosticism_delete_confirm':
+        'Slet dette par permanent? Dette kan ikke fortrydes.',
     'agnosticism_pair_deleted': 'Par slettet',
     'agnosticism_archived_on': 'Arkiveret den',
     // Help Content - 4th Step (Danish)
     'help_4th_step_title': '4. Trins opgørelse - Formål & Vejledning',
     'help_4th_step_purpose_title': 'Hvorfor denne opgørelse',
-    'help_4th_step_purpose': '4. Trin beder os om at lave "en grundig og frygtløs moralsk status." Dette værktøj hjælper med at identificere vrede - roden til vores åndelige sygdom. Ved at undersøge hvad der sårede os og vores egen andel i det, forbereder vi os på frihed fra selvets lænker.',
+    'help_4th_step_purpose':
+        '4. Trin beder os om at lave "en grundig og frygtløs moralsk status." Dette værktøj hjælper med at identificere vrede - roden til vores åndelige sygdom. Ved at undersøge hvad der sårede os og vores egen andel i det, forbereder vi os på frihed fra selvets lænker.',
     'help_4th_step_fields_title': 'Forståelse af Felterne',
-    'help_4th_step_fields': '• "Jeg er vred på" - Personen, institutionen eller princippet\n• "Årsagen" - Hvad de gjorde eller sagde der sårede\n• "Påvirker min" - Hvilken del af selvet blev truet (selvværd, sikkerhed, ambitioner, personlige og seksuelle relationer)\n• "Min del" - Hvor var jeg selvisk, uærlig, selvoptaget eller bange?\n• "Karakterdefekt(er)" - Afslørede karakterdefekter (frygt, stolthed, vrede osv.)',
+    'help_4th_step_fields':
+        '• "Jeg er vred på" - Personen, institutionen eller princippet\n• "Årsagen" - Hvad de gjorde eller sagde der sårede\n• "Påvirker min" - Hvilken del af selvet blev truet (selvværd, sikkerhed, ambitioner, personlige og seksuelle relationer)\n• "Min del" - Hvor var jeg selvisk, uærlig, selvoptaget eller bange?\n• "Karakterdefekt(er)" - Afslørede karakterdefekter (frygt, stolthed, vrede osv.)',
     'help_4th_step_i_am_title': '"Jeg Er" Konceptet',
-    'help_4th_step_i_am': '"Jeg er" definitioner repræsenterer kerneidentiteter knyttet til årsagen (f.eks. "Jeg er sønnen", "Jeg er medarbejderen"). Disse hjælper med at spore mønstre, hvor specifikke roller udløser tilbagevendende karakterdefekter. Dette afslører hvilke identiteter der har brug for åndelig tilpasning.',
+    'help_4th_step_i_am':
+        '"Jeg er" definitioner repræsenterer kerneidentiteter knyttet til årsagen (f.eks. "Jeg er sønnen", "Jeg er medarbejderen"). Disse hjælper med at spore mønstre, hvor specifikke roller udløser tilbagevendende karakterdefekter. Dette afslører hvilke identiteter der har brug for åndelig tilpasning.',
     // Help Content - 8th Step (Danish)
     'help_8th_step_title': '8. Trins liste - Formål & Vejledning',
     'help_8th_step_purpose_title': 'Hvorfor lave denne liste?',
-    'help_8th_step_purpose': 'Trin 8 beder os om at lave "en liste over alle personer vi har gjort fortræd, og blive villige til at gøre det godt igen. Med listen, forbereder os til trin 9. - vi bygger parathed og villighed til at rydde op og tage ansvar for vores del.',
+    'help_8th_step_purpose':
+        'Trin 8 beder os om at lave "en liste over alle personer vi har gjort fortræd, og blive villige til at gøre det godt igen. Med listen, forbereder os til trin 9. - vi bygger parathed og villighed til at rydde op og tage ansvar for vores del.',
     'help_8th_step_fields_title': 'Forståelse af Kolonnerne',
-    'help_8th_step_fields': '• Navn - Den person vi har gjort fortræd\n• Kolonne (valgfrit)\n• Hvordan tager jeg ansvar? - Hvilken skade forvoldte jeg? Hvordan tager jeg ansvar for det?\n• Ansvar taget - Spor hvornår du har taget ansvar',
+    'help_8th_step_fields':
+        '• Navn - Den person vi har gjort fortræd\n• Kolonne (valgfrit)\n• Hvordan tager jeg ansvar? - Hvilken skade forvoldte jeg? Hvordan tager jeg ansvar for det?\n• Ansvar taget - Spor hvornår du har taget ansvar',
     // Help Content - Evening Ritual (Danish)
     'help_evening_ritual_title': 'Aftenritual - Formål & Vejledning',
     'help_evening_ritual_purpose_title': 'Hvorfor Gennemgå Hver Dag?',
-    'help_evening_ritual_purpose': 'Den Store Bog foreslår: "Gennemgå dagen. Var vi vrede, selviske, uærlige eller bange?" Denne daglige praksis holder os åndeligt i form, fanger fejl hurtigt før de forværres. Regelmæssig status forhindrer opbygning der fører til tilbagefald.',
+    'help_evening_ritual_purpose':
+        'Den Store Bog foreslår: "Gennemgå dagen. Var vi vrede, selviske, uærlige eller bange?" Denne daglige praksis holder os åndeligt i form, fanger fejl hurtigt før de forværres. Regelmæssig status forhindrer opbygning der fører til tilbagefald.',
     'help_evening_ritual_reflection_types_title': 'De Ti Kategorier',
-    'help_evening_ritual_reflection_types': 'Spor dagligt hvor du:\n• Var vred, selvisk, uærlig eller bange\n• Skylder undskyldninger eller holdt noget for dig selv\n• Viste venlighed eller kunne have gjort det bedre\n• Søger Guds tilgivelse\n• Planlæg korrigerende handlinger for i morgen\n\nDisse kategorier stemmer overens med Den Store Bogs vejledning for daglig status.',
+    'help_evening_ritual_reflection_types':
+        'Spor dagligt hvor du:\n• Var vred, selvisk, uærlig eller bange\n• Skylder undskyldninger eller holdt noget for dig selv\n• Viste venlighed eller kunne have gjort det bedre\n• Søger Guds tilgivelse\n• Planlæg korrigerende handlinger for i morgen\n\nDisse kategorier stemmer overens med Den Store Bogs vejledning for daglig status.',
     'help_evening_ritual_focus_title': 'Selv vs. Andre Fokus',
-    'help_evening_ritual_focus': 'Skyderen sporer: "Hvor var min opmærksomhed i dag?" Bedring flytter os fra selvcentrering til at være nyttige for andre. Daglig sporing afslører mønstre - vokser jeg i uselviskhed eller glider jeg ind i selvoptagethed?',
+    'help_evening_ritual_focus':
+        'Skyderen sporer: "Hvor var min opmærksomhed i dag?" Bedring flytter os fra selvcentrering til at være nyttige for andre. Daglig sporing afslører mønstre - vokser jeg i uselviskhed eller glider jeg ind i selvoptagethed?',
     // Help Content - Gratitude (Danish)
     'help_gratitude_title': 'Taknemmeligheds Dagbog - Formål & Vejledning',
     'help_gratitude_purpose_title': 'Hvorfor Øve Taknemmelighed?',
-    'help_gratitude_purpose': 'Taknemmelighed er modgiften mod vrede og selvmedlidenhed. Den Store Bog siger vi ikke kan være til nytte når vi nærer vrede. Daglig taknemmelighed omkobler vores sind mod overflod frem for mangel, flytter fokus fra hvad der er galt til hvad der er rigtigt. Dette bygger åndelig styrke.',
+    'help_gratitude_purpose':
+        'Taknemmelighed er modgiften mod vrede og selvmedlidenhed. Den Store Bog siger vi ikke kan være til nytte når vi nærer vrede. Daglig taknemmelighed omkobler vores sind mod overflod frem for mangel, flytter fokus fra hvad der er galt til hvad der er rigtigt. Dette bygger åndelig styrke.',
     'help_gratitude_practice_title': 'Den Daglige Praksis',
-    'help_gratitude_practice': 'Hver dag, noter hvad du er taknemmelig for ved hjælp af to felter: "Taknemmelighed over for" (person, sted eller ting) og "Taknemmelig for" (hvad specifikt ved dem). For eksempel: over for "Min sponsor" taknemmelig for "Deres tålmodighed og visdom under min kamp." Denne struktur hjælper dig med at være specifik og se mønstre af nåde i dit liv.',
+    'help_gratitude_practice':
+        'Hver dag, noter hvad du er taknemmelig for ved hjælp af to felter: "Taknemmelighed over for" (person, sted eller ting) og "Taknemmelig for" (hvad specifikt ved dem). For eksempel: over for "Min sponsor" taknemmelig for "Deres tålmodighed og visdom under min kamp." Denne struktur hjælper dig med at være specifik og se mønstre af nåde i dit liv.',
     // Help Content - Agnosticism (Danish)
     'help_agnosticism_title': 'Agnosticisme papirer - formål & vejledning',
     'help_agnosticism_purpose_title': 'Hvorfor denne øvelse?',
-    'help_agnosticism_purpose': 'Dette værktøj hjælper med at identificere hvad vi stadig holder fast i i stedet for at overgive det til Gud, og de Gudsgivne korrigerende holdninger der erstatter vores fejl. Det er en praktisk anvendelse af trin 3 - at overlade vores vilje og liv til Guds omsorg.',
+    'help_agnosticism_purpose':
+        'Dette værktøj hjælper med at identificere hvad vi stadig holder fast i i stedet for at overgive det til Gud, og de Gudsgivne korrigerende holdninger der erstatter vores fejl. Det er en praktisk anvendelse af trin 3 - at overlade vores vilje og liv til Guds omsorg.',
     'help_agnosticism_barriers_title': 'Ikke overgivet til Gud',
-    'help_agnosticism_barriers': 'Lave en liste over det du ikke har overgivet: vrede, frygt, egenvilje, kontrol, udfald, relationer, økonomi, stolthed osv. Dette er de ting du stadig prøver at styre selv i stedet for at stole på Gud.',
+    'help_agnosticism_barriers':
+        'Lave en liste over det du ikke har overgivet: vrede, frygt, egenvilje, kontrol, udfald, relationer, økonomi, stolthed osv. Dette er de ting du stadig prøver at styre selv i stedet for at stole på Gud.',
     'help_agnosticism_powers_title': 'Gudsgivet korrigerende handling',
-    'help_agnosticism_powers': 'For hver ting der ikke er overgivet til gud, identificer den Gudsgivne holdning der korrigerer den: accept i stedet for kontrol, tillid i stedet for frygt, ydmyghed i stedet for stolthed, taknemmelighed i stedet for vrede, tro i stedet for bekymring.',
+    'help_agnosticism_powers':
+        'For hver ting der ikke er overgivet til gud, identificer den Gudsgivne holdning der korrigerer den: accept i stedet for kontrol, tillid i stedet for frygt, ydmyghed i stedet for stolthed, taknemmelighed i stedet for vrede, tro i stedet for bekymring.',
     'help_agnosticism_process_title': 'Processen',
-    'help_agnosticism_process': 'Opret op til 5 par. Hvert par forbinder noget du holder fast i med den korrigerende holdning Gud giver. Vend papiret for at se begge sider. Når overgivelsen finder sted og holdningen er adopteret, arkivér parret og tilføj nye efterhånden som du vokser.',
+    'help_agnosticism_process':
+        'Opret op til 5 par. Hvert par forbinder noget du holder fast i med den korrigerende holdning Gud giver. Vend papiret for at se begge sider. Når overgivelsen finder sted og holdningen er adopteret, arkivér parret og tilføj nye efterhånden som du vokser.',
     // Morning Ritual (Danish)
     'morning_ritual_title': 'Morgenritual',
     'morning_ritual_today_tab': 'I dag',
     'morning_ritual_history_tab': 'Historik',
-    'morning_ritual_settings_desc': 'Definer dit morgenritual ved at tilføje timere og bønner. Træk for at omarrangere.',
-    'morning_ritual_no_items': 'Ingen ritualelementer defineret endnu.\nTryk + for at tilføje dit første element.',
+    'morning_ritual_settings_desc':
+        'Definer dit morgenritual ved at tilføje timere og bønner. Træk for at omarrangere.',
+    'morning_ritual_no_items':
+        'Ingen ritualelementer defineret endnu.\nTryk + for at tilføje dit første element.',
     'morning_ritual_add_item': 'Tilføj Ritualelement',
     'morning_ritual_edit_item': 'Rediger Ritualelement',
     'morning_ritual_delete_item': 'Slet Ritualelement',
     'morning_ritual_delete_confirm': 'Slet "%name%"? Dette kan ikke fortrydes.',
     'morning_ritual_item_name': 'Elementnavn',
-    'morning_ritual_item_name_hint': 'f.eks. 5 minutters meditation, 3. trins bøn',
+    'morning_ritual_item_name_hint':
+        'f.eks. 5 minutters meditation, 3. trins bøn',
     'morning_ritual_item_type': 'Type',
     'morning_ritual_type_timer': 'Timer',
     'morning_ritual_type_prayer': 'Bøn',
@@ -867,13 +966,15 @@ final Map<String, Map<String, String>> localizedValues = {
     'morning_ritual_minutes': 'Minutter',
     'morning_ritual_seconds': 'Sekunder',
     'morning_ritual_prayer_text': 'Bøn',
-    'morning_ritual_prayer_text_hint': 'Indtast teksten på bønnen, der skal vises',
+    'morning_ritual_prayer_text_hint':
+        'Indtast teksten på bønnen, der skal vises',
     'morning_ritual_name_required': 'Navn er påkrævet',
     'morning_ritual_ready': 'Klar til at Begynde',
     'morning_ritual_items_count': '%count% elementer i dit ritual',
     'morning_ritual_start': 'Start Ritual',
     'morning_ritual_add_items_hint': 'Tilføj elementer i Indstillinger først',
-    'morning_ritual_no_items_to_start': 'Ingen ritualelementer defineret. Tilføj elementer i Indstillinger først.',
+    'morning_ritual_no_items_to_start':
+        'Ingen ritualelementer defineret. Tilføj elementer i Indstillinger først.',
     'morning_ritual_timer_start': 'Start',
     'morning_ritual_timer_pause': 'Pause',
     'morning_ritual_timer_resume': 'Genoptag',
@@ -893,29 +994,36 @@ final Map<String, Map<String, String>> localizedValues = {
     'morning_ritual_no_entry': 'Ingen morgenritualer for denne dato',
     'morning_ritual_select_date': 'Vælg en dato for at se detaljer',
     'morning_ritual_no_history': 'Ingen morgenritualer endnu',
-    'morning_ritual_no_history_hint': 'Fuldfør dit første morgenritual for at se din historik her.',
+    'morning_ritual_no_history_hint':
+        'Fuldfør dit første morgenritual for at se din historik her.',
     'morning_ritual_delete_entry': 'Slet indtastning',
-    'morning_ritual_delete_entry_confirm': 'Er du sikker på, at du vil slette morgenritual for {date}?',
+    'morning_ritual_delete_entry_confirm':
+        'Er du sikker på, at du vil slette morgenritual for {date}?',
     'morning_ritual_entry_deleted': 'Indtastning slettet',
     'morning_ritual_previous': 'Forrige',
     'morning_ritual_start_over': 'Start Forfra',
-    'morning_ritual_start_over_confirm': 'Start forfra fra begyndelsen? Din nuværende fremgang vil gå tabt.',
+    'morning_ritual_start_over_confirm':
+        'Start forfra fra begyndelsen? Din nuværende fremgang vil gå tabt.',
     'more': 'mere',
     'show_less': 'Vis mindre',
     'show_more': 'Vis mere',
     // Help Content - Morning Ritual (Danish)
     'help_morning_ritual_title': 'Morgenritual - Formål & Vejledning',
     'help_morning_ritual_purpose_title': 'Hvorfor et Morgenritual?',
-    'help_morning_ritual_purpose': 'Den Store Bog (s.86-88) beskriver morgenmeditationen: "Ved opvågning lad os tænke på de fireogtyve timer forude... Før vi begynder, beder vi Gud om at lede vores tankegang." Dette værktøj hjælper med at etablere en konsistent morgenpraksis med bøn og meditation.',
+    'help_morning_ritual_purpose':
+        'Den Store Bog (s.86-88) beskriver morgenmeditationen: "Ved opvågning lad os tænke på de fireogtyve timer forude... Før vi begynder, beder vi Gud om at lede vores tankegang." Dette værktøj hjælper med at etablere en konsistent morgenpraksis med bøn og meditation.',
     'help_morning_ritual_items_title': 'Timere & Bønner',
-    'help_morning_ritual_items': 'Opret dit ritual med to typer elementer:\n• Timere - Til meditation eller stille bøn (med alarm når færdig)\n• Bønner - Vis tekst til bønner som 3. trins, 7. trins eller St. Frans bønnen\n\nArranger elementer i den rækkefølge du vil udføre dem.',
+    'help_morning_ritual_items':
+        'Opret dit ritual med to typer elementer:\n• Timere - Til meditation eller stille bøn (med alarm når færdig)\n• Bønner - Vis tekst til bønner som 3. trins, 7. trins eller St. Frans bønnen\n\nArranger elementer i den rækkefølge du vil udføre dem.',
     'help_morning_ritual_practice_title': 'Daglig Praksis',
-    'help_morning_ritual_practice': 'Hver morgen, start dit ritual fra I dag fanen. Fuldfør eller spring over hvert element. Din historik spores på kalenderen - grønne flueben for fuldførte elementer, rødt X for sprunget over eller misset. Konsistens bygger åndelig disciplin.',
-    
+    'help_morning_ritual_practice':
+        'Hver morgen, start dit ritual fra I dag fanen. Fuldfør eller spring over hvert element. Din historik spores på kalenderen - grønne flueben for fuldførte elementer, rødt X for sprunget over eller misset. Konsistens bygger åndelig disciplin.',
+
     // General Settings - Morning Ritual Auto-Load (Danish)
     'morning_ritual_settings': 'Morgenritual auto-indlæsning',
     'load_morning_ritual_toggle': 'Indlæs morgenritual om morgenen',
-    'load_morning_ritual_desc': 'Åbn automatisk Morgenritual-appen i det konfigurerede tidsvindue',
+    'load_morning_ritual_desc':
+        'Åbn automatisk Morgenritual-appen i det konfigurerede tidsvindue',
     'morning_start_time': 'Morgen starttid',
     'morning_end_time': 'Morgen sluttid',
     'morning_time_error': 'Starttid skal være før sluttid',

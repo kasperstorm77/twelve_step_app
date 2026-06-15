@@ -4,7 +4,7 @@ import 'package:hive_flutter/hive_flutter.dart';
 import '../../shared/models/app_entry.dart';
 
 /// Service for managing app selection and switching.
-/// 
+///
 /// Provides both synchronous access ([getSelectedAppId]) and reactive updates
 /// via [selectedAppNotifier] for UI components that need to rebuild on changes.
 class AppSwitcherService {
@@ -14,15 +14,14 @@ class AppSwitcherService {
   // ---------------------------------------------------------------------------
   // Reactive State Management
   // ---------------------------------------------------------------------------
-  
+
   /// Singleton ValueNotifier for reactive app selection changes.
   /// Use this with ValueListenableBuilder for automatic UI rebuilds.
-  static final ValueNotifier<String> _selectedAppNotifier = ValueNotifier<String>(
-    _loadInitialAppId(),
-  );
+  static final ValueNotifier<String> _selectedAppNotifier =
+      ValueNotifier<String>(_loadInitialAppId());
 
   /// Reactive notifier for selected app ID changes.
-  /// 
+  ///
   /// Example usage:
   /// ```dart
   /// ValueListenableBuilder<String>(
@@ -41,7 +40,9 @@ class AppSwitcherService {
         return selectedId ?? AvailableApps.fourthStepInventory;
       }
     } catch (e) {
-      if (kDebugMode) print('AppSwitcherService: Error loading initial app - $e');
+      if (kDebugMode) {
+        print('AppSwitcherService: Error loading initial app - $e');
+      }
     }
     return AvailableApps.fourthStepInventory;
   }
@@ -51,27 +52,31 @@ class AppSwitcherService {
   // ---------------------------------------------------------------------------
 
   /// Get the currently selected app ID (synchronous read).
-  /// 
+  ///
   /// For reactive updates, use [selectedAppNotifier] instead.
   static String getSelectedAppId() {
     return _selectedAppNotifier.value;
   }
 
   /// Set the currently selected app ID.
-  /// 
+  ///
   /// This updates both the persistent Hive storage and the reactive notifier,
   /// triggering rebuilds in any UI listening to [selectedAppNotifier].
   static Future<void> setSelectedAppId(String appId) async {
     try {
       final settingsBox = Hive.box(_settingsBoxName);
       await settingsBox.put(_selectedAppKey, appId);
-      
+
       // Update notifier AFTER successful persistence
       _selectedAppNotifier.value = appId;
-      
-      if (kDebugMode) print('AppSwitcherService: Selected app changed to $appId');
+
+      if (kDebugMode) {
+        print('AppSwitcherService: Selected app changed to $appId');
+      }
     } catch (e) {
-      if (kDebugMode) print('AppSwitcherService: Error setting selected app - $e');
+      if (kDebugMode) {
+        print('AppSwitcherService: Error setting selected app - $e');
+      }
     }
   }
 

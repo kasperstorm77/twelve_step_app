@@ -3,14 +3,14 @@ import 'package:hive_flutter/hive_flutter.dart';
 
 class LocaleProvider extends ChangeNotifier {
   Locale _locale = const Locale('en');
-  
+
   LocaleProvider() {
     // Load saved locale immediately on construction
     _loadSavedLocale();
   }
-  
+
   Locale get locale => _locale;
-  
+
   /// Load saved locale from Hive (called on construction)
   void _loadSavedLocale() {
     try {
@@ -26,13 +26,13 @@ class LocaleProvider extends ChangeNotifier {
       _locale = const Locale('en');
     }
   }
-  
+
   /// Change locale and persist to Hive
   Future<void> changeLocale(Locale locale) async {
     if (_locale != locale) {
       _locale = locale;
       notifyListeners();
-      
+
       // Save to Hive
       try {
         if (Hive.isBoxOpen('settings')) {

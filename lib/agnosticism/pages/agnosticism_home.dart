@@ -16,7 +16,8 @@ class AgnosticismHome extends StatefulWidget {
   State<AgnosticismHome> createState() => _AgnosticismHomeState();
 }
 
-class _AgnosticismHomeState extends State<AgnosticismHome> with SingleTickerProviderStateMixin {
+class _AgnosticismHomeState extends State<AgnosticismHome>
+    with SingleTickerProviderStateMixin {
   late final TabController _tabController;
   final _paperController = PaperTabController();
   final _forceShowBack = ValueNotifier<bool>(false);
@@ -30,7 +31,9 @@ class _AgnosticismHomeState extends State<AgnosticismHome> with SingleTickerProv
 
   void _onTabChanged() {
     // When animation completes and we're on paper tab (index 0) with forceShowBack set
-    if (!_tabController.indexIsChanging && _tabController.index == 0 && _forceShowBack.value) {
+    if (!_tabController.indexIsChanging &&
+        _tabController.index == 0 &&
+        _forceShowBack.value) {
       _paperController.showBackInstant();
       _forceShowBack.value = false;
     }
@@ -52,9 +55,7 @@ class _AgnosticismHomeState extends State<AgnosticismHome> with SingleTickerProv
   void _openDataManagement() async {
     await Navigator.push(
       context,
-      MaterialPageRoute(
-        builder: (context) => const DataManagementPage(),
-      ),
+      MaterialPageRoute(builder: (context) => const DataManagementPage()),
     );
     // Force rebuild after returning from Data Management
     // to ensure restored data is displayed
@@ -72,9 +73,9 @@ class _AgnosticismHomeState extends State<AgnosticismHome> with SingleTickerProv
       builder: (dialogContext) => AlertDialog(
         title: Text(
           t(context, 'select_app'),
-          style: Theme.of(context).textTheme.titleMedium?.copyWith(
-            fontWeight: FontWeight.bold,
-          ),
+          style: Theme.of(
+            context,
+          ).textTheme.titleMedium?.copyWith(fontWeight: FontWeight.bold),
         ),
         content: SingleChildScrollView(
           child: Column(
@@ -95,18 +96,25 @@ class _AgnosticismHomeState extends State<AgnosticismHome> with SingleTickerProv
                   child: Row(
                     children: [
                       Icon(
-                        isSelected ? Icons.radio_button_checked : Icons.radio_button_unchecked,
-                        color: isSelected ? Theme.of(context).colorScheme.primary : null,
+                        isSelected
+                            ? Icons.radio_button_checked
+                            : Icons.radio_button_unchecked,
+                        color: isSelected
+                            ? Theme.of(context).colorScheme.primary
+                            : null,
                         size: 20,
                       ),
                       const SizedBox(width: 12),
                       Expanded(
                         child: Text(
                           app.name,
-                          style: Theme.of(context).textTheme.bodyMedium?.copyWith(
-                            fontWeight: isSelected ? FontWeight.w600 : null,
-                            color: isSelected ? Theme.of(context).colorScheme.primary : null,
-                          ),
+                          style: Theme.of(context).textTheme.bodyMedium
+                              ?.copyWith(
+                                fontWeight: isSelected ? FontWeight.w600 : null,
+                                color: isSelected
+                                    ? Theme.of(context).colorScheme.primary
+                                    : null,
+                              ),
                         ),
                       ),
                     ],
@@ -130,7 +138,10 @@ class _AgnosticismHomeState extends State<AgnosticismHome> with SingleTickerProv
   Widget build(BuildContext context) {
     return Scaffold(
       appBar: AppBar(
-        title: Text(t(context, 'agnosticism_title'), style: const TextStyle(fontSize: 18)),
+        title: Text(
+          t(context, 'agnosticism_title'),
+          style: const TextStyle(fontSize: 18),
+        ),
         actions: [
           IconButton(
             icon: const Icon(Icons.apps),
@@ -142,10 +153,7 @@ class _AgnosticismHomeState extends State<AgnosticismHome> with SingleTickerProv
             icon: const Icon(Icons.help_outline),
             tooltip: t(context, 'help'),
             onPressed: () {
-              AppHelpService.showHelpDialog(
-                context,
-                AvailableApps.agnosticism,
-              );
+              AppHelpService.showHelpDialog(context, AvailableApps.agnosticism);
             },
             visualDensity: VisualDensity.compact,
           ),
@@ -157,8 +165,14 @@ class _AgnosticismHomeState extends State<AgnosticismHome> with SingleTickerProv
           PopupMenuButton<String>(
             onSelected: _changeLanguage,
             itemBuilder: (context) => [
-              PopupMenuItem(value: 'en', child: Text(t(context, 'lang_english'))),
-              PopupMenuItem(value: 'da', child: Text(t(context, 'lang_danish'))),
+              PopupMenuItem(
+                value: 'en',
+                child: Text(t(context, 'lang_english')),
+              ),
+              PopupMenuItem(
+                value: 'da',
+                child: Text(t(context, 'lang_danish')),
+              ),
             ],
             icon: const Icon(Icons.language),
             padding: EdgeInsets.zero,

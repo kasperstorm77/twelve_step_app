@@ -1,18 +1,18 @@
 // --------------------------------------------------------------------------
 // Windows Google Authentication Service - Windows Only
 // --------------------------------------------------------------------------
-// 
+//
 // PLATFORM SUPPORT: Windows only
 // This service provides automatic OAuth with credential caching,
 // similar to the mobile google_sign_in experience.
-// 
+//
 // Features:
 // - Loopback IP OAuth redirect (required by Google for desktop apps)
 // - Local HTTP server for OAuth callback
 // - Secure credential caching in Hive
 // - Silent sign-in support
 // - Automatic token refresh
-// 
+//
 // Usage: Only import and use when PlatformHelper.isWindows returns true.
 // --------------------------------------------------------------------------
 
@@ -34,35 +34,39 @@ class WindowsGoogleAuthService {
   // OAuth credentials from desktop_oauth_config.dart
   static const String _clientId = desktopOAuthClientId;
   static const String _clientSecret = desktopOAuthClientSecret;
-  
+
   final GoogleDriveConfig _config;
   final Box _credentialsBox;
-  
+
   auth.AccessCredentials? _credentials;
   HttpServer? _redirectServer;
-  
+
   static const String _credentialsKey = 'windows_google_credentials';
 
   WindowsGoogleAuthService({
     required GoogleDriveConfig config,
     required Box credentialsBox,
-  })  : _config = config,
-        _credentialsBox = credentialsBox;
+  }) : _config = config,
+       _credentialsBox = credentialsBox;
 
   /// Current access token
   String? get accessToken => _credentials?.accessToken.data;
-  
+
   /// Get drive config
   GoogleDriveConfig get config => _config;
-  
+
   /// Check if user is signed in
   bool get isSignedIn {
     final hasCredentials = _credentials != null;
     final tokenExpired = _isTokenExpired();
-    if (kDebugMode) print('WindowsGoogleAuthService: isSignedIn check - hasCredentials=$hasCredentials, tokenExpired=$tokenExpired');
+    if (kDebugMode) {
+      print(
+        'WindowsGoogleAuthService: isSignedIn check - hasCredentials=$hasCredentials, tokenExpired=$tokenExpired',
+      );
+    }
     return hasCredentials && !tokenExpired;
   }
-  
+
   /// Check if user has cached credentials (even if expired)
   bool get hasCachedCredentials => _credentialsBox.containsKey(_credentialsKey);
 
@@ -73,7 +77,7 @@ class WindowsGoogleAuthService {
       final cached = _credentialsBox.get(_credentialsKey);
       if (cached != null) {
         _credentials = _deserializeCredentials(cached);
-        
+
         // Check if token is expired and refresh if needed
         if (_isTokenExpired() && _credentials!.refreshToken != null) {
           final refreshed = await _refreshAccessToken();
@@ -100,9 +104,9 @@ class WindowsGoogleAuthService {
       _redirectServer = await HttpServer.bind(InternetAddress.loopbackIPv4, 0);
       final port = _redirectServer!.port;
       final redirectUri = 'http://127.0.0.1:$port';
-      
+
       if (kDebugMode) print('OAuth callback server started on $redirectUri');
-      
+
       // Create completer to wait for the OAuth callback
       final authCompleter = Completer<String?>();
 
@@ -119,13 +123,13 @@ class WindowsGoogleAuthService {
       // Listen for the OAuth callback
       _redirectServer!.listen((request) async {
         final uri = request.uri;
-        
+
         if (kDebugMode) print('Received callback: ${uri.path}?${uri.query}');
-        
+
         // Get authorization code from query params
         final code = uri.queryParameters['code'];
         final error = uri.queryParameters['error'];
-        
+
         // Ignore requests without code or error (favicon, etc.)
         if (code == null && error == null) {
           // Send empty response for non-OAuth requests
@@ -134,7 +138,7 @@ class WindowsGoogleAuthService {
             ..close();
           return;
         }
-        
+
         // Send response to browser
         if (code != null) {
           request.response
@@ -142,7 +146,7 @@ class WindowsGoogleAuthService {
             ..headers.contentType = ContentType.html
             ..write(_getSuccessHtml())
             ..close();
-          
+
           if (!authCompleter.isCompleted) {
             authCompleter.complete(code);
           }
@@ -152,7 +156,7 @@ class WindowsGoogleAuthService {
             ..headers.contentType = ContentType.html
             ..write(_getErrorHtml(error ?? 'Unknown error'))
             ..close();
-          
+
           if (!authCompleter.isCompleted) {
             authCompleter.complete(null);
           }
@@ -268,12 +272,12 @@ class WindowsGoogleAuthService {
   /// Create authenticated Drive client
   Future<GoogleDriveCrudClient?> createDriveClient() async {
     if (!isSignedIn) return null;
-    
+
     // Refresh token if expired
     if (_isTokenExpired() && _credentials!.refreshToken != null) {
       await _refreshAccessToken();
     }
-    
+
     return GoogleDriveCrudClient.create(
       accessToken: _credentials!.accessToken.data,
       config: _config,
@@ -285,11 +289,11 @@ class WindowsGoogleAuthService {
     if (_credentials == null || _credentials!.refreshToken == null) {
       return false;
     }
-    
+
     if (_isTokenExpired()) {
       return await _refreshAccessToken();
     }
-    
+
     return true;
   }
 
@@ -310,13 +314,15 @@ class WindowsGoogleAuthService {
 
       if (response.statusCode != 200) {
         if (kDebugMode) {
-          print('Token exchange failed: ${response.statusCode} ${response.body}');
+          print(
+            'Token exchange failed: ${response.statusCode} ${response.body}',
+          );
         }
         return false;
       }
 
       final tokens = json.decode(response.body) as Map<String, dynamic>;
-      
+
       _credentials = auth.AccessCredentials(
         auth.AccessToken(
           'Bearer',
@@ -354,13 +360,15 @@ class WindowsGoogleAuthService {
 
       if (response.statusCode != 200) {
         if (kDebugMode) {
-          print('Token refresh failed: ${response.statusCode} ${response.body}');
+          print(
+            'Token refresh failed: ${response.statusCode} ${response.body}',
+          );
         }
         return false;
       }
 
       final tokens = json.decode(response.body) as Map<String, dynamic>;
-      
+
       // Update credentials with new access token (keep existing refresh token)
       _credentials = auth.AccessCredentials(
         auth.AccessToken(
@@ -385,10 +393,10 @@ class WindowsGoogleAuthService {
   /// Check if access token is expired
   bool _isTokenExpired() {
     if (_credentials?.accessToken == null) return true;
-    
+
     final expiry = _credentials!.accessToken.expiry;
     final now = DateTime.now().toUtc();
-    
+
     // Consider expired if less than 5 minutes remaining
     return expiry.difference(now).inMinutes < 5;
   }
@@ -396,7 +404,7 @@ class WindowsGoogleAuthService {
   /// Cache credentials securely in Hive
   Future<void> _cacheCredentials() async {
     if (_credentials == null) return;
-    
+
     final serialized = _serializeCredentials(_credentials!);
     await _credentialsBox.put(_credentialsKey, serialized);
   }

@@ -23,9 +23,7 @@ class MorningRitualService {
 
   /// Get all active ritual items in order
   static List<RitualItem> getActiveRitualItems() {
-    return ritualItemsBox.values
-        .where((item) => item.isActive)
-        .toList()
+    return ritualItemsBox.values.where((item) => item.isActive).toList()
       ..sort((a, b) => a.sortOrder.compareTo(b.sortOrder));
   }
 
@@ -41,8 +39,8 @@ class MorningRitualService {
     final maxOrder = ritualItemsBox.values.isEmpty
         ? -1
         : ritualItemsBox.values
-            .map((i) => i.sortOrder)
-            .reduce((a, b) => a > b ? a : b);
+              .map((i) => i.sortOrder)
+              .reduce((a, b) => a > b ? a : b);
     final newItem = item.copyWith(sortOrder: maxOrder + 1);
     await ritualItemsBox.put(newItem.id, newItem);
     _triggerSync();
@@ -87,8 +85,7 @@ class MorningRitualService {
 
   /// Get all entries sorted by date descending
   static List<MorningRitualEntry> getAllEntries() {
-    return entriesBox.values.toList()
-      ..sort((a, b) => b.date.compareTo(a.date));
+    return entriesBox.values.toList()..sort((a, b) => b.date.compareTo(a.date));
   }
 
   /// Get entry for a specific date
@@ -129,9 +126,13 @@ class MorningRitualService {
     final endOfMonth = DateTime(month.year, month.month + 1, 0);
 
     return entriesBox.values
-        .where((entry) =>
-            entry.date.isAfter(startOfMonth.subtract(const Duration(days: 1))) &&
-            entry.date.isBefore(endOfMonth.add(const Duration(days: 1))))
+        .where(
+          (entry) =>
+              entry.date.isAfter(
+                startOfMonth.subtract(const Duration(days: 1)),
+              ) &&
+              entry.date.isBefore(endOfMonth.add(const Duration(days: 1))),
+        )
         .toList()
       ..sort((a, b) => b.date.compareTo(a.date));
   }
@@ -140,7 +141,11 @@ class MorningRitualService {
   static Map<DateTime, MorningRitualEntry> getEntriesByDay() {
     final Map<DateTime, MorningRitualEntry> map = {};
     for (var entry in entriesBox.values) {
-      final dateKey = DateTime(entry.date.year, entry.date.month, entry.date.day);
+      final dateKey = DateTime(
+        entry.date.year,
+        entry.date.month,
+        entry.date.day,
+      );
       map[dateKey] = entry;
     }
     return map;
@@ -150,11 +155,13 @@ class MorningRitualService {
   static Future<MorningRitualEntry> createMissedEntry(DateTime date) async {
     final activeItems = getActiveRitualItems();
     final missedRecords = activeItems
-        .map((item) => RitualItemRecord(
-              ritualItemId: item.id,
-              ritualItemName: item.name,
-              status: RitualItemStatus.missed,
-            ))
+        .map(
+          (item) => RitualItemRecord(
+            ritualItemId: item.id,
+            ritualItemName: item.name,
+            status: RitualItemStatus.missed,
+          ),
+        )
         .toList();
 
     final entry = MorningRitualEntry(
@@ -201,7 +208,9 @@ class MorningRitualService {
       };
       await Hive.box('settings').put(_progressKey, jsonEncode(data));
     } catch (e) {
-      if (kDebugMode) print('MorningRitualService: Failed to save progress - $e');
+      if (kDebugMode) {
+        print('MorningRitualService: Failed to save progress - $e');
+      }
     }
   }
 
@@ -233,7 +242,9 @@ class MorningRitualService {
     try {
       await Hive.box('settings').delete(_progressKey);
     } catch (e) {
-      if (kDebugMode) print('MorningRitualService: Failed to clear progress - $e');
+      if (kDebugMode) {
+        print('MorningRitualService: Failed to clear progress - $e');
+      }
     }
   }
 

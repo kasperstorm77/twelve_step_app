@@ -13,11 +13,7 @@ class IAmDefinition extends HiveObject {
   @HiveField(2)
   String? reasonToExist;
 
-  IAmDefinition({
-    required this.id,
-    required this.name,
-    this.reasonToExist,
-  });
+  IAmDefinition({required this.id, required this.name, this.reasonToExist});
 
   // Safe getter for reason to exist
   String get safeReasonToExist => reasonToExist ?? '';

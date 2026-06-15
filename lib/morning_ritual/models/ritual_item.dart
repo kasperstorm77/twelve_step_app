@@ -63,8 +63,8 @@ class RitualItem extends HiveObject {
     this.soundEnabled = true,
     this.soundId,
     DateTime? lastModified,
-  })  : id = id ?? const Uuid().v4(),
-        lastModified = lastModified ?? DateTime.now();
+  }) : id = id ?? const Uuid().v4(),
+       lastModified = lastModified ?? DateTime.now();
 
   /// Duration as a Duration object (for timers)
   Duration get duration => Duration(seconds: durationSeconds ?? 0);
@@ -109,18 +109,18 @@ class RitualItem extends HiveObject {
   }
 
   Map<String, dynamic> toJson() => {
-        'id': id,
-        'name': name,
-        'type': type.index,
-        'durationSeconds': durationSeconds,
-        'prayerText': prayerText,
-        'sortOrder': sortOrder,
-        'isActive': isActive,
-      'vibrateEnabled': vibrateEnabled,
-      'soundEnabled': soundEnabled,
-      'soundId': soundId,
-        'lastModified': lastModified.toIso8601String(),
-      };
+    'id': id,
+    'name': name,
+    'type': type.index,
+    'durationSeconds': durationSeconds,
+    'prayerText': prayerText,
+    'sortOrder': sortOrder,
+    'isActive': isActive,
+    'vibrateEnabled': vibrateEnabled,
+    'soundEnabled': soundEnabled,
+    'soundId': soundId,
+    'lastModified': lastModified.toIso8601String(),
+  };
 
   factory RitualItem.fromJson(Map<String, dynamic> json) {
     return RitualItem(

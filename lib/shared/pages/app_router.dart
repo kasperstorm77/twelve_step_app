@@ -10,7 +10,7 @@ import '../../agnosticism/pages/agnosticism_home.dart';
 import '../../notifications/pages/notifications_home.dart';
 
 /// Global app router that determines which app to display based on AppSwitcherService.
-/// 
+///
 /// Uses [ValueListenableBuilder] to automatically rebuild when the selected app
 /// changes, eliminating the need for manual setState calls or callback propagation.
 class AppRouter extends StatelessWidget {

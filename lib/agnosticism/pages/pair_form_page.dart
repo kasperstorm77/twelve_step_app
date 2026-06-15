@@ -8,11 +8,7 @@ class PairFormPage extends StatefulWidget {
   final Box<BarrierPowerPair> box;
   final BarrierPowerPair? editingPair;
 
-  const PairFormPage({
-    super.key,
-    required this.box,
-    this.editingPair,
-  });
+  const PairFormPage({super.key, required this.box, this.editingPair});
 
   @override
   State<PairFormPage> createState() => _PairFormPageState();
@@ -71,9 +67,9 @@ class _PairFormPageState extends State<PairFormPage> {
       builder: (context) => AlertDialog(
         title: Text(
           t(context, 'agnosticism_archive_title'),
-          style: Theme.of(context).textTheme.titleMedium?.copyWith(
-            fontWeight: FontWeight.bold,
-          ),
+          style: Theme.of(
+            context,
+          ).textTheme.titleMedium?.copyWith(fontWeight: FontWeight.bold),
         ),
         content: Text(t(context, 'agnosticism_archive_confirm')),
         actions: [
@@ -94,9 +90,7 @@ class _PairFormPageState extends State<PairFormPage> {
       if (!mounted) return;
       Navigator.pop(context);
       ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(
-          content: Text(t(context, 'agnosticism_pair_archived')),
-        ),
+        SnackBar(content: Text(t(context, 'agnosticism_pair_archived'))),
       );
     }
   }
@@ -107,9 +101,10 @@ class _PairFormPageState extends State<PairFormPage> {
 
     return Scaffold(
       appBar: AppBar(
-        title: Text(isEditing 
-            ? t(context, 'agnosticism_edit_pair')
-            : t(context, 'agnosticism_add_pair'),
+        title: Text(
+          isEditing
+              ? t(context, 'agnosticism_edit_pair')
+              : t(context, 'agnosticism_add_pair'),
         ),
       ),
       body: Form(
@@ -143,9 +138,9 @@ class _PairFormPageState extends State<PairFormPage> {
                 return null;
               },
             ),
-            
+
             const SizedBox(height: 24),
-            
+
             // Power field
             Text(
               t(context, 'agnosticism_power'),
@@ -172,22 +167,23 @@ class _PairFormPageState extends State<PairFormPage> {
                 return null;
               },
             ),
-            
+
             const SizedBox(height: 32),
-            
+
             // Save button
             FilledButton.icon(
               onPressed: _savePair,
               icon: Icon(isEditing ? Icons.save : Icons.add),
-              label: Text(isEditing 
-                  ? t(context, 'agnosticism_update')
-                  : t(context, 'agnosticism_add'),
+              label: Text(
+                isEditing
+                    ? t(context, 'agnosticism_update')
+                    : t(context, 'agnosticism_add'),
               ),
               style: FilledButton.styleFrom(
                 padding: const EdgeInsets.symmetric(vertical: 16),
               ),
             ),
-            
+
             // Archive button (only when editing)
             if (isEditing) ...[
               const SizedBox(height: 16),

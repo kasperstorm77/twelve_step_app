@@ -1,4 +1,4 @@
-﻿import 'dart:convert';
+import 'dart:convert';
 import 'dart:io';
 import 'dart:typed_data';
 import 'package:flutter/material.dart';
@@ -29,7 +29,8 @@ class _SettingsTabState extends State<SettingsTab> {
   Widget build(BuildContext context) {
     final iAmBox = Hive.box<IAmDefinition>('i_am_definitions');
     final theme = Theme.of(context);
-    final compactViewEnabled = AppSettingsService.getFourthStepCompactViewEnabled();
+    final compactViewEnabled =
+        AppSettingsService.getFourthStepCompactViewEnabled();
 
     return Scaffold(
       body: ValueListenableBuilder(
@@ -40,7 +41,10 @@ class _SettingsTabState extends State<SettingsTab> {
           return Column(
             children: [
               Padding(
-                padding: const EdgeInsets.symmetric(horizontal: 16.0, vertical: 8.0),
+                padding: const EdgeInsets.symmetric(
+                  horizontal: 16.0,
+                  vertical: 8.0,
+                ),
                 child: SizedBox(
                   width: double.infinity,
                   child: OutlinedButton.icon(
@@ -51,7 +55,10 @@ class _SettingsTabState extends State<SettingsTab> {
                 ),
               ),
               Padding(
-                padding: const EdgeInsets.symmetric(horizontal: 16.0, vertical: 8.0),
+                padding: const EdgeInsets.symmetric(
+                  horizontal: 16.0,
+                  vertical: 8.0,
+                ),
                 child: Card(
                   margin: EdgeInsets.zero,
                   child: Padding(
@@ -72,7 +79,9 @@ class _SettingsTabState extends State<SettingsTab> {
                               Text(
                                 t(context, 'fourth_step_compact_view_desc'),
                                 style: theme.textTheme.bodySmall?.copyWith(
-                                  color: theme.colorScheme.onSurface.withValues(alpha: 0.6),
+                                  color: theme.colorScheme.onSurface.withValues(
+                                    alpha: 0.6,
+                                  ),
                                 ),
                               ),
                             ],
@@ -81,8 +90,12 @@ class _SettingsTabState extends State<SettingsTab> {
                         Switch(
                           value: compactViewEnabled,
                           onChanged: (value) async {
-                            await AppSettingsService.setFourthStepCompactViewEnabled(value);
-                            AllAppsDriveService.instance.scheduleUploadFromBox(widget.box);
+                            await AppSettingsService.setFourthStepCompactViewEnabled(
+                              value,
+                            );
+                            AllAppsDriveService.instance.scheduleUploadFromBox(
+                              widget.box,
+                            );
                             if (mounted) setState(() {});
                           },
                         ),
@@ -92,7 +105,10 @@ class _SettingsTabState extends State<SettingsTab> {
                 ),
               ),
               Padding(
-                padding: const EdgeInsets.symmetric(horizontal: 16.0, vertical: 8.0),
+                padding: const EdgeInsets.symmetric(
+                  horizontal: 16.0,
+                  vertical: 8.0,
+                ),
                 child: SizedBox(
                   width: double.infinity,
                   child: ElevatedButton.icon(
@@ -137,7 +153,8 @@ class _SettingsTabState extends State<SettingsTab> {
                                 children: [
                                   Expanded(
                                     child: Column(
-                                      crossAxisAlignment: CrossAxisAlignment.start,
+                                      crossAxisAlignment:
+                                          CrossAxisAlignment.start,
                                       children: [
                                         Text(
                                           t(context, 'i_am_name'),
@@ -151,22 +168,34 @@ class _SettingsTabState extends State<SettingsTab> {
                                           style: theme.textTheme.bodyMedium,
                                         ),
                                         if (definition.reasonToExist != null &&
-                                            definition.reasonToExist!.isNotEmpty)
+                                            definition
+                                                .reasonToExist!
+                                                .isNotEmpty)
                                           Padding(
-                                            padding: const EdgeInsets.only(top: 4),
+                                            padding: const EdgeInsets.only(
+                                              top: 4,
+                                            ),
                                             child: Column(
-                                              crossAxisAlignment: CrossAxisAlignment.start,
+                                              crossAxisAlignment:
+                                                  CrossAxisAlignment.start,
                                               children: [
                                                 Text(
-                                                  t(context, 'reason_to_exist_optional'),
+                                                  t(
+                                                    context,
+                                                    'reason_to_exist_optional',
+                                                  ),
                                                   style: TextStyle(
-                                                    color: theme.colorScheme.primary,
+                                                    color: theme
+                                                        .colorScheme
+                                                        .primary,
                                                     fontWeight: FontWeight.w600,
                                                   ),
                                                 ),
                                                 Text(
                                                   definition.reasonToExist!,
-                                                  style: theme.textTheme.bodyMedium,
+                                                  style: theme
+                                                      .textTheme
+                                                      .bodyMedium,
                                                 ),
                                               ],
                                             ),
@@ -209,8 +238,9 @@ class _SettingsTabState extends State<SettingsTab> {
     IAmDefinition? definition,
   }) {
     final nameController = TextEditingController(text: definition?.name ?? '');
-    final reasonController =
-        TextEditingController(text: definition?.reasonToExist ?? '');
+    final reasonController = TextEditingController(
+      text: definition?.reasonToExist ?? '',
+    );
     final isEdit = definition != null;
 
     showDialog(
@@ -341,7 +371,10 @@ class _SettingsTabState extends State<SettingsTab> {
   String _escapeCsvValue(String? value) {
     if (value == null || value.isEmpty) return '';
     // If value contains semicolon, quote, or newline, wrap in quotes and escape quotes
-    if (value.contains(';') || value.contains('"') || value.contains('\n') || value.contains('\r')) {
+    if (value.contains(';') ||
+        value.contains('"') ||
+        value.contains('\n') ||
+        value.contains('\r')) {
       return '"${value.replaceAll('"', '""')}"';
     }
     return value;
@@ -363,30 +396,34 @@ class _SettingsTabState extends State<SettingsTab> {
 
   Future<void> _exportCsv(BuildContext context) async {
     final messenger = ScaffoldMessenger.of(context);
-    
+
     try {
       final entries = widget.box.values.toList();
       final iAmBox = Hive.box<IAmDefinition>('i_am_definitions');
-      
+
       if (entries.isEmpty) {
-        messenger.showSnackBar(SnackBar(content: Text(t(context, 'no_entries'))));
+        messenger.showSnackBar(
+          SnackBar(content: Text(t(context, 'no_entries'))),
+        );
         return;
       }
 
       // Build CSV content with semicolon separator (European locale compatible)
       final buffer = StringBuffer();
-      
+
       // Header row
-      buffer.writeln([
-        _escapeCsvValue(t(context, 'order')),
-        _escapeCsvValue(t(context, 'category')),
-        _escapeCsvValue(t(context, 'field1_header')),
-        _escapeCsvValue(t(context, 'i_am')),
-        _escapeCsvValue(t(context, 'field2_header')),
-        _escapeCsvValue(t(context, 'affect_my')),
-        _escapeCsvValue(t(context, 'my_take')),
-        _escapeCsvValue(t(context, 'shortcomings')),
-      ].join(';'));
+      buffer.writeln(
+        [
+          _escapeCsvValue(t(context, 'order')),
+          _escapeCsvValue(t(context, 'category')),
+          _escapeCsvValue(t(context, 'field1_header')),
+          _escapeCsvValue(t(context, 'i_am')),
+          _escapeCsvValue(t(context, 'field2_header')),
+          _escapeCsvValue(t(context, 'affect_my')),
+          _escapeCsvValue(t(context, 'my_take')),
+          _escapeCsvValue(t(context, 'shortcomings')),
+        ].join(';'),
+      );
 
       // Data rows
       for (final entry in entries) {
@@ -396,17 +433,19 @@ class _SettingsTabState extends State<SettingsTab> {
             .map((id) => _iAmService.getNameById(iAmBox, id))
             .where((name) => name != null)
             .join(', ');
-        
-        buffer.writeln([
-          _escapeCsvValue(entry.order?.toString() ?? ''),
-          _escapeCsvValue(_getCategoryName(context, category)),
-          _escapeCsvValue(entry.resentment),
-          _escapeCsvValue(iAmNames),
-          _escapeCsvValue(entry.reason),
-          _escapeCsvValue(entry.affect),
-          _escapeCsvValue(entry.part),
-          _escapeCsvValue(entry.defect),
-        ].join(';'));
+
+        buffer.writeln(
+          [
+            _escapeCsvValue(entry.order?.toString() ?? ''),
+            _escapeCsvValue(_getCategoryName(context, category)),
+            _escapeCsvValue(entry.resentment),
+            _escapeCsvValue(iAmNames),
+            _escapeCsvValue(entry.reason),
+            _escapeCsvValue(entry.affect),
+            _escapeCsvValue(entry.part),
+            _escapeCsvValue(entry.defect),
+          ].join(';'),
+        );
       }
 
       final csvString = buffer.toString();
@@ -414,16 +453,14 @@ class _SettingsTabState extends State<SettingsTab> {
       final bom = [0xEF, 0xBB, 0xBF];
       final csvBytes = utf8.encode(csvString);
       final bytes = Uint8List.fromList([...bom, ...csvBytes]);
-      final fileName = 'fourth_step_export_${DateTime.now().millisecondsSinceEpoch}.csv';
+      final fileName =
+          'fourth_step_export_${DateTime.now().millisecondsSinceEpoch}.csv';
 
       String? savedPath;
 
       if (PlatformHelper.isMobile) {
         // Mobile: Use flutter_file_dialog
-        final params = SaveFileDialogParams(
-          data: bytes,
-          fileName: fileName,
-        );
+        final params = SaveFileDialogParams(data: bytes, fileName: fileName);
         savedPath = await FlutterFileDialog.saveFile(params: params);
       } else if (PlatformHelper.isDesktop) {
         // Desktop: Use file_picker
@@ -441,11 +478,15 @@ class _SettingsTabState extends State<SettingsTab> {
 
       if (savedPath != null) {
         if (!context.mounted) return;
-        messenger.showSnackBar(SnackBar(content: Text('${t(context, 'csv_saved')}: $savedPath')));
+        messenger.showSnackBar(
+          SnackBar(content: Text('${t(context, 'csv_saved')}: $savedPath')),
+        );
       }
     } catch (e) {
       if (!context.mounted) return;
-      messenger.showSnackBar(SnackBar(content: Text('${t(context, 'export_failed')}: $e')));
+      messenger.showSnackBar(
+        SnackBar(content: Text('${t(context, 'export_failed')}: $e')),
+      );
     }
   }
 }

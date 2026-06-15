@@ -49,12 +49,12 @@ class RitualItemRecord {
   }
 
   Map<String, dynamic> toJson() => {
-        'ritualItemId': ritualItemId,
-        'ritualItemName': ritualItemName,
-        'status': status.index,
-        'actualDurationSeconds': actualDurationSeconds,
-        'originalDurationSeconds': originalDurationSeconds,
-      };
+    'ritualItemId': ritualItemId,
+    'ritualItemName': ritualItemName,
+    'status': status.index,
+    'actualDurationSeconds': actualDurationSeconds,
+    'originalDurationSeconds': originalDurationSeconds,
+  };
 
   factory RitualItemRecord.fromJson(Map<String, dynamic> json) {
     return RitualItemRecord(
@@ -95,8 +95,8 @@ class MorningRitualEntry extends HiveObject {
     this.startedAt,
     this.completedAt,
     DateTime? lastModified,
-  })  : id = id ?? const Uuid().v4(),
-        lastModified = lastModified ?? DateTime.now();
+  }) : id = id ?? const Uuid().v4(),
+       lastModified = lastModified ?? DateTime.now();
 
   /// Check if all items were completed successfully
   bool get isFullyCompleted =>
@@ -135,13 +135,13 @@ class MorningRitualEntry extends HiveObject {
   }
 
   Map<String, dynamic> toJson() => {
-        'id': id,
-        'date': date.toIso8601String().substring(0, 10),
-        'items': items.map((i) => i.toJson()).toList(),
-        'startedAt': startedAt?.toIso8601String(),
-        'completedAt': completedAt?.toIso8601String(),
-        'lastModified': lastModified.toIso8601String(),
-      };
+    'id': id,
+    'date': date.toIso8601String().substring(0, 10),
+    'items': items.map((i) => i.toJson()).toList(),
+    'startedAt': startedAt?.toIso8601String(),
+    'completedAt': completedAt?.toIso8601String(),
+    'lastModified': lastModified.toIso8601String(),
+  };
 
   factory MorningRitualEntry.fromJson(Map<String, dynamic> json) {
     return MorningRitualEntry(

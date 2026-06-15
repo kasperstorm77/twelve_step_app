@@ -5,7 +5,7 @@ import 'package:flutter/foundation.dart' show kIsWeb;
 /// Import this anywhere you need platform-specific code:
 /// ```dart
 /// import 'package:twelvestepsapp/shared/utils/platform_helper.dart';
-/// 
+///
 /// if (PlatformHelper.isAndroid) {
 ///   // Android-specific code
 /// } else if (PlatformHelper.isWindows) {

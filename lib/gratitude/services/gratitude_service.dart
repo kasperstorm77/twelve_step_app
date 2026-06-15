@@ -41,7 +41,11 @@ class GratitudeService {
   ) {
     final targetDate = DateTime(date.year, date.month, date.day);
     final entries = box.values.where((entry) {
-      final entryDate = DateTime(entry.date.year, entry.date.month, entry.date.day);
+      final entryDate = DateTime(
+        entry.date.year,
+        entry.date.month,
+        entry.date.day,
+      );
       return entryDate.isAtSameMomentAs(targetDate);
     }).toList();
     // Sort by creation time, newest first
@@ -57,7 +61,11 @@ class GratitudeService {
     final grouped = <DateTime, List<GratitudeEntry>>{};
 
     for (final entry in entries) {
-      final dateKey = DateTime(entry.date.year, entry.date.month, entry.date.day);
+      final dateKey = DateTime(
+        entry.date.year,
+        entry.date.month,
+        entry.date.day,
+      );
       if (!grouped.containsKey(dateKey)) {
         grouped[dateKey] = [];
       }

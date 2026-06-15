@@ -14,21 +14,25 @@ class InventoryService {
     if (entriesBox.isEmpty) {
       return;
     }
-    
+
     // Get only entries without order values
     final keysWithoutOrder = entriesBox.keys
         .where((key) => entriesBox.get(key)?.order == null)
         .toList();
-    
+
     if (keysWithoutOrder.isEmpty) {
       return;
     }
-    
-    if (kDebugMode) print('Migrating ${keysWithoutOrder.length} entries without order values...');
-    
+
+    if (kDebugMode) {
+      print(
+        'Migrating ${keysWithoutOrder.length} entries without order values...',
+      );
+    }
+
     // Sort by key (creation order) - oldest first
     keysWithoutOrder.sort((a, b) => (a as int).compareTo(b as int));
-    
+
     // Find the current max order value (from entries that already have order)
     int maxOrder = 0;
     for (final entry in entriesBox.values) {
@@ -36,7 +40,7 @@ class InventoryService {
         maxOrder = entry.order!;
       }
     }
-    
+
     // Assign order values starting from maxOrder + 1
     // Oldest unordered entry gets lowest new order, newest gets highest
     for (int i = 0; i < keysWithoutOrder.length; i++) {
@@ -46,8 +50,10 @@ class InventoryService {
         await entry.save();
       }
     }
-    
-    if (kDebugMode) print('✓ Migrated ${keysWithoutOrder.length} entries with order values');
+
+    if (kDebugMode) {
+      print('✓ Migrated ${keysWithoutOrder.length} entries with order values');
+    }
   }
 
   // Get all entries sorted by order (highest first = newest on top)
@@ -103,7 +109,9 @@ class InventoryService {
     if (newIndex < 0 || newIndex >= entries.length) return;
     if (oldIndex == newIndex) return;
 
-    if (kDebugMode) print('InventoryService: Reordering from $oldIndex to $newIndex');
+    if (kDebugMode) {
+      print('InventoryService: Reordering from $oldIndex to $newIndex');
+    }
 
     // Reassign order values based on new positions
     // After reorder, rebuild order values from scratch
@@ -113,15 +121,21 @@ class InventoryService {
     // Assign new order values (highest to lowest)
     for (int i = 0; i < entries.length; i++) {
       final newOrder = entries.length - i;
-      if (kDebugMode) print('InventoryService: Setting entry ${entries[i].id.substring(0, 8)} order to $newOrder (was ${entries[i].order})');
+      if (kDebugMode) {
+        print(
+          'InventoryService: Setting entry ${entries[i].id.substring(0, 8)} order to $newOrder (was ${entries[i].order})',
+        );
+      }
       entries[i].order = newOrder;
       await entries[i].save(); // HiveObject.save() updates in place
     }
-    
+
     if (kDebugMode) {
       // Verify the save worked by reading back from box
       final verifyEntries = getAllEntries();
-      print('InventoryService: After save, order values are: ${verifyEntries.map((e) => e.order).toList()}');
+      print(
+        'InventoryService: After save, order values are: ${verifyEntries.map((e) => e.order).toList()}',
+      );
     }
 
     AllAppsDriveService.instance.scheduleUploadFromBox(_box);

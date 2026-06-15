@@ -15,14 +15,15 @@ import '../models/app_notification.dart';
 class NotificationsService {
   static const String notificationsBoxName = 'notifications_box';
 
-  static final FlutterLocalNotificationsPlugin _plugin = FlutterLocalNotificationsPlugin();
+  static final FlutterLocalNotificationsPlugin _plugin =
+      FlutterLocalNotificationsPlugin();
   static bool _initialized = false;
 
   static Future<void> initialize() async {
     if (_initialized) return;
 
     tz.initializeTimeZones();
-    
+
     // Get the device's actual timezone
     try {
       final timezoneName = await FlutterTimezone.getLocalTimezone();
@@ -61,20 +62,27 @@ class NotificationsService {
   static Future<void> requestPermissionsIfNeeded() async {
     if (!PlatformHelper.isMobile) return;
 
-    final android = _plugin.resolvePlatformSpecificImplementation<AndroidFlutterLocalNotificationsPlugin>();
+    final android = _plugin
+        .resolvePlatformSpecificImplementation<
+          AndroidFlutterLocalNotificationsPlugin
+        >();
     if (android != null) {
       await android.requestNotificationsPermission();
       // Note: We use USE_EXACT_ALARM permission (auto-granted for alarm/reminder apps)
       // instead of SCHEDULE_EXACT_ALARM (requires Play Store declaration)
     }
 
-    final ios = _plugin.resolvePlatformSpecificImplementation<IOSFlutterLocalNotificationsPlugin>();
+    final ios = _plugin
+        .resolvePlatformSpecificImplementation<
+          IOSFlutterLocalNotificationsPlugin
+        >();
     if (ios != null) {
       final granted = await ios.requestPermissions(
-        alert: true, 
-        badge: true, 
+        alert: true,
+        badge: true,
         sound: true,
-        critical: true,  // Request critical alerts for time-sensitive notifications
+        critical:
+            true, // Request critical alerts for time-sensitive notifications
       );
       if (kDebugMode) {
         print('NotificationsService: iOS permissions granted = $granted');
@@ -85,8 +93,11 @@ class NotificationsService {
   /// Check and print iOS notification permission status (for debugging)
   static Future<void> checkPermissionStatus() async {
     if (!PlatformHelper.isMobile) return;
-    
-    final ios = _plugin.resolvePlatformSpecificImplementation<IOSFlutterLocalNotificationsPlugin>();
+
+    final ios = _plugin
+        .resolvePlatformSpecificImplementation<
+          IOSFlutterLocalNotificationsPlugin
+        >();
     if (ios != null) {
       final settings = await ios.checkPermissions();
       if (kDebugMode) {
@@ -98,7 +109,7 @@ class NotificationsService {
         print('  - isProvisionalEnabled: ${settings?.isProvisionalEnabled}');
       }
     }
-    
+
     // Also show pending notifications
     final pending = await _plugin.pendingNotificationRequests();
     if (kDebugMode) {
@@ -109,7 +120,8 @@ class NotificationsService {
     }
   }
 
-  static Box<AppNotification> get box => Hive.box<AppNotification>(notificationsBoxName);
+  static Box<AppNotification> get box =>
+      Hive.box<AppNotification>(notificationsBoxName);
 
   static Future<void> openBox() async {
     if (!Hive.isBoxOpen(notificationsBoxName)) {
@@ -161,13 +173,13 @@ class NotificationsService {
   static NotificationDetails _details(AppNotification notification) {
     // Use different channel IDs for sound/no-sound to avoid Android channel caching issues
     // Once a channel is created, its sound setting is fixed and can't be changed
-    final channelId = notification.soundEnabled 
-        ? 'daily_notifications_sound' 
+    final channelId = notification.soundEnabled
+        ? 'daily_notifications_sound'
         : 'daily_notifications_silent';
     final channelName = notification.soundEnabled
         ? 'Daily notifications (with sound)'
         : 'Daily notifications (silent)';
-    
+
     final androidDetails = AndroidNotificationDetails(
       channelId,
       channelName,
@@ -176,8 +188,8 @@ class NotificationsService {
       priority: Priority.high,
       playSound: notification.soundEnabled,
       enableVibration: notification.vibrateEnabled,
-      fullScreenIntent: true,  // This helps wake the device
-      category: AndroidNotificationCategory.alarm,  // Mark as alarm category
+      fullScreenIntent: true, // This helps wake the device
+      category: AndroidNotificationCategory.alarm, // Mark as alarm category
     );
 
     // For iOS: presentSound controls whether sound plays
@@ -234,23 +246,36 @@ class NotificationsService {
           uiLocalNotificationDateInterpretation:
               UILocalNotificationDateInterpretation.absoluteTime,
           androidScheduleMode: AndroidScheduleMode.inexactAllowWhileIdle,
-          matchDateTimeComponents: DateTimeComponents.time,  // Repeat daily at same time
+          matchDateTimeComponents:
+              DateTimeComponents.time, // Repeat daily at same time
           payload: notification.id,
         );
         if (kDebugMode) {
-          print('NotificationsService.schedule: zonedSchedule call completed (daily repeating)');
+          print(
+            'NotificationsService.schedule: zonedSchedule call completed (daily repeating)',
+          );
           // Verify it was scheduled
           final pending = await _plugin.pendingNotificationRequests();
           final found = pending.any((p) => p.id == notification.notificationId);
-          print('NotificationsService.schedule: Verified in pending list: $found');
+          print(
+            'NotificationsService.schedule: Verified in pending list: $found',
+          );
         }
       } else {
         // Weekly: schedule one per weekday. We allocate derived IDs.
         for (final weekday in notification.weekdays.toSet()) {
-          final derivedId = _derivedNotificationId(notification.notificationId, weekday);
-          final scheduledTime = _nextInstanceOfWeekday(weekday, notification.timeMinutes);
+          final derivedId = _derivedNotificationId(
+            notification.notificationId,
+            weekday,
+          );
+          final scheduledTime = _nextInstanceOfWeekday(
+            weekday,
+            notification.timeMinutes,
+          );
           if (kDebugMode) {
-            print('NotificationsService.schedule: scheduling weekly notification for weekday $weekday');
+            print(
+              'NotificationsService.schedule: scheduling weekly notification for weekday $weekday',
+            );
             print('  - Derived ID: $derivedId');
             print('  - Scheduled for: $scheduledTime');
           }
@@ -289,11 +314,15 @@ class NotificationsService {
     // (can happen after app reinstall when stale data exists)
     try {
       if (kDebugMode) {
-        print('NotificationsService.cancel: Cancelling notification id=${notification.notificationId}');
+        print(
+          'NotificationsService.cancel: Cancelling notification id=${notification.notificationId}',
+        );
       }
       await _plugin.cancel(notification.notificationId);
       for (var weekday = 1; weekday <= 7; weekday++) {
-        await _plugin.cancel(_derivedNotificationId(notification.notificationId, weekday));
+        await _plugin.cancel(
+          _derivedNotificationId(notification.notificationId, weekday),
+        );
       }
       if (kDebugMode) {
         print('NotificationsService.cancel: Successfully cancelled');
@@ -311,7 +340,9 @@ class NotificationsService {
     await openBox();
 
     if (kDebugMode) {
-      print('NotificationsService.rescheduleAll: Scheduling ${box.values.length} notifications');
+      print(
+        'NotificationsService.rescheduleAll: Scheduling ${box.values.length} notifications',
+      );
     }
 
     for (final notification in box.values) {
@@ -321,7 +352,9 @@ class NotificationsService {
     // Debug: List all pending notifications
     if (kDebugMode) {
       final pending = await _plugin.pendingNotificationRequests();
-      print('NotificationsService.rescheduleAll: ${pending.length} pending notifications:');
+      print(
+        'NotificationsService.rescheduleAll: ${pending.length} pending notifications:',
+      );
       for (final p in pending) {
         print('  - ID: ${p.id}, Title: ${p.title}');
       }
@@ -331,7 +364,7 @@ class NotificationsService {
   /// Show a test notification immediately (for debugging)
   static Future<void> showTestNotification() async {
     await initialize();
-    
+
     const androidDetails = AndroidNotificationDetails(
       'test_channel_sound',
       'Test notifications',
@@ -340,24 +373,29 @@ class NotificationsService {
       priority: Priority.high,
       playSound: true,
     );
-    
+
     const iosDetails = DarwinNotificationDetails(
       presentAlert: true,
       presentBadge: true,
       presentSound: true,
     );
-    
-    const details = NotificationDetails(android: androidDetails, iOS: iosDetails);
-    
+
+    const details = NotificationDetails(
+      android: androidDetails,
+      iOS: iosDetails,
+    );
+
     await _plugin.show(
       0,
       'Test Notification',
       'If you see this, notifications are working!',
       details,
     );
-    
+
     if (kDebugMode) {
-      print('NotificationsService.showTestNotification: Showed test notification');
+      print(
+        'NotificationsService.showTestNotification: Showed test notification',
+      );
     }
   }
 
@@ -373,19 +411,25 @@ class NotificationsService {
     await openBox();
 
     if (kDebugMode) {
-      print('NotificationsService.delete: Deleting notification id=${notification.id}');
+      print(
+        'NotificationsService.delete: Deleting notification id=${notification.id}',
+      );
       print('NotificationsService.delete: Box contains ${box.length} items');
       print('NotificationsService.delete: Box keys: ${box.keys.toList()}');
-      print('NotificationsService.delete: Key exists: ${box.containsKey(notification.id)}');
+      print(
+        'NotificationsService.delete: Key exists: ${box.containsKey(notification.id)}',
+      );
     }
 
     await cancel(notification);
     await box.delete(notification.id);
-    
+
     if (kDebugMode) {
-      print('NotificationsService.delete: After delete, box contains ${box.length} items');
+      print(
+        'NotificationsService.delete: After delete, box contains ${box.length} items',
+      );
     }
-    
+
     _triggerSync();
   }
 

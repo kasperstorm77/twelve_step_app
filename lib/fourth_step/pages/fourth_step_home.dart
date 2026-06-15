@@ -40,9 +40,10 @@ class _ModularInventoryHomeState extends State<ModularInventoryHome>
   final _listScrollController = ScrollController();
   double? _savedScrollPosition;
 
-  dynamic editingKey;  // Hive key of entry being edited (null if adding new)
-  List<String> selectedIAmIds = [];  // Selected I Am definition IDs (multiple)
-  InventoryCategory selectedCategory = InventoryCategory.resentment;  // Selected category
+  dynamic editingKey; // Hive key of entry being edited (null if adding new)
+  List<String> selectedIAmIds = []; // Selected I Am definition IDs (multiple)
+  InventoryCategory selectedCategory =
+      InventoryCategory.resentment; // Selected category
   bool get isEditing => editingKey != null;
 
   @override
@@ -50,9 +51,9 @@ class _ModularInventoryHomeState extends State<ModularInventoryHome>
     super.initState();
     _tabController = TabController(length: 3, vsync: this);
     _inventoryService = InventoryService();
-    
+
     AllAppsDriveService.instance.loadSyncState();
-    
+
     // Note: No longer listening to all upload events to avoid showing notifications
     // for background sync. User-initiated actions in Settings show their own notifications.
     // Sync is handled automatically via timestamp comparison in main.dart
@@ -107,7 +108,7 @@ class _ModularInventoryHomeState extends State<ModularInventoryHome>
       _savedScrollPosition = null;
     });
     _tabController.animateTo(1); // Switch to list tab
-    
+
     // Restore scroll position after switching to list tab
     // Use Future.delayed to wait for tab animation and list rebuild
     if (savedPosition != null) {
@@ -125,8 +126,10 @@ class _ModularInventoryHomeState extends State<ModularInventoryHome>
 
   Future<void> _saveEntry() async {
     // When editing, preserve the existing entry's ID and order
-    final existingEntry = editingKey != null ? _inventoryService.getEntryByKey(editingKey) : null;
-    
+    final existingEntry = editingKey != null
+        ? _inventoryService.getEntryByKey(editingKey)
+        : null;
+
     final entry = InventoryEntry(
       _resentmentController.text,
       _reasonController.text,
@@ -135,10 +138,10 @@ class _ModularInventoryHomeState extends State<ModularInventoryHome>
       _defectController.text,
       iAmIds: selectedIAmIds.isNotEmpty ? selectedIAmIds : null,
       category: selectedCategory,
-      id: existingEntry?.id,  // Preserve ID when editing
-      order: existingEntry?.order,  // Preserve order when editing
+      id: existingEntry?.id, // Preserve ID when editing
+      order: existingEntry?.order, // Preserve order when editing
     );
-    
+
     if (isEditing && editingKey != null) {
       await _inventoryService.updateEntryByKey(editingKey, entry);
     } else {
@@ -160,9 +163,7 @@ class _ModularInventoryHomeState extends State<ModularInventoryHome>
   void _openDataManagement() async {
     await Navigator.push(
       context,
-      MaterialPageRoute(
-        builder: (context) => const DataManagementPage(),
-      ),
+      MaterialPageRoute(builder: (context) => const DataManagementPage()),
     );
     // Force rebuild after returning from Data Management
     // to ensure restored data is displayed
@@ -180,9 +181,9 @@ class _ModularInventoryHomeState extends State<ModularInventoryHome>
       builder: (dialogContext) => AlertDialog(
         title: Text(
           t(context, 'select_app'),
-          style: Theme.of(context).textTheme.titleMedium?.copyWith(
-            fontWeight: FontWeight.bold,
-          ),
+          style: Theme.of(
+            context,
+          ).textTheme.titleMedium?.copyWith(fontWeight: FontWeight.bold),
         ),
         content: SingleChildScrollView(
           child: Column(
@@ -203,18 +204,25 @@ class _ModularInventoryHomeState extends State<ModularInventoryHome>
                   child: Row(
                     children: [
                       Icon(
-                        isSelected ? Icons.radio_button_checked : Icons.radio_button_unchecked,
-                        color: isSelected ? Theme.of(context).colorScheme.primary : null,
+                        isSelected
+                            ? Icons.radio_button_checked
+                            : Icons.radio_button_unchecked,
+                        color: isSelected
+                            ? Theme.of(context).colorScheme.primary
+                            : null,
                         size: 20,
                       ),
                       const SizedBox(width: 12),
                       Expanded(
                         child: Text(
                           app.name,
-                          style: Theme.of(context).textTheme.bodyMedium?.copyWith(
-                            fontWeight: isSelected ? FontWeight.w600 : null,
-                            color: isSelected ? Theme.of(context).colorScheme.primary : null,
-                          ),
+                          style: Theme.of(context).textTheme.bodyMedium
+                              ?.copyWith(
+                                fontWeight: isSelected ? FontWeight.w600 : null,
+                                color: isSelected
+                                    ? Theme.of(context).colorScheme.primary
+                                    : null,
+                              ),
                         ),
                       ),
                     ],
@@ -240,7 +248,10 @@ class _ModularInventoryHomeState extends State<ModularInventoryHome>
     // Routing to other apps is handled by AppRouter
     return Scaffold(
       appBar: AppBar(
-        title: Text(t(context, 'app_title'), style: const TextStyle(fontSize: 18)),
+        title: Text(
+          t(context, 'app_title'),
+          style: const TextStyle(fontSize: 18),
+        ),
         actions: [
           // App Switcher Icon
           IconButton(
@@ -273,8 +284,14 @@ class _ModularInventoryHomeState extends State<ModularInventoryHome>
           PopupMenuButton<String>(
             onSelected: _changeLanguage,
             itemBuilder: (context) => [
-              PopupMenuItem(value: 'en', child: Text(t(context, 'lang_english'))),
-              PopupMenuItem(value: 'da', child: Text(t(context, 'lang_danish'))),
+              PopupMenuItem(
+                value: 'en',
+                child: Text(t(context, 'lang_english')),
+              ),
+              PopupMenuItem(
+                value: 'da',
+                child: Text(t(context, 'lang_danish')),
+              ),
             ],
             icon: const Icon(Icons.language),
             padding: EdgeInsets.zero,

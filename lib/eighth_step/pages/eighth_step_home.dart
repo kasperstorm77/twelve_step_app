@@ -19,16 +19,15 @@ class EighthStepHome extends StatefulWidget {
 }
 
 class _EighthStepHomeState extends State<EighthStepHome> {
-
   void _showEditPersonDialog(String internalId) {
     final box = Hive.box<Person>('people_box');
     final person = box.values.cast<Person?>().firstWhere(
       (p) => p?.internalId == internalId,
       orElse: () => null,
     );
-    
+
     if (person == null) return;
-    
+
     showDialog(
       context: context,
       builder: (context) => settings.PersonEditDialog(
@@ -57,9 +56,7 @@ class _EighthStepHomeState extends State<EighthStepHome> {
   void _openDataManagement() async {
     await Navigator.push(
       context,
-      MaterialPageRoute(
-        builder: (context) => const DataManagementPage(),
-      ),
+      MaterialPageRoute(builder: (context) => const DataManagementPage()),
     );
     // Force rebuild after returning from Data Management
     // to ensure restored data is displayed
@@ -77,9 +74,9 @@ class _EighthStepHomeState extends State<EighthStepHome> {
       builder: (dialogContext) => AlertDialog(
         title: Text(
           t(context, 'select_app'),
-          style: Theme.of(context).textTheme.titleMedium?.copyWith(
-            fontWeight: FontWeight.bold,
-          ),
+          style: Theme.of(
+            context,
+          ).textTheme.titleMedium?.copyWith(fontWeight: FontWeight.bold),
         ),
         content: SingleChildScrollView(
           child: Column(
@@ -100,18 +97,25 @@ class _EighthStepHomeState extends State<EighthStepHome> {
                   child: Row(
                     children: [
                       Icon(
-                        isSelected ? Icons.radio_button_checked : Icons.radio_button_unchecked,
-                        color: isSelected ? Theme.of(context).colorScheme.primary : null,
+                        isSelected
+                            ? Icons.radio_button_checked
+                            : Icons.radio_button_unchecked,
+                        color: isSelected
+                            ? Theme.of(context).colorScheme.primary
+                            : null,
                         size: 20,
                       ),
                       const SizedBox(width: 12),
                       Expanded(
                         child: Text(
                           app.name,
-                          style: Theme.of(context).textTheme.bodyMedium?.copyWith(
-                            fontWeight: isSelected ? FontWeight.w600 : null,
-                            color: isSelected ? Theme.of(context).colorScheme.primary : null,
-                          ),
+                          style: Theme.of(context).textTheme.bodyMedium
+                              ?.copyWith(
+                                fontWeight: isSelected ? FontWeight.w600 : null,
+                                color: isSelected
+                                    ? Theme.of(context).colorScheme.primary
+                                    : null,
+                              ),
                         ),
                       ),
                     ],
@@ -135,7 +139,10 @@ class _EighthStepHomeState extends State<EighthStepHome> {
   Widget build(BuildContext context) {
     return Scaffold(
       appBar: AppBar(
-        title: Text(t(context, 'eighth_step_title'), style: const TextStyle(fontSize: 18)),
+        title: Text(
+          t(context, 'eighth_step_title'),
+          style: const TextStyle(fontSize: 18),
+        ),
         actions: [
           // App Switcher Icon
           IconButton(
@@ -168,8 +175,14 @@ class _EighthStepHomeState extends State<EighthStepHome> {
           PopupMenuButton<String>(
             onSelected: _changeLanguage,
             itemBuilder: (context) => [
-              PopupMenuItem(value: 'en', child: Text(t(context, 'lang_english'))),
-              PopupMenuItem(value: 'da', child: Text(t(context, 'lang_danish'))),
+              PopupMenuItem(
+                value: 'en',
+                child: Text(t(context, 'lang_english')),
+              ),
+              PopupMenuItem(
+                value: 'da',
+                child: Text(t(context, 'lang_danish')),
+              ),
             ],
             icon: const Icon(Icons.language),
             padding: EdgeInsets.zero,
@@ -212,28 +225,51 @@ class EighthStepMainTab extends StatelessWidget {
       valueListenable: Hive.box<Person>('people_box').listenable(),
       builder: (context, box, widget) {
         final people = box.values.toList();
-        
+
         // Sort by sortOrder within each column
-        final yesPeople = people.where((p) => p.column == ColumnType.yes).toList()
-          ..sort((a, b) => a.sortOrder.compareTo(b.sortOrder));
+        final yesPeople =
+            people.where((p) => p.column == ColumnType.yes).toList()
+              ..sort((a, b) => a.sortOrder.compareTo(b.sortOrder));
         final noPeople = people.where((p) => p.column == ColumnType.no).toList()
           ..sort((a, b) => a.sortOrder.compareTo(b.sortOrder));
-        final maybePeople = people.where((p) => p.column == ColumnType.maybe).toList()
-          ..sort((a, b) => a.sortOrder.compareTo(b.sortOrder));
+        final maybePeople =
+            people.where((p) => p.column == ColumnType.maybe).toList()
+              ..sort((a, b) => a.sortOrder.compareTo(b.sortOrder));
 
-        Widget buildColumnHeader(String label, int count, {bool isFirst = false, bool isLast = false}) {
+        Widget buildColumnHeader(
+          String label,
+          int count, {
+          bool isFirst = false,
+          bool isLast = false,
+        }) {
           return Expanded(
             child: Container(
               padding: const EdgeInsets.symmetric(vertical: 10, horizontal: 8),
               decoration: BoxDecoration(
                 color: Theme.of(context).colorScheme.surfaceContainerHighest,
                 border: Border(
-                  top: BorderSide(color: Theme.of(context).colorScheme.outline.withValues(alpha: 0.3)),
-                  bottom: BorderSide(color: Theme.of(context).colorScheme.outline.withValues(alpha: 0.3)),
-                  left: isFirst 
-                      ? BorderSide(color: Theme.of(context).colorScheme.outline.withValues(alpha: 0.3))
+                  top: BorderSide(
+                    color: Theme.of(
+                      context,
+                    ).colorScheme.outline.withValues(alpha: 0.3),
+                  ),
+                  bottom: BorderSide(
+                    color: Theme.of(
+                      context,
+                    ).colorScheme.outline.withValues(alpha: 0.3),
+                  ),
+                  left: isFirst
+                      ? BorderSide(
+                          color: Theme.of(
+                            context,
+                          ).colorScheme.outline.withValues(alpha: 0.3),
+                        )
                       : BorderSide.none,
-                  right: BorderSide(color: Theme.of(context).colorScheme.outline.withValues(alpha: 0.3)),
+                  right: BorderSide(
+                    color: Theme.of(
+                      context,
+                    ).colorScheme.outline.withValues(alpha: 0.3),
+                  ),
                 ),
               ),
               child: Row(
@@ -242,18 +278,31 @@ class EighthStepMainTab extends StatelessWidget {
                   Flexible(
                     child: Text(
                       label,
-                      style: Theme.of(context).textTheme.titleSmall?.copyWith(fontWeight: FontWeight.w600),
+                      style: Theme.of(context).textTheme.titleSmall?.copyWith(
+                        fontWeight: FontWeight.w600,
+                      ),
                       overflow: TextOverflow.ellipsis,
                     ),
                   ),
                   const SizedBox(width: 6),
                   Container(
-                    padding: const EdgeInsets.symmetric(vertical: 1, horizontal: 5),
+                    padding: const EdgeInsets.symmetric(
+                      vertical: 1,
+                      horizontal: 5,
+                    ),
                     decoration: BoxDecoration(
-                      color: Theme.of(context).colorScheme.primary.withValues(alpha: 0.15),
+                      color: Theme.of(
+                        context,
+                      ).colorScheme.primary.withValues(alpha: 0.15),
                       borderRadius: BorderRadius.circular(4),
                     ),
-                    child: Text('$count', style: const TextStyle(fontSize: 11, fontWeight: FontWeight.w500)),
+                    child: Text(
+                      '$count',
+                      style: const TextStyle(
+                        fontSize: 11,
+                        fontWeight: FontWeight.w500,
+                      ),
+                    ),
                   ),
                 ],
               ),
@@ -276,9 +325,20 @@ class EighthStepMainTab extends StatelessWidget {
             // Headers row - connected with straight corners
             Row(
               children: [
-                buildColumnHeader(t(context, 'eighth_step_yes'), yesPeople.length, isFirst: true),
-                buildColumnHeader(t(context, 'eighth_step_no'), noPeople.length),
-                buildColumnHeader(t(context, 'eighth_step_maybe'), maybePeople.length, isLast: true),
+                buildColumnHeader(
+                  t(context, 'eighth_step_yes'),
+                  yesPeople.length,
+                  isFirst: true,
+                ),
+                buildColumnHeader(
+                  t(context, 'eighth_step_no'),
+                  noPeople.length,
+                ),
+                buildColumnHeader(
+                  t(context, 'eighth_step_maybe'),
+                  maybePeople.length,
+                  isLast: true,
+                ),
               ],
             ),
             // Content columns
@@ -334,7 +394,8 @@ class _DroppableColumnState extends State<_DroppableColumn> {
   }
 
   int _calculateDropIndex(Offset globalPosition) {
-    final listRenderBox = _listKey.currentContext?.findRenderObject() as RenderBox?;
+    final listRenderBox =
+        _listKey.currentContext?.findRenderObject() as RenderBox?;
     if (listRenderBox == null) return widget.items.length;
 
     final localY = listRenderBox.globalToLocal(globalPosition).dy;
@@ -344,7 +405,8 @@ class _DroppableColumnState extends State<_DroppableColumn> {
       final key = _itemKeys[i];
       if (key?.currentContext == null) continue;
 
-      final itemRenderBox = key!.currentContext!.findRenderObject() as RenderBox?;
+      final itemRenderBox =
+          key!.currentContext!.findRenderObject() as RenderBox?;
       if (itemRenderBox == null) continue;
 
       final itemPosition = itemRenderBox.localToGlobal(Offset.zero);
@@ -367,35 +429,37 @@ class _DroppableColumnState extends State<_DroppableColumn> {
     // to the target column's items (since dragged item isn't in this column).
     // When dropping within the same column, we need to account for the fact
     // that the dragged item is still visually present but will be "moved".
-    
+
     // For calculating sort order, we need the list WITHOUT the dragged person
     final columnPeopleWithoutDragged = widget.items
         .where((p) => p.internalId != person.internalId)
         .toList();
-    
+
     // For same-column drags, we need to think in terms of the filtered list
     // The insertIndex is based on visual position including the dragged item
     int targetIndex = insertIndex;
-    
+
     if (person.column == widget.columnType) {
       // Find original position in the visual list (which includes the dragged item)
-      final originalIndex = widget.items.indexWhere((p) => p.internalId == person.internalId);
-      
-      // When dragging down (insertIndex > originalIndex), the visual indicator 
+      final originalIndex = widget.items.indexWhere(
+        (p) => p.internalId == person.internalId,
+      );
+
+      // When dragging down (insertIndex > originalIndex), the visual indicator
       // is below where we'll actually insert in the filtered list
       // When dragging up (insertIndex < originalIndex), no adjustment needed
       if (originalIndex != -1 && insertIndex > originalIndex) {
         targetIndex = insertIndex - 1;
       }
     }
-    
+
     // Clamp target index to valid range for the filtered list
     targetIndex = targetIndex.clamp(0, columnPeopleWithoutDragged.length);
 
     // Calculate new sort order based on position in filtered list
     int newSortOrder;
     bool needsRebalance = false;
-    
+
     if (columnPeopleWithoutDragged.isEmpty) {
       newSortOrder = 1000;
     } else if (targetIndex == 0) {
@@ -409,7 +473,7 @@ class _DroppableColumnState extends State<_DroppableColumn> {
       final before = columnPeopleWithoutDragged[targetIndex - 1].sortOrder;
       final after = columnPeopleWithoutDragged[targetIndex].sortOrder;
       final gap = after - before;
-      
+
       if (gap <= 1) {
         // Gap is too small - need to rebalance after insertion
         needsRebalance = true;
@@ -426,21 +490,20 @@ class _DroppableColumnState extends State<_DroppableColumn> {
     );
     updated.lastModified = DateTime.now();
     await PersonService.updatePerson(updated);
-    
+
     // Rebalance if needed - reassign evenly-spaced sortOrders to all items in column
     if (needsRebalance) {
       await _rebalanceColumn();
     }
   }
-  
+
   Future<void> _rebalanceColumn() async {
     // Get all people in this column, sorted by current sortOrder
     final box = Hive.box<Person>('people_box');
-    final columnPeople = box.values
-        .where((p) => p.column == widget.columnType)
-        .toList()
-      ..sort((a, b) => a.sortOrder.compareTo(b.sortOrder));
-    
+    final columnPeople =
+        box.values.where((p) => p.column == widget.columnType).toList()
+          ..sort((a, b) => a.sortOrder.compareTo(b.sortOrder));
+
     // Reassign sortOrders with large gaps (1000 apart)
     for (int i = 0; i < columnPeople.length; i++) {
       final newOrder = (i + 1) * 1000;
@@ -472,11 +535,11 @@ class _DroppableColumnState extends State<_DroppableColumn> {
       },
       builder: (context, candidateData, rejectedData) {
         final isDraggingOver = candidateData.isNotEmpty;
-        
+
         return Container(
           decoration: BoxDecoration(
-            color: isDraggingOver 
-                ? Theme.of(context).colorScheme.primary.withValues(alpha: 0.04) 
+            color: isDraggingOver
+                ? Theme.of(context).colorScheme.primary.withValues(alpha: 0.04)
                 : null,
           ),
           child: ListView(
@@ -486,8 +549,7 @@ class _DroppableColumnState extends State<_DroppableColumn> {
               // Build items with drop indicators
               for (int i = 0; i <= widget.items.length; i++) ...[
                 // Drop indicator before this position
-                if (isDraggingOver && _hoverIndex == i)
-                  _DropIndicator(),
+                if (isDraggingOver && _hoverIndex == i) _DropIndicator(),
                 // The actual item (if not past the end)
                 if (i < widget.items.length)
                   Draggable<Person>(
@@ -555,7 +617,12 @@ class PersonCard extends StatelessWidget {
   final Function(String) onViewPerson;
   final bool isDragging;
 
-  const PersonCard({super.key, required this.person, required this.onViewPerson, this.isDragging = false});
+  const PersonCard({
+    super.key,
+    required this.person,
+    required this.onViewPerson,
+    this.isDragging = false,
+  });
 
   @override
   Widget build(BuildContext context) {
@@ -566,13 +633,15 @@ class PersonCard extends StatelessWidget {
         border: Border.all(
           color: Theme.of(context).colorScheme.outline.withValues(alpha: 0.3),
         ),
-        boxShadow: isDragging ? [
-          BoxShadow(
-            color: Colors.black.withValues(alpha: 0.15),
-            blurRadius: 8,
-            offset: const Offset(0, 2),
-          ),
-        ] : null,
+        boxShadow: isDragging
+            ? [
+                BoxShadow(
+                  color: Colors.black.withValues(alpha: 0.15),
+                  blurRadius: 8,
+                  offset: const Offset(0, 2),
+                ),
+              ]
+            : null,
       ),
       child: Padding(
         padding: const EdgeInsets.symmetric(horizontal: 8.0, vertical: 6.0),

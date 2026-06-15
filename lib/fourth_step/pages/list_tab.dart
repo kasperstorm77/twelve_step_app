@@ -9,11 +9,13 @@ import '../../shared/services/app_settings_service.dart';
 
 class ListTab extends StatefulWidget {
   final Box<InventoryEntry> box;
-  final void Function(dynamic key) onEdit;  // Now uses Hive key instead of index
-  final void Function(dynamic key)? onDelete;  // Now uses Hive key instead of index
+  final void Function(dynamic key) onEdit; // Now uses Hive key instead of index
+  final void Function(dynamic key)?
+  onDelete; // Now uses Hive key instead of index
   final bool isProcessing;
   final ScrollController? scrollController;
-  final TextEditingController? filterController;  // Filter controller from parent (persistent)
+  final TextEditingController?
+  filterController; // Filter controller from parent (persistent)
 
   const ListTab({
     super.key,
@@ -36,7 +38,7 @@ class _ListTabState extends State<ListTab> {
   String _filterText = '';
 
   final Set<String> _expandedEntryIds = {};
-  
+
   // Category filter - all enabled by default
   final Set<InventoryCategory> _selectedCategories = {
     InventoryCategory.resentment,
@@ -59,7 +61,11 @@ class _ListTabState extends State<ListTab> {
   /// Builds a heading + value pair where the heading uses the same blue,
   /// bold styling used for I Am names and the value is on a new line.
   /// Always shows the heading, but only adds spacing when there's data.
-  Widget _buildHeadingValue(BuildContext context, String headingKey, String value) {
+  Widget _buildHeadingValue(
+    BuildContext context,
+    String headingKey,
+    String value,
+  ) {
     final theme = Theme.of(context);
     final hasValue = value.isNotEmpty;
     return Padding(
@@ -74,8 +80,7 @@ class _ListTabState extends State<ListTab> {
               fontWeight: FontWeight.w600,
             ),
           ),
-          if (hasValue)
-            Text(value, style: theme.textTheme.bodyMedium),
+          if (hasValue) Text(value, style: theme.textTheme.bodyMedium),
         ],
       ),
     );
@@ -262,7 +267,9 @@ class _ListTabState extends State<ListTab> {
                         child: const Icon(Icons.clear, size: 20),
                       )
                     : null,
-                border: OutlineInputBorder(borderRadius: BorderRadius.circular(8)),
+                border: OutlineInputBorder(
+                  borderRadius: BorderRadius.circular(8),
+                ),
                 contentPadding: const EdgeInsets.symmetric(horizontal: 12),
               ),
             ),
@@ -298,7 +305,9 @@ class _ListTabState extends State<ListTab> {
                           border: Border.all(
                             color: isSelected
                                 ? theme.colorScheme.primary
-                                : theme.colorScheme.outline.withValues(alpha: 0.5),
+                                : theme.colorScheme.outline.withValues(
+                                    alpha: 0.5,
+                                  ),
                           ),
                         ),
                         child: Center(
@@ -344,22 +353,29 @@ class _ListTabState extends State<ListTab> {
 
                         // Apply category filter
                         entries = entries
-                            .where((e) =>
-                                _selectedCategories.contains(e.effectiveCategory))
+                            .where(
+                              (e) => _selectedCategories.contains(
+                                e.effectiveCategory,
+                              ),
+                            )
                             .toList();
 
                         // Apply text filter if 2+ characters entered (wildcard on resentment field)
                         if (_filterText.length >= 2) {
                           final filterLower = _filterText.toLowerCase();
                           entries = entries
-                              .where((e) =>
-                                  e.safeResentment.toLowerCase().contains(filterLower))
+                              .where(
+                                (e) => e.safeResentment.toLowerCase().contains(
+                                  filterLower,
+                                ),
+                              )
                               .toList();
                         }
 
                         if (entries.isEmpty) {
                           return Center(
-                              child: Text(t(context, 'no_matching_entries')));
+                            child: Text(t(context, 'no_matching_entries')),
+                          );
                         }
 
                         return ReorderableListView.builder(
@@ -367,21 +383,27 @@ class _ListTabState extends State<ListTab> {
                           scrollController: widget.scrollController,
                           buildDefaultDragHandles: false,
                           padding: EdgeInsets.only(
-                              bottom: MediaQuery.of(context).padding.bottom + 16),
+                            bottom: MediaQuery.of(context).padding.bottom + 16,
+                          ),
                           itemCount: entries.length,
                           onReorder: (oldIndex, newIndex) async {
                             // Adjust newIndex for the removal
                             if (newIndex > oldIndex) {
                               newIndex -= 1;
                             }
-                            await _inventoryService.reorderEntries(oldIndex, newIndex);
+                            await _inventoryService.reorderEntries(
+                              oldIndex,
+                              newIndex,
+                            );
                           },
                           proxyDecorator: (child, index, animation) {
                             return AnimatedBuilder(
                               animation: animation,
                               builder: (context, child) {
-                                final elevation = Tween<double>(begin: 0, end: 6)
-                                    .evaluate(animation);
+                                final elevation = Tween<double>(
+                                  begin: 0,
+                                  end: 6,
+                                ).evaluate(animation);
                                 return Material(
                                   elevation: elevation,
                                   borderRadius: BorderRadius.circular(12),
@@ -404,7 +426,8 @@ class _ListTabState extends State<ListTab> {
                                 child: Padding(
                                   padding: const EdgeInsets.all(12),
                                   child: Column(
-                                    crossAxisAlignment: CrossAxisAlignment.start,
+                                    crossAxisAlignment:
+                                        CrossAxisAlignment.start,
                                     children: [
                                       Row(
                                         children: [
@@ -414,20 +437,29 @@ class _ListTabState extends State<ListTab> {
                                               size: 16,
                                             ),
                                             label: Text(
-                                              t(context, _getCategoryLabelKey(category)),
-                                              style: const TextStyle(fontSize: 12),
+                                              t(
+                                                context,
+                                                _getCategoryLabelKey(category),
+                                              ),
+                                              style: const TextStyle(
+                                                fontSize: 12,
+                                              ),
                                             ),
-                                            visualDensity: VisualDensity.compact,
+                                            visualDensity:
+                                                VisualDensity.compact,
                                             padding: EdgeInsets.zero,
                                           ),
                                           const Spacer(),
                                           ReorderableDragStartListener(
                                             index: index,
                                             child: Padding(
-                                              padding: const EdgeInsets.all(8.0),
+                                              padding: const EdgeInsets.all(
+                                                8.0,
+                                              ),
                                               child: Icon(
                                                 Icons.drag_handle,
-                                                color: theme.colorScheme.outline,
+                                                color:
+                                                    theme.colorScheme.outline,
                                               ),
                                             ),
                                           ),
@@ -441,22 +473,33 @@ class _ListTabState extends State<ListTab> {
                                       if (iAmNames.isNotEmpty)
                                         ...iAmNames.map(
                                           (name) => Padding(
-                                            padding: const EdgeInsets.only(top: 4),
+                                            padding: const EdgeInsets.only(
+                                              top: 4,
+                                            ),
                                             child: RichText(
                                               text: TextSpan(
                                                 children: [
                                                   TextSpan(
-                                                    text: '${t(context, 'i_am')}: ',
+                                                    text:
+                                                        '${t(context, 'i_am')}: ',
                                                     style: TextStyle(
-                                                      color: theme.colorScheme.primary,
-                                                      fontWeight: FontWeight.w600,
+                                                      color: theme
+                                                          .colorScheme
+                                                          .primary,
+                                                      fontWeight:
+                                                          FontWeight.w600,
                                                     ),
                                                   ),
                                                   TextSpan(
                                                     text: name,
-                                                    style: theme.textTheme.bodyMedium?.copyWith(
-                                                      color: theme.colorScheme.primary,
-                                                    ),
+                                                    style: theme
+                                                        .textTheme
+                                                        .bodyMedium
+                                                        ?.copyWith(
+                                                          color: theme
+                                                              .colorScheme
+                                                              .primary,
+                                                        ),
                                                   ),
                                                 ],
                                               ),
@@ -469,21 +512,29 @@ class _ListTabState extends State<ListTab> {
                                         e.safeReason,
                                       ),
                                       _buildHeadingValue(
-                                          context, 'affects_my', e.safeAffect),
+                                        context,
+                                        'affects_my',
+                                        e.safeAffect,
+                                      ),
                                       _buildHeadingValue(
-                                          context, 'my_part', e.myTake ?? ''),
+                                        context,
+                                        'my_part',
+                                        e.myTake ?? '',
+                                      ),
                                       _buildHeadingValue(
                                         context,
                                         'shortcoming_field',
                                         e.shortcomings ?? '',
                                       ),
                                       Row(
-                                        mainAxisAlignment: MainAxisAlignment.end,
+                                        mainAxisAlignment:
+                                            MainAxisAlignment.end,
                                         children: [
                                           IconButton(
                                             icon: const Icon(Icons.edit),
                                             tooltip: t(context, 'edit_entry'),
-                                            onPressed: () => widget.onEdit(e.key),
+                                            onPressed: () =>
+                                                widget.onEdit(e.key),
                                           ),
                                           IconButton(
                                             icon: const Icon(Icons.delete),
@@ -491,42 +542,72 @@ class _ListTabState extends State<ListTab> {
                                             onPressed: () async {
                                               final confirm =
                                                   await showDialog<bool>(
-                                                context: context,
-                                                builder: (_) => AlertDialog(
-                                                  title:
-                                                      Text(t(context, 'delete_entry')),
-                                                  content: Text(
-                                                      t(context, 'delete_confirm')),
-                                                  actions: [
-                                                    TextButton(
-                                                      onPressed: () =>
-                                                          Navigator.pop(context, false),
-                                                      child: Text(t(context, 'cancel')),
-                                                    ),
-                                                    TextButton(
-                                                      onPressed: () =>
-                                                          Navigator.pop(context, true),
-                                                      child: Text(
-                                                        t(context, 'delete'),
-                                                        style: TextStyle(
-                                                            color: theme
-                                                                .colorScheme.error),
+                                                    context: context,
+                                                    builder: (_) => AlertDialog(
+                                                      title: Text(
+                                                        t(
+                                                          context,
+                                                          'delete_entry',
+                                                        ),
                                                       ),
+                                                      content: Text(
+                                                        t(
+                                                          context,
+                                                          'delete_confirm',
+                                                        ),
+                                                      ),
+                                                      actions: [
+                                                        TextButton(
+                                                          onPressed: () =>
+                                                              Navigator.pop(
+                                                                context,
+                                                                false,
+                                                              ),
+                                                          child: Text(
+                                                            t(
+                                                              context,
+                                                              'cancel',
+                                                            ),
+                                                          ),
+                                                        ),
+                                                        TextButton(
+                                                          onPressed: () =>
+                                                              Navigator.pop(
+                                                                context,
+                                                                true,
+                                                              ),
+                                                          child: Text(
+                                                            t(
+                                                              context,
+                                                              'delete',
+                                                            ),
+                                                            style: TextStyle(
+                                                              color: theme
+                                                                  .colorScheme
+                                                                  .error,
+                                                            ),
+                                                          ),
+                                                        ),
+                                                      ],
                                                     ),
-                                                  ],
-                                                ),
-                                              );
+                                                  );
 
                                               if (confirm ?? false) {
                                                 await _inventoryService
                                                     .deleteEntryByKey(e.key);
                                                 widget.onDelete?.call(e.key);
                                                 if (!context.mounted) return;
-                                                ScaffoldMessenger.of(context)
-                                                    .showSnackBar(
+                                                ScaffoldMessenger.of(
+                                                  context,
+                                                ).showSnackBar(
                                                   SnackBar(
-                                                      content: Text(
-                                                          t(context, 'entry_deleted'))),
+                                                    content: Text(
+                                                      t(
+                                                        context,
+                                                        'entry_deleted',
+                                                      ),
+                                                    ),
+                                                  ),
                                                 );
                                               }
                                             },
@@ -541,10 +622,12 @@ class _ListTabState extends State<ListTab> {
 
                             // Compact layout
                             final entryId = e.id;
-                            final isExpanded = _expandedEntryIds.contains(entryId);
+                            final isExpanded = _expandedEntryIds.contains(
+                              entryId,
+                            );
                             final iAmNames = isExpanded
-                              ? _getIAmNames(e.effectiveIAmIds)
-                              : const <String>[];
+                                ? _getIAmNames(e.effectiveIAmIds)
+                                : const <String>[];
                             final iAmJoined = iAmNames.join(', ');
 
                             return Card(
@@ -578,13 +661,17 @@ class _ListTabState extends State<ListTab> {
                                     if (!isExpanded) ...[
                                       _buildCompactLine(
                                         context,
-                                                headingKey: _getCompactField1PrefixKey(category),
+                                        headingKey: _getCompactField1PrefixKey(
+                                          category,
+                                        ),
                                         value: e.safeResentment,
                                         faded: true,
                                       ),
                                       _buildCompactLine(
                                         context,
-                                                headingKey: _getCompactField2PrefixKey(category),
+                                        headingKey: _getCompactField2PrefixKey(
+                                          category,
+                                        ),
                                         value: e.safeReason,
                                         faded: true,
                                       ),
@@ -629,22 +716,29 @@ class _ListTabState extends State<ListTab> {
                                           onTap: () {
                                             setState(() {
                                               if (isExpanded) {
-                                                _expandedEntryIds.remove(entryId);
+                                                _expandedEntryIds.remove(
+                                                  entryId,
+                                                );
                                               } else {
                                                 _expandedEntryIds.add(entryId);
                                               }
                                             });
                                           },
                                           child: Padding(
-                                            padding: const EdgeInsets.only(top: 4),
+                                            padding: const EdgeInsets.only(
+                                              top: 4,
+                                            ),
                                             child: Text(
                                               isExpanded
                                                   ? t(context, 'show_less')
                                                   : t(context, 'show_more'),
-                                              style: theme.textTheme.bodySmall?.copyWith(
-                                                fontStyle: FontStyle.italic,
-                                                color: theme.colorScheme.primary,
-                                              ),
+                                              style: theme.textTheme.bodySmall
+                                                  ?.copyWith(
+                                                    fontStyle: FontStyle.italic,
+                                                    color: theme
+                                                        .colorScheme
+                                                        .primary,
+                                                  ),
                                             ),
                                           ),
                                         ),
@@ -660,38 +754,64 @@ class _ListTabState extends State<ListTab> {
                                           tooltip: t(context, 'delete_entry'),
                                           visualDensity: VisualDensity.compact,
                                           onPressed: () async {
-                                            final confirm = await showDialog<bool>(
-                                              context: context,
-                                              builder: (_) => AlertDialog(
-                                                title: Text(t(context, 'delete_entry')),
-                                                content: Text(t(context, 'delete_confirm')),
-                                                actions: [
-                                                  TextButton(
-                                                    onPressed: () =>
-                                                        Navigator.pop(context, false),
-                                                    child: Text(t(context, 'cancel')),
-                                                  ),
-                                                  TextButton(
-                                                    onPressed: () =>
-                                                        Navigator.pop(context, true),
-                                                    child: Text(
-                                                      t(context, 'delete'),
-                                                      style: TextStyle(
-                                                        color: theme.colorScheme.error,
+                                            final confirm =
+                                                await showDialog<bool>(
+                                                  context: context,
+                                                  builder: (_) => AlertDialog(
+                                                    title: Text(
+                                                      t(
+                                                        context,
+                                                        'delete_entry',
                                                       ),
                                                     ),
+                                                    content: Text(
+                                                      t(
+                                                        context,
+                                                        'delete_confirm',
+                                                      ),
+                                                    ),
+                                                    actions: [
+                                                      TextButton(
+                                                        onPressed: () =>
+                                                            Navigator.pop(
+                                                              context,
+                                                              false,
+                                                            ),
+                                                        child: Text(
+                                                          t(context, 'cancel'),
+                                                        ),
+                                                      ),
+                                                      TextButton(
+                                                        onPressed: () =>
+                                                            Navigator.pop(
+                                                              context,
+                                                              true,
+                                                            ),
+                                                        child: Text(
+                                                          t(context, 'delete'),
+                                                          style: TextStyle(
+                                                            color: theme
+                                                                .colorScheme
+                                                                .error,
+                                                          ),
+                                                        ),
+                                                      ),
+                                                    ],
                                                   ),
-                                                ],
-                                              ),
-                                            );
+                                                );
 
                                             if (confirm ?? false) {
-                                              await _inventoryService.deleteEntryByKey(e.key);
+                                              await _inventoryService
+                                                  .deleteEntryByKey(e.key);
                                               widget.onDelete?.call(e.key);
                                               if (!context.mounted) return;
-                                              ScaffoldMessenger.of(context).showSnackBar(
+                                              ScaffoldMessenger.of(
+                                                context,
+                                              ).showSnackBar(
                                                 SnackBar(
-                                                  content: Text(t(context, 'entry_deleted')),
+                                                  content: Text(
+                                                    t(context, 'entry_deleted'),
+                                                  ),
                                                 ),
                                               );
                                             }
@@ -732,11 +852,7 @@ class _FadedOverflowText extends StatelessWidget {
         return const LinearGradient(
           begin: Alignment.centerLeft,
           end: Alignment.centerRight,
-          colors: [
-            Colors.black,
-            Colors.black,
-            Colors.transparent,
-          ],
+          colors: [Colors.black, Colors.black, Colors.transparent],
           // Start fading earlier to keep the visible portion shorter.
           stops: [0.0, 0.55, 1.0],
         ).createShader(bounds);

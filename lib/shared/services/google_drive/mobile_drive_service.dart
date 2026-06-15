@@ -12,33 +12,37 @@ import 'mobile_google_auth_service.dart';
 /// Uses GoogleSignIn for authentication
 class MobileDriveService {
   final MobileGoogleAuthService _authService;
-  
+
   GoogleDriveCrudClient? _driveClient;
   bool _syncEnabled;
-  
+
   // Debouncing for uploads
   Timer? _uploadTimer;
   final Duration _uploadDelay;
 
   // Events
-  final StreamController<bool> _syncStateController = StreamController.broadcast();
-  final StreamController<String> _uploadController = StreamController.broadcast();
-  final StreamController<String> _downloadController = StreamController.broadcast();
-  final StreamController<String> _errorController = StreamController.broadcast();
+  final StreamController<bool> _syncStateController =
+      StreamController.broadcast();
+  final StreamController<String> _uploadController =
+      StreamController.broadcast();
+  final StreamController<String> _downloadController =
+      StreamController.broadcast();
+  final StreamController<String> _errorController =
+      StreamController.broadcast();
 
   MobileDriveService({
     required GoogleDriveConfig config,
     bool syncEnabled = false,
     Duration uploadDelay = const Duration(milliseconds: 700),
-  })  : _syncEnabled = syncEnabled,
-        _uploadDelay = uploadDelay,
-        _authService = MobileGoogleAuthService(config: config);
+  }) : _syncEnabled = syncEnabled,
+       _uploadDelay = uploadDelay,
+       _authService = MobileGoogleAuthService(config: config);
 
   // Getters
   bool get syncEnabled => _syncEnabled;
   bool get isAuthenticated => _authService.isSignedIn || _driveClient != null;
   MobileGoogleAuthService get authService => _authService;
-  
+
   // Streams
   Stream<bool> get onSyncStateChanged => _syncStateController.stream;
   Stream<String> get onUpload => _uploadController.stream;
@@ -51,7 +55,7 @@ class MobileDriveService {
     if (_authService.isSignedIn) {
       await _createDriveClient();
     }
-    
+
     // Listen to auth changes
     _authService.listenToAuthChanges((account) async {
       if (account != null) {
@@ -99,24 +103,40 @@ class MobileDriveService {
 
   /// Upload content to Drive
   Future<void> uploadContent(String content) async {
-    if (kDebugMode) print('MobileDriveService.uploadContent() called - syncEnabled=$_syncEnabled, _driveClient=${_driveClient != null ? "set" : "null"}');
-    
+    if (kDebugMode) {
+      print(
+        'MobileDriveService.uploadContent() called - syncEnabled=$_syncEnabled, _driveClient=${_driveClient != null ? "set" : "null"}',
+      );
+    }
+
     if (!_syncEnabled) {
-      if (kDebugMode) print('MobileDriveService.uploadContent() - skipped: sync not enabled');
+      if (kDebugMode) {
+        print('MobileDriveService.uploadContent() - skipped: sync not enabled');
+      }
       return;
     }
 
     if (_driveClient == null) {
-      if (kDebugMode) print('MobileDriveService.uploadContent() - _driveClient is null, trying _ensureAuthenticated');
+      if (kDebugMode) {
+        print(
+          'MobileDriveService.uploadContent() - _driveClient is null, trying _ensureAuthenticated',
+        );
+      }
       if (!await _ensureAuthenticated()) {
         _errorController.add('Upload failed - not authenticated');
-        if (kDebugMode) print('MobileDriveService.uploadContent() - _ensureAuthenticated failed');
+        if (kDebugMode) {
+          print(
+            'MobileDriveService.uploadContent() - _ensureAuthenticated failed',
+          );
+        }
         return;
       }
     }
 
     try {
-      if (kDebugMode) print('MobileDriveService.uploadContent() - creating dated backup');
+      if (kDebugMode) {
+        print('MobileDriveService.uploadContent() - creating dated backup');
+      }
       // Create dated backup with timestamp
       await _createDatedBackup(content);
       _uploadController.add('Upload successful');
@@ -132,7 +152,8 @@ class MobileDriveService {
       // the auth cache and re-minting (in refreshTokenIfNeeded) recovers a fresh
       // token with the correct scopes. Both are auto-healed with one retry so no
       // user action is ever required.
-      final looksLikeAuthError = msg.contains('401') ||
+      final looksLikeAuthError =
+          msg.contains('401') ||
           msg.contains('UNAUTHENTICATED') ||
           msg.contains('Invalid Credentials') ||
           msg.contains('Login Required') ||
@@ -141,7 +162,11 @@ class MobileDriveService {
           msg.contains('ACCESS_TOKEN_SCOPE_INSUFFICIENT') ||
           msg.contains('PERMISSION_DENIED');
       if (looksLikeAuthError) {
-        if (kDebugMode) print('MobileDriveService.uploadContent() - auth error, refreshing token and retrying');
+        if (kDebugMode) {
+          print(
+            'MobileDriveService.uploadContent() - auth error, refreshing token and retrying',
+          );
+        }
         try {
           final refreshed = await _authService.refreshTokenIfNeeded();
           if (refreshed) {
@@ -149,12 +174,20 @@ class MobileDriveService {
             if (_driveClient != null) {
               await _createDatedBackup(content);
               _uploadController.add('Upload successful (after token refresh)');
-              if (kDebugMode) print('MobileDriveService.uploadContent() - retry success after refresh');
+              if (kDebugMode) {
+                print(
+                  'MobileDriveService.uploadContent() - retry success after refresh',
+                );
+              }
               return;
             }
           }
         } catch (retryError) {
-          if (kDebugMode) print('MobileDriveService.uploadContent() - retry after refresh failed: $retryError');
+          if (kDebugMode) {
+            print(
+              'MobileDriveService.uploadContent() - retry after refresh failed: $retryError',
+            );
+          }
           final errorMsg = 'Upload failed after token refresh: $retryError';
           _errorController.add(errorMsg);
           rethrow;
@@ -172,12 +205,18 @@ class MobileDriveService {
   /// Previous 7 days: keep only one backup per day (latest)
   Future<void> _createDatedBackup(String content) async {
     final now = DateTime.now();
-    if (kDebugMode) print('MobileDriveService._createDatedBackup() - timestamp: $now');
-    
+    if (kDebugMode) {
+      print('MobileDriveService._createDatedBackup() - timestamp: $now');
+    }
+
     // Create today's backup first (so it exists before cleanup)
     final fileId = await _driveClient!.createDatedBackupFile(content, now);
-    if (kDebugMode) print('MobileDriveService._createDatedBackup() - created backup with fileId: $fileId');
-    
+    if (kDebugMode) {
+      print(
+        'MobileDriveService._createDatedBackup() - created backup with fileId: $fileId',
+      );
+    }
+
     // Then clean up old backups
     await _cleanupOldBackups();
   }
@@ -191,18 +230,20 @@ class MobileDriveService {
   /// Internal cleanup that fetches files directly (used by both upload and listAvailableBackups)
   Future<void> _cleanupOldBackupsInternal() async {
     if (_driveClient == null) return;
-    
+
     try {
       // Fetch files directly to avoid recursion with listAvailableBackups
       final baseName = _authService.config.fileName.replaceAll('.json', '');
       final pattern = '${baseName}_*.json';
       final files = await _driveClient!.findBackupFiles(pattern);
       if (files.isEmpty) return;
-      
+
       // Parse files into backup info
       final backups = <Map<String, dynamic>>[];
       for (final file in files) {
-        final regex = RegExp(r'(\d{4})-(\d{2})-(\d{2})(?:_(\d{2})-(\d{2})-(\d{2}))?');
+        final regex = RegExp(
+          r'(\d{4})-(\d{2})-(\d{2})(?:_(\d{2})-(\d{2})-(\d{2}))?',
+        );
         final match = regex.firstMatch(file.name ?? '');
         if (match != null) {
           final year = int.parse(match.group(1)!);
@@ -218,72 +259,87 @@ class MobileDriveService {
           backups.add({'fileName': file.name, 'date': date});
         }
       }
-      
+
       final now = DateTime.now();
       final today = DateTime(now.year, now.month, now.day);
       final weekCutoff = today.subtract(const Duration(days: 7));
       final yearCutoff = DateTime(now.year - 1, now.month, now.day);
-      
+
       // Group backups by date (for daily) and by month (for monthly)
       final backupsByDate = <DateTime, List<Map<String, dynamic>>>{};
       final backupsByMonth = <String, List<Map<String, dynamic>>>{};
-      
+
       for (final backup in backups) {
         final backupDate = backup['date'] as DateTime;
-        final dateOnly = DateTime(backupDate.year, backupDate.month, backupDate.day);
-        final monthKey = '${backupDate.year}-${backupDate.month.toString().padLeft(2, '0')}';
-        
+        final dateOnly = DateTime(
+          backupDate.year,
+          backupDate.month,
+          backupDate.day,
+        );
+        final monthKey =
+            '${backupDate.year}-${backupDate.month.toString().padLeft(2, '0')}';
+
         if (!backupsByDate.containsKey(dateOnly)) {
           backupsByDate[dateOnly] = [];
         }
         backupsByDate[dateOnly]!.add(backup);
-        
+
         if (!backupsByMonth.containsKey(monthKey)) {
           backupsByMonth[monthKey] = [];
         }
         backupsByMonth[monthKey]!.add(backup);
       }
-      
+
       // Track which backups to keep (by fileName)
       final backupsToKeep = <String>{};
-      
+
       // Process daily backups (today and last 7 days)
       for (final entry in backupsByDate.entries) {
         final date = entry.key;
         final dateBackups = entry.value;
-        
+
         if (date.isAtSameMomentAs(today) || date.isAfter(today)) {
           // Today: keep all
           for (final backup in dateBackups) {
             backupsToKeep.add(backup['fileName'] as String);
           }
-        } else if (date.isAfter(weekCutoff) || date.isAtSameMomentAs(weekCutoff)) {
+        } else if (date.isAfter(weekCutoff) ||
+            date.isAtSameMomentAs(weekCutoff)) {
           // Last 7 days: keep only the latest per day
-          dateBackups.sort((a, b) => (b['date'] as DateTime).compareTo(a['date'] as DateTime));
+          dateBackups.sort(
+            (a, b) => (b['date'] as DateTime).compareTo(a['date'] as DateTime),
+          );
           backupsToKeep.add(dateBackups.first['fileName'] as String);
         }
         // Older than 7 days: handled by monthly logic below
       }
-      
+
       // Process monthly backups (for dates older than 7 days but within last year)
       for (final entry in backupsByMonth.entries) {
         final monthBackups = entry.value;
-        
+
         // Filter to only backups older than 7 days and within the last year
         final eligibleBackups = monthBackups.where((backup) {
           final backupDate = backup['date'] as DateTime;
-          final dateOnly = DateTime(backupDate.year, backupDate.month, backupDate.day);
-          return dateOnly.isBefore(weekCutoff) && 
-                 (dateOnly.isAfter(yearCutoff) || dateOnly.isAtSameMomentAs(yearCutoff));
+          final dateOnly = DateTime(
+            backupDate.year,
+            backupDate.month,
+            backupDate.day,
+          );
+          return dateOnly.isBefore(weekCutoff) &&
+              (dateOnly.isAfter(yearCutoff) ||
+                  dateOnly.isAtSameMomentAs(yearCutoff));
         }).toList();
-        
+
         if (eligibleBackups.isNotEmpty) {
           // Keep only the latest backup for this month
-          eligibleBackups.sort((a, b) => (b['date'] as DateTime).compareTo(a['date'] as DateTime));
+          eligibleBackups.sort(
+            (a, b) => (b['date'] as DateTime).compareTo(a['date'] as DateTime),
+          );
           backupsToKeep.add(eligibleBackups.first['fileName'] as String);
         }
       }
-      
+
       // Delete all backups not in the keep set
       for (final backup in backups) {
         final fileName = backup['fileName'] as String;
@@ -295,7 +351,7 @@ class MobileDriveService {
       if (kDebugMode) print('Failed to cleanup old backups: $e');
     }
   }
-  
+
   /// Delete a backup file by name
   /// Returns true if deleted, false if not found or error
   Future<bool> _deleteBackup(String fileName) async {
@@ -312,7 +368,8 @@ class MobileDriveService {
       return true;
     } catch (e) {
       // 404 means file was already deleted - treat as success
-      if (e.toString().contains('404') || e.toString().contains('File not found')) {
+      if (e.toString().contains('404') ||
+          e.toString().contains('File not found')) {
         if (kDebugMode) print('Backup already deleted: $fileName');
         return false;
       }
@@ -332,13 +389,13 @@ class MobileDriveService {
     try {
       final backups = await listAvailableBackups();
       int deletedCount = 0;
-      
+
       for (final backup in backups) {
         final fileName = backup['fileName'] as String;
         await _deleteBackup(fileName);
         deletedCount++;
       }
-      
+
       if (kDebugMode) print('Deleted $deletedCount backup files');
       return deletedCount;
     } catch (e) {
@@ -351,65 +408,89 @@ class MobileDriveService {
   Future<List<Map<String, dynamic>>> listAvailableBackups() async {
     if (kDebugMode) print('MobileDriveService.listAvailableBackups() called');
     if (_driveClient == null) {
-      if (kDebugMode) print('MobileDriveService: _driveClient is null, ensuring authenticated');
+      if (kDebugMode) {
+        print(
+          'MobileDriveService: _driveClient is null, ensuring authenticated',
+        );
+      }
       if (!await _ensureAuthenticated()) {
-        if (kDebugMode) print('MobileDriveService: _ensureAuthenticated() failed');
+        if (kDebugMode) {
+          print('MobileDriveService: _ensureAuthenticated() failed');
+        }
         return [];
       }
-      if (kDebugMode) print('MobileDriveService: _ensureAuthenticated() succeeded');
+      if (kDebugMode) {
+        print('MobileDriveService: _ensureAuthenticated() succeeded');
+      }
     }
 
     try {
       // NOTE: Cleanup is NOT run here - only after uploading a new backup.
       // This ensures users can see and restore from old backups on fresh installs.
-      
+
       // Find all backup files matching pattern
       final baseName = _authService.config.fileName.replaceAll('.json', '');
       final pattern = '${baseName}_*.json';
-      if (kDebugMode) print('MobileDriveService: searching for backup files with pattern: $pattern');
+      if (kDebugMode) {
+        print(
+          'MobileDriveService: searching for backup files with pattern: $pattern',
+        );
+      }
       final files = await _driveClient!.findBackupFiles(pattern);
-      if (kDebugMode) print('MobileDriveService: found ${files.length} backup files');
-      
+      if (kDebugMode) {
+        print('MobileDriveService: found ${files.length} backup files');
+      }
+
       final backups = <Map<String, dynamic>>[];
       for (final file in files) {
         // Extract date and time from filename (e.g., twelve_steps_backup_2025-12-03_14-30-15.json)
-        final regex = RegExp(r'(\d{4})-(\d{2})-(\d{2})(?:_(\d{2})-(\d{2})-(\d{2}))?');
+        final regex = RegExp(
+          r'(\d{4})-(\d{2})-(\d{2})(?:_(\d{2})-(\d{2})-(\d{2}))?',
+        );
         final match = regex.firstMatch(file.name ?? '');
-        
-        if (kDebugMode) print('MobileDriveService: Processing file: ${file.name}');
-        
+
+        if (kDebugMode) {
+          print('MobileDriveService: Processing file: ${file.name}');
+        }
+
         if (match != null) {
           final year = int.parse(match.group(1)!);
           final month = int.parse(match.group(2)!);
           final day = int.parse(match.group(3)!);
-          
+
           // Parse time if available (for newer backups with timestamps)
           int hour = 0, minute = 0, second = 0;
           if (match.group(4) != null) {
             hour = int.parse(match.group(4)!);
             minute = int.parse(match.group(5)!);
             second = int.parse(match.group(6)!);
-            if (kDebugMode) print('MobileDriveService: Parsed time: $hour:$minute:$second');
+            if (kDebugMode) {
+              print('MobileDriveService: Parsed time: $hour:$minute:$second');
+            }
           } else {
-            if (kDebugMode) print('MobileDriveService: No time found in filename');
+            if (kDebugMode) {
+              print('MobileDriveService: No time found in filename');
+            }
           }
-          
+
           final date = DateTime(year, month, day, hour, minute, second);
           final dateOnly = DateTime(year, month, day);
-          
+
           // Format display date with time for current day, date only for previous days
           final now = DateTime.now();
           final today = DateTime(now.year, now.month, now.day);
-          
+
           String displayDate;
           if (dateOnly.isAtSameMomentAs(today)) {
             // Show time for today's backups
-            displayDate = '${date.year}-${date.month.toString().padLeft(2, '0')}-${date.day.toString().padLeft(2, '0')} ${date.hour.toString().padLeft(2, '0')}:${date.minute.toString().padLeft(2, '0')}';
+            displayDate =
+                '${date.year}-${date.month.toString().padLeft(2, '0')}-${date.day.toString().padLeft(2, '0')} ${date.hour.toString().padLeft(2, '0')}:${date.minute.toString().padLeft(2, '0')}';
           } else {
             // Show only date for previous days
-            displayDate = '${date.year}-${date.month.toString().padLeft(2, '0')}-${date.day.toString().padLeft(2, '0')}';
+            displayDate =
+                '${date.year}-${date.month.toString().padLeft(2, '0')}-${date.day.toString().padLeft(2, '0')}';
           }
-          
+
           backups.add({
             'fileName': file.name,
             'fileId': file.id,
@@ -419,10 +500,12 @@ class MobileDriveService {
           });
         }
       }
-      
+
       // Sort by date descending (newest first)
-      backups.sort((a, b) => (b['date'] as DateTime).compareTo(a['date'] as DateTime));
-      
+      backups.sort(
+        (a, b) => (b['date'] as DateTime).compareTo(a['date'] as DateTime),
+      );
+
       return backups;
     } catch (e) {
       if (kDebugMode) print('Failed to list backups: $e');
@@ -435,7 +518,9 @@ class MobileDriveService {
   /// This avoids downloading/parsing the JSON backup content just to read `lastModified`.
   ///
   /// If [runCleanup] is true, retention cleanup runs first (may be slower).
-  Future<DateTime?> getNewestBackupModifiedTime({bool runCleanup = false}) async {
+  Future<DateTime?> getNewestBackupModifiedTime({
+    bool runCleanup = false,
+  }) async {
     if (_driveClient == null) {
       if (!await _ensureAuthenticated()) {
         return null;
@@ -468,7 +553,9 @@ class MobileDriveService {
 
       return newest?.toUtc();
     } catch (e) {
-      if (kDebugMode) print('MobileDriveService.getNewestBackupModifiedTime() failed: $e');
+      if (kDebugMode) {
+        print('MobileDriveService.getNewestBackupModifiedTime() failed: $e');
+      }
       return null;
     }
   }
@@ -480,7 +567,9 @@ class MobileDriveService {
   ///
   /// Uses a small prefix download to extract the field, falling back to a full download
   /// only if needed.
-  Future<DateTime?> getNewestBackupJsonLastModified({bool runCleanup = false}) async {
+  Future<DateTime?> getNewestBackupJsonLastModified({
+    bool runCleanup = false,
+  }) async {
     if (_driveClient == null) {
       if (!await _ensureAuthenticated()) {
         return null;
@@ -501,7 +590,9 @@ class MobileDriveService {
       if (files.isEmpty) return null;
 
       // Pick newest by timestamp in filename if possible (most robust across APIs).
-      final regex = RegExp(r'(\d{4})-(\d{2})-(\d{2})(?:_(\d{2})-(\d{2})-(\d{2}))?');
+      final regex = RegExp(
+        r'(\d{4})-(\d{2})-(\d{2})(?:_(\d{2})-(\d{2})-(\d{2}))?',
+      );
       DateTime? bestTs;
       String? bestId;
 
@@ -530,7 +621,10 @@ class MobileDriveService {
 
       final lastModifiedRegex = RegExp(r'"lastModified"\s*:\s*"([^"]+)"');
       for (final maxBytes in const [8192, 65536]) {
-        final prefix = await driveClient.readFilePrefix(fileId, maxBytes: maxBytes);
+        final prefix = await driveClient.readFilePrefix(
+          fileId,
+          maxBytes: maxBytes,
+        );
         if (prefix == null) continue;
 
         final match = lastModifiedRegex.firstMatch(prefix);
@@ -547,7 +641,11 @@ class MobileDriveService {
       if (match == null) return null;
       return DateTime.parse(match.group(1)!).toUtc();
     } catch (e) {
-      if (kDebugMode) print('MobileDriveService.getNewestBackupJsonLastModified() failed: $e');
+      if (kDebugMode) {
+        print(
+          'MobileDriveService.getNewestBackupJsonLastModified() failed: $e',
+        );
+      }
       return null;
     }
   }
@@ -592,12 +690,12 @@ class MobileDriveService {
         if (kDebugMode) print('No backup files found on Drive');
         return null;
       }
-      
+
       // backups are sorted newest first, so take the first one
       final mostRecent = backups.first;
       final fileName = mostRecent['fileName'] as String;
       if (kDebugMode) print('Downloading most recent backup: $fileName');
-      
+
       final content = await _driveClient!.readBackupFile(fileName);
       if (content != null) {
         _downloadController.add('Download successful');
@@ -672,7 +770,7 @@ class MobileDriveService {
     if (_driveClient != null) {
       return true;
     }
-    
+
     // Otherwise, check if the auth service has a signed-in user
     if (_authService.isSignedIn) {
       await _createDriveClient();

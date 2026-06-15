@@ -1,17 +1,17 @@
 // --------------------------------------------------------------------------
 // Windows Drive Service - Windows Only
 // --------------------------------------------------------------------------
-// 
+//
 // PLATFORM SUPPORT: Windows only
 // This service provides standalone Google Drive integration for Windows,
 // completely separate from mobile implementation.
-// 
+//
 // Features:
 // - Automatic OAuth with local HTTP server
 // - Secure credential caching
 // - Silent sign-in
 // - Automatic token refresh
-// 
+//
 // Usage: Only use when PlatformHelper.isWindows returns true.
 // --------------------------------------------------------------------------
 
@@ -25,9 +25,9 @@ import 'drive_crud_client.dart';
 /// Windows-specific Google Drive service
 class WindowsDriveService {
   final WindowsGoogleAuthService _authService;
-  
+
   WindowsDriveService({required WindowsGoogleAuthService authService})
-      : _authService = authService;
+    : _authService = authService;
 
   /// Get config for accessing file name
   GoogleDriveConfig get config => _authService.config;
@@ -36,7 +36,7 @@ class WindowsDriveService {
   static Future<WindowsDriveService> create() async {
     // Open or create credentials box for Windows
     final credentialsBox = await Hive.openBox('windows_google_credentials');
-    
+
     // Use same config as mobile for cross-platform sync
     const config = GoogleDriveConfig(
       fileName: 'twelve_steps_backup.json',
@@ -44,21 +44,21 @@ class WindowsDriveService {
       scope: 'https://www.googleapis.com/auth/drive.appdata',
       parentFolder: 'appDataFolder',
     );
-    
+
     final authService = WindowsGoogleAuthService(
       config: config,
       credentialsBox: credentialsBox,
     );
-    
+
     return WindowsDriveService(authService: authService);
   }
 
   /// Check if user is signed in
   bool get isSignedIn => _authService.isSignedIn;
-  
+
   /// Check if user has cached credentials
   bool get hasCachedCredentials => _authService.hasCachedCredentials;
-  
+
   /// Current access token
   String? get accessToken => _authService.accessToken;
 
@@ -96,7 +96,7 @@ class WindowsDriveService {
     try {
       // Ensure we have valid credentials
       await _authService.refreshTokenIfNeeded();
-      
+
       final client = await _authService.createDriveClient();
       if (client == null) {
         if (kDebugMode) print('Windows Drive: Not signed in');
@@ -106,10 +106,10 @@ class WindowsDriveService {
       // Create dated backup with timestamp (this is the only file we store now)
       final now = DateTime.now();
       final fileId = await createDatedBackup(content, now);
-      
+
       // Clean up old backups (keeps today's all, 1 per day for last 7 days)
       await cleanupOldBackups();
-      
+
       return fileId;
     } catch (e) {
       if (kDebugMode) print('Windows Drive: Upload failed: $e');
@@ -122,7 +122,7 @@ class WindowsDriveService {
     try {
       // Ensure we have valid credentials
       await _authService.refreshTokenIfNeeded();
-      
+
       final client = await _authService.createDriveClient();
       if (client == null) {
         if (kDebugMode) print('Windows Drive: Not signed in');
@@ -141,7 +141,7 @@ class WindowsDriveService {
     try {
       // Ensure we have valid credentials
       await _authService.refreshTokenIfNeeded();
-      
+
       final client = await _authService.createDriveClient();
       if (client == null) {
         if (kDebugMode) print('Windows Drive: Not signed in');
@@ -162,7 +162,7 @@ class WindowsDriveService {
     try {
       // Ensure we have valid credentials
       await _authService.refreshTokenIfNeeded();
-      
+
       final client = await _authService.createDriveClient();
       if (client == null) {
         if (kDebugMode) print('Windows Drive: Not signed in');
@@ -190,7 +190,7 @@ class WindowsDriveService {
     try {
       // Ensure we have valid credentials
       await _authService.refreshTokenIfNeeded();
-      
+
       final client = await _authService.createDriveClient();
       if (client == null) {
         if (kDebugMode) print('Windows Drive: Not signed in');
@@ -208,7 +208,7 @@ class WindowsDriveService {
   Future<List<Map<String, dynamic>>> listAvailableBackups() async {
     try {
       await _authService.refreshTokenIfNeeded();
-      
+
       final client = await _authService.createDriveClient();
       if (client == null) {
         if (kDebugMode) print('Windows Drive: Not signed in');
@@ -217,22 +217,24 @@ class WindowsDriveService {
 
       // NOTE: Cleanup is NOT run here - only after uploading a new backup.
       // This ensures users can see and restore from old backups on fresh installs.
-      
+
       // Find all backup files matching pattern
       final baseName = _authService.config.fileName.replaceAll('.json', '');
       final files = await client.findBackupFiles('${baseName}_*.json');
-      
+
       final backups = <Map<String, dynamic>>[];
       for (final file in files) {
         // Extract date and time from filename (e.g., twelve_steps_backup_2025-12-03_14-30-15.json)
-        final regex = RegExp(r'(\d{4})-(\d{2})-(\d{2})(?:_(\d{2})-(\d{2})-(\d{2}))?');
+        final regex = RegExp(
+          r'(\d{4})-(\d{2})-(\d{2})(?:_(\d{2})-(\d{2})-(\d{2}))?',
+        );
         final match = regex.firstMatch(file.name ?? '');
-        
+
         if (match != null) {
           final year = int.parse(match.group(1)!);
           final month = int.parse(match.group(2)!);
           final day = int.parse(match.group(3)!);
-          
+
           // Parse time if available
           int hour = 0, minute = 0, second = 0;
           if (match.group(4) != null) {
@@ -240,11 +242,13 @@ class WindowsDriveService {
             minute = int.parse(match.group(5)!);
             second = int.parse(match.group(6)!);
           }
-          
+
           final date = DateTime(year, month, day, hour, minute, second);
-          final displayDate = '$year-${month.toString().padLeft(2, '0')}-${day.toString().padLeft(2, '0')}';
-          final displayTime = '${hour.toString().padLeft(2, '0')}:${minute.toString().padLeft(2, '0')}';
-          
+          final displayDate =
+              '$year-${month.toString().padLeft(2, '0')}-${day.toString().padLeft(2, '0')}';
+          final displayTime =
+              '${hour.toString().padLeft(2, '0')}:${minute.toString().padLeft(2, '0')}';
+
           backups.add({
             'fileName': file.name,
             'displayDate': '$displayDate $displayTime',
@@ -252,10 +256,12 @@ class WindowsDriveService {
           });
         }
       }
-      
+
       // Sort by date (newest first)
-      backups.sort((a, b) => (b['date'] as DateTime).compareTo(a['date'] as DateTime));
-      
+      backups.sort(
+        (a, b) => (b['date'] as DateTime).compareTo(a['date'] as DateTime),
+      );
+
       return backups;
     } catch (e) {
       if (kDebugMode) print('Windows Drive: List backups failed: $e');
@@ -268,7 +274,9 @@ class WindowsDriveService {
   /// This avoids downloading/parsing the JSON backup content just to read `lastModified`.
   ///
   /// If [runCleanup] is true, retention cleanup runs first (may be slower).
-  Future<DateTime?> getNewestBackupModifiedTime({bool runCleanup = false}) async {
+  Future<DateTime?> getNewestBackupModifiedTime({
+    bool runCleanup = false,
+  }) async {
     try {
       await _authService.refreshTokenIfNeeded();
       final client = await _authService.createDriveClient();
@@ -298,7 +306,9 @@ class WindowsDriveService {
 
       return newest?.toUtc();
     } catch (e) {
-      if (kDebugMode) print('Windows Drive: getNewestBackupModifiedTime failed: $e');
+      if (kDebugMode) {
+        print('Windows Drive: getNewestBackupModifiedTime failed: $e');
+      }
       return null;
     }
   }
@@ -310,7 +320,9 @@ class WindowsDriveService {
   ///
   /// Uses a small prefix download to extract the field, falling back to a full download
   /// only if needed.
-  Future<DateTime?> getNewestBackupJsonLastModified({bool runCleanup = false}) async {
+  Future<DateTime?> getNewestBackupJsonLastModified({
+    bool runCleanup = false,
+  }) async {
     try {
       await _authService.refreshTokenIfNeeded();
       final client = await _authService.createDriveClient();
@@ -328,7 +340,9 @@ class WindowsDriveService {
       if (files.isEmpty) return null;
 
       // Pick newest by timestamp in filename if possible.
-      final regex = RegExp(r'(\d{4})-(\d{2})-(\d{2})(?:_(\d{2})-(\d{2})-(\d{2}))?');
+      final regex = RegExp(
+        r'(\d{4})-(\d{2})-(\d{2})(?:_(\d{2})-(\d{2})-(\d{2}))?',
+      );
       DateTime? bestTs;
       String? bestId;
 
@@ -373,7 +387,9 @@ class WindowsDriveService {
       if (match == null) return null;
       return DateTime.parse(match.group(1)!).toUtc();
     } catch (e) {
-      if (kDebugMode) print('Windows Drive: getNewestBackupJsonLastModified failed: $e');
+      if (kDebugMode) {
+        print('Windows Drive: getNewestBackupJsonLastModified failed: $e');
+      }
       return null;
     }
   }
@@ -382,7 +398,7 @@ class WindowsDriveService {
   Future<String?> downloadBackupContent(String fileName) async {
     try {
       await _authService.refreshTokenIfNeeded();
-      
+
       final client = await _authService.createDriveClient();
       if (client == null) {
         if (kDebugMode) print('Windows Drive: Not signed in');
@@ -400,7 +416,7 @@ class WindowsDriveService {
   Future<String?> createDatedBackup(String content, DateTime date) async {
     try {
       await _authService.refreshTokenIfNeeded();
-      
+
       final client = await _authService.createDriveClient();
       if (client == null) {
         if (kDebugMode) print('Windows Drive: Not signed in');
@@ -433,11 +449,13 @@ class WindowsDriveService {
       final baseName = _authService.config.fileName.replaceAll('.json', '');
       final files = await client.findBackupFiles('${baseName}_*.json');
       if (files.isEmpty) return;
-      
+
       // Parse files into backup info
       final backups = <Map<String, dynamic>>[];
       for (final file in files) {
-        final regex = RegExp(r'(\d{4})-(\d{2})-(\d{2})(?:_(\d{2})-(\d{2})-(\d{2}))?');
+        final regex = RegExp(
+          r'(\d{4})-(\d{2})-(\d{2})(?:_(\d{2})-(\d{2})-(\d{2}))?',
+        );
         final match = regex.firstMatch(file.name ?? '');
         if (match != null) {
           final year = int.parse(match.group(1)!);
@@ -453,72 +471,87 @@ class WindowsDriveService {
           backups.add({'fileName': file.name, 'date': date});
         }
       }
-      
+
       final now = DateTime.now();
       final today = DateTime(now.year, now.month, now.day);
       final weekCutoff = today.subtract(const Duration(days: 7));
       final yearCutoff = DateTime(now.year - 1, now.month, now.day);
-      
+
       // Group backups by date (for daily) and by month (for monthly)
       final backupsByDate = <DateTime, List<Map<String, dynamic>>>{};
       final backupsByMonth = <String, List<Map<String, dynamic>>>{};
-      
+
       for (final backup in backups) {
         final backupDate = backup['date'] as DateTime;
-        final dateOnly = DateTime(backupDate.year, backupDate.month, backupDate.day);
-        final monthKey = '${backupDate.year}-${backupDate.month.toString().padLeft(2, '0')}';
-        
+        final dateOnly = DateTime(
+          backupDate.year,
+          backupDate.month,
+          backupDate.day,
+        );
+        final monthKey =
+            '${backupDate.year}-${backupDate.month.toString().padLeft(2, '0')}';
+
         if (!backupsByDate.containsKey(dateOnly)) {
           backupsByDate[dateOnly] = [];
         }
         backupsByDate[dateOnly]!.add(backup);
-        
+
         if (!backupsByMonth.containsKey(monthKey)) {
           backupsByMonth[monthKey] = [];
         }
         backupsByMonth[monthKey]!.add(backup);
       }
-      
+
       // Track which backups to keep (by fileName)
       final backupsToKeep = <String>{};
-      
+
       // Process daily backups (today and last 7 days)
       for (final entry in backupsByDate.entries) {
         final date = entry.key;
         final dateBackups = entry.value;
-        
+
         if (date.isAtSameMomentAs(today) || date.isAfter(today)) {
           // Today: keep all
           for (final backup in dateBackups) {
             backupsToKeep.add(backup['fileName'] as String);
           }
-        } else if (date.isAfter(weekCutoff) || date.isAtSameMomentAs(weekCutoff)) {
+        } else if (date.isAfter(weekCutoff) ||
+            date.isAtSameMomentAs(weekCutoff)) {
           // Last 7 days: keep only the latest per day
-          dateBackups.sort((a, b) => (b['date'] as DateTime).compareTo(a['date'] as DateTime));
+          dateBackups.sort(
+            (a, b) => (b['date'] as DateTime).compareTo(a['date'] as DateTime),
+          );
           backupsToKeep.add(dateBackups.first['fileName'] as String);
         }
         // Older than 7 days: handled by monthly logic below
       }
-      
+
       // Process monthly backups (for dates older than 7 days but within last year)
       for (final entry in backupsByMonth.entries) {
         final monthBackups = entry.value;
-        
+
         // Filter to only backups older than 7 days and within the last year
         final eligibleBackups = monthBackups.where((backup) {
           final backupDate = backup['date'] as DateTime;
-          final dateOnly = DateTime(backupDate.year, backupDate.month, backupDate.day);
-          return dateOnly.isBefore(weekCutoff) && 
-                 (dateOnly.isAfter(yearCutoff) || dateOnly.isAtSameMomentAs(yearCutoff));
+          final dateOnly = DateTime(
+            backupDate.year,
+            backupDate.month,
+            backupDate.day,
+          );
+          return dateOnly.isBefore(weekCutoff) &&
+              (dateOnly.isAfter(yearCutoff) ||
+                  dateOnly.isAtSameMomentAs(yearCutoff));
         }).toList();
-        
+
         if (eligibleBackups.isNotEmpty) {
           // Keep only the latest backup for this month
-          eligibleBackups.sort((a, b) => (b['date'] as DateTime).compareTo(a['date'] as DateTime));
+          eligibleBackups.sort(
+            (a, b) => (b['date'] as DateTime).compareTo(a['date'] as DateTime),
+          );
           backupsToKeep.add(eligibleBackups.first['fileName'] as String);
         }
       }
-      
+
       // Delete all backups not in the keep set
       for (final backup in backups) {
         final fileName = backup['fileName'] as String;
@@ -537,12 +570,16 @@ class WindowsDriveService {
     try {
       final client = await _authService.createDriveClient();
       if (client == null) return false;
-      
+
       // Find the file
       final files = await client.findBackupFiles(fileName);
       if (files.isEmpty) {
         // File not found - may have already been deleted
-        if (kDebugMode) print('Windows Drive: Backup not found (already deleted?): $fileName');
+        if (kDebugMode) {
+          print(
+            'Windows Drive: Backup not found (already deleted?): $fileName',
+          );
+        }
         return false;
       }
       await client.deleteFile(files.first.id!);
@@ -550,11 +587,16 @@ class WindowsDriveService {
       return true;
     } catch (e) {
       // 404 means file was already deleted - treat as success
-      if (e.toString().contains('404') || e.toString().contains('File not found')) {
-        if (kDebugMode) print('Windows Drive: Backup already deleted: $fileName');
+      if (e.toString().contains('404') ||
+          e.toString().contains('File not found')) {
+        if (kDebugMode) {
+          print('Windows Drive: Backup already deleted: $fileName');
+        }
         return false;
       }
-      if (kDebugMode) print('Windows Drive: Failed to delete backup $fileName: $e');
+      if (kDebugMode) {
+        print('Windows Drive: Failed to delete backup $fileName: $e');
+      }
       return false;
     }
   }

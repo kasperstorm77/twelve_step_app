@@ -65,10 +65,10 @@ class AppNotification extends HiveObject {
     DateTime? lastModified,
     this.vibrateEnabled = true,
     this.soundEnabled = true,
-  })  : id = id ?? const Uuid().v4(),
-        weekdays = weekdays ?? <int>[],
-        createdAt = createdAt ?? DateTime.now(),
-        lastModified = lastModified ?? DateTime.now();
+  }) : id = id ?? const Uuid().v4(),
+       weekdays = weekdays ?? <int>[],
+       createdAt = createdAt ?? DateTime.now(),
+       lastModified = lastModified ?? DateTime.now();
 
   AppNotification copyWith({
     String? title,
@@ -97,19 +97,19 @@ class AppNotification extends HiveObject {
   }
 
   Map<String, dynamic> toJson() => {
-        'id': id,
-        'notificationId': notificationId,
-        'title': title,
-        'body': body,
-        'enabled': enabled,
-        'scheduleType': scheduleType.index,
-        'timeMinutes': timeMinutes,
-        'weekdays': weekdays,
-        'createdAt': createdAt.toIso8601String(),
-        'lastModified': lastModified.toIso8601String(),
-        'vibrateEnabled': vibrateEnabled,
-        'soundEnabled': soundEnabled,
-      };
+    'id': id,
+    'notificationId': notificationId,
+    'title': title,
+    'body': body,
+    'enabled': enabled,
+    'scheduleType': scheduleType.index,
+    'timeMinutes': timeMinutes,
+    'weekdays': weekdays,
+    'createdAt': createdAt.toIso8601String(),
+    'lastModified': lastModified.toIso8601String(),
+    'vibrateEnabled': vibrateEnabled,
+    'soundEnabled': soundEnabled,
+  };
 
   factory AppNotification.fromJson(Map<String, dynamic> json) {
     return AppNotification(
@@ -118,7 +118,8 @@ class AppNotification extends HiveObject {
       title: (json['title'] as String?) ?? '',
       body: (json['body'] as String?) ?? '',
       enabled: (json['enabled'] as bool?) ?? true,
-      scheduleType: NotificationScheduleType.values[(json['scheduleType'] as int?) ?? 0],
+      scheduleType:
+          NotificationScheduleType.values[(json['scheduleType'] as int?) ?? 0],
       timeMinutes: (json['timeMinutes'] as int?) ?? 8 * 60,
       weekdays: (json['weekdays'] as List?)?.cast<int>() ?? <int>[],
       createdAt: json['createdAt'] != null

@@ -17,7 +17,11 @@ class _ArchiveTabState extends State<ArchiveTab> {
   final _service = AgnosticismService();
   double _dragDeltaX = 0;
 
-  void _restorePair(BuildContext context, Box<BarrierPowerPair> box, BarrierPowerPair pair) async {
+  void _restorePair(
+    BuildContext context,
+    Box<BarrierPowerPair> box,
+    BarrierPowerPair pair,
+  ) async {
     if (!_service.canAddPair(box)) {
       if (!context.mounted) return;
       ScaffoldMessenger.of(context).showSnackBar(
@@ -32,13 +36,15 @@ class _ArchiveTabState extends State<ArchiveTab> {
     await _service.restorePair(box, pair.id);
     if (!context.mounted) return;
     ScaffoldMessenger.of(context).showSnackBar(
-      SnackBar(
-        content: Text(t(context, 'agnosticism_pair_restored')),
-      ),
+      SnackBar(content: Text(t(context, 'agnosticism_pair_restored'))),
     );
   }
 
-  void _deletePair(BuildContext context, Box<BarrierPowerPair> box, BarrierPowerPair pair) async {
+  void _deletePair(
+    BuildContext context,
+    Box<BarrierPowerPair> box,
+    BarrierPowerPair pair,
+  ) async {
     final confirmed = await showDialog<bool>(
       context: context,
       builder: (context) => AlertDialog(
@@ -64,9 +70,7 @@ class _ArchiveTabState extends State<ArchiveTab> {
       await _service.deletePair(box, pair.id);
       if (!context.mounted) return;
       ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(
-          content: Text(t(context, 'agnosticism_pair_deleted')),
-        ),
+        SnackBar(content: Text(t(context, 'agnosticism_pair_deleted'))),
       );
     }
   }
@@ -117,7 +121,12 @@ class _ArchiveTabState extends State<ArchiveTab> {
           }
 
           return ListView.builder(
-            padding: EdgeInsets.fromLTRB(12, 8, 12, MediaQuery.of(context).padding.bottom + 16),
+            padding: EdgeInsets.fromLTRB(
+              12,
+              8,
+              12,
+              MediaQuery.of(context).padding.bottom + 16,
+            ),
             itemCount: archivedPairs.length,
             itemBuilder: (context, index) {
               final pair = archivedPairs[index];
@@ -129,8 +138,12 @@ class _ArchiveTabState extends State<ArchiveTab> {
     );
   }
 
-  Widget _buildArchivedPairCard(BuildContext context, Box<BarrierPowerPair> box,
-      BarrierPowerPair pair, bool canRestore) {
+  Widget _buildArchivedPairCard(
+    BuildContext context,
+    Box<BarrierPowerPair> box,
+    BarrierPowerPair pair,
+    bool canRestore,
+  ) {
     final colorScheme = Theme.of(context).colorScheme;
     final archivedDate = pair.archivedAt != null
         ? '${pair.archivedAt!.day}/${pair.archivedAt!.month}/${pair.archivedAt!.year}'
@@ -146,12 +159,12 @@ class _ArchiveTabState extends State<ArchiveTab> {
             // Archived date
             Text(
               '${t(context, 'agnosticism_archived_on')}: $archivedDate',
-              style: Theme.of(context).textTheme.bodySmall?.copyWith(
-                color: colorScheme.outline,
-              ),
+              style: Theme.of(
+                context,
+              ).textTheme.bodySmall?.copyWith(color: colorScheme.outline),
             ),
             const SizedBox(height: 12),
-            
+
             // Barrier section
             Text(
               t(context, 'agnosticism_barrier'),
@@ -160,11 +173,8 @@ class _ArchiveTabState extends State<ArchiveTab> {
                 fontWeight: FontWeight.w600,
               ),
             ),
-            Text(
-              pair.barrier,
-              style: Theme.of(context).textTheme.bodyMedium,
-            ),
-            
+            Text(pair.barrier, style: Theme.of(context).textTheme.bodyMedium),
+
             Padding(
               padding: const EdgeInsets.only(top: 4),
               child: Column(
@@ -185,16 +195,16 @@ class _ArchiveTabState extends State<ArchiveTab> {
                 ],
               ),
             ),
-            
+
             const SizedBox(height: 16),
-            
+
             // Action buttons
             Row(
               mainAxisAlignment: MainAxisAlignment.end,
               children: [
                 // Restore button
                 TextButton.icon(
-                  onPressed: canRestore 
+                  onPressed: canRestore
                       ? () => _restorePair(context, box, pair)
                       : null,
                   icon: const Icon(Icons.restore),

@@ -5,17 +5,20 @@ import 'package:hive_flutter/hive_flutter.dart';
 /// Service for managing app-wide settings like morning ritual auto-load
 class AppSettingsService {
   static const String _settingsBoxName = 'settings';
-  
+
   // Morning ritual settings keys
-  static const String _morningRitualEnabledKey = 'morning_ritual_auto_load_enabled';
+  static const String _morningRitualEnabledKey =
+      'morning_ritual_auto_load_enabled';
   static const String _morningStartHourKey = 'morning_ritual_start_hour';
   static const String _morningStartMinuteKey = 'morning_ritual_start_minute';
   static const String _morningEndHourKey = 'morning_ritual_end_hour';
   static const String _morningEndMinuteKey = 'morning_ritual_end_minute';
-  static const String _morningRitualLastForcedDateKey = 'morning_ritual_last_forced_date';
+  static const String _morningRitualLastForcedDateKey =
+      'morning_ritual_last_forced_date';
 
   // 4th step settings keys
-  static const String _fourthStepCompactViewEnabledKey = 'fourth_step_compact_view_enabled';
+  static const String _fourthStepCompactViewEnabledKey =
+      'fourth_step_compact_view_enabled';
 
   static bool getFourthStepCompactViewEnabled() {
     try {
@@ -23,10 +26,13 @@ class AppSettingsService {
       return settingsBox.get(
             _fourthStepCompactViewEnabledKey,
             defaultValue: false,
-          ) as bool;
+          )
+          as bool;
     } catch (e) {
       if (kDebugMode) {
-        print('AppSettingsService: Error getting 4th step compact view setting - $e');
+        print(
+          'AppSettingsService: Error getting 4th step compact view setting - $e',
+        );
       }
       return false;
     }
@@ -38,7 +44,9 @@ class AppSettingsService {
       await settingsBox.put(_fourthStepCompactViewEnabledKey, enabled);
     } catch (e) {
       if (kDebugMode) {
-        print('AppSettingsService: Error saving 4th step compact view setting - $e');
+        print(
+          'AppSettingsService: Error saving 4th step compact view setting - $e',
+        );
       }
     }
   }
@@ -47,20 +55,28 @@ class AppSettingsService {
   static Map<String, dynamic> getMorningRitualSettings() {
     try {
       final settingsBox = Hive.box(_settingsBoxName);
-      
-      final enabled = settingsBox.get(_morningRitualEnabledKey, defaultValue: false) as bool;
-      final startHour = settingsBox.get(_morningStartHourKey, defaultValue: 6) as int;
-      final startMinute = settingsBox.get(_morningStartMinuteKey, defaultValue: 0) as int;
-      final endHour = settingsBox.get(_morningEndHourKey, defaultValue: 9) as int;
-      final endMinute = settingsBox.get(_morningEndMinuteKey, defaultValue: 0) as int;
-      
+
+      final enabled =
+          settingsBox.get(_morningRitualEnabledKey, defaultValue: false)
+              as bool;
+      final startHour =
+          settingsBox.get(_morningStartHourKey, defaultValue: 6) as int;
+      final startMinute =
+          settingsBox.get(_morningStartMinuteKey, defaultValue: 0) as int;
+      final endHour =
+          settingsBox.get(_morningEndHourKey, defaultValue: 9) as int;
+      final endMinute =
+          settingsBox.get(_morningEndMinuteKey, defaultValue: 0) as int;
+
       return {
         'enabled': enabled,
         'startTime': TimeOfDay(hour: startHour, minute: startMinute),
         'endTime': TimeOfDay(hour: endHour, minute: endMinute),
       };
     } catch (e) {
-      if (kDebugMode) print('AppSettingsService: Error getting morning ritual settings - $e');
+      if (kDebugMode) {
+        print('AppSettingsService: Error getting morning ritual settings - $e');
+      }
       return {
         'enabled': false,
         'startTime': const TimeOfDay(hour: 5, minute: 0),
@@ -77,19 +93,23 @@ class AppSettingsService {
   }) async {
     try {
       final settingsBox = Hive.box(_settingsBoxName);
-      
+
       await settingsBox.put(_morningRitualEnabledKey, enabled);
       await settingsBox.put(_morningStartHourKey, startTime.hour);
       await settingsBox.put(_morningStartMinuteKey, startTime.minute);
       await settingsBox.put(_morningEndHourKey, endTime.hour);
       await settingsBox.put(_morningEndMinuteKey, endTime.minute);
-      
+
       if (kDebugMode) {
-        print('AppSettingsService: Saved morning ritual settings - enabled: $enabled, '
-            'start: ${startTime.hour}:${startTime.minute}, end: ${endTime.hour}:${endTime.minute}');
+        print(
+          'AppSettingsService: Saved morning ritual settings - enabled: $enabled, '
+          'start: ${startTime.hour}:${startTime.minute}, end: ${endTime.hour}:${endTime.minute}',
+        );
       }
     } catch (e) {
-      if (kDebugMode) print('AppSettingsService: Error saving morning ritual settings - $e');
+      if (kDebugMode) {
+        print('AppSettingsService: Error saving morning ritual settings - $e');
+      }
     }
   }
 
@@ -97,17 +117,17 @@ class AppSettingsService {
   static bool isWithinMorningRitualWindow() {
     final settings = getMorningRitualSettings();
     final enabled = settings['enabled'] as bool;
-    
+
     if (!enabled) return false;
-    
+
     final now = TimeOfDay.now();
     final startTime = settings['startTime'] as TimeOfDay;
     final endTime = settings['endTime'] as TimeOfDay;
-    
+
     final nowMinutes = now.hour * 60 + now.minute;
     final startMinutes = startTime.hour * 60 + startTime.minute;
     final endMinutes = endTime.hour * 60 + endTime.minute;
-    
+
     return nowMinutes >= startMinutes && nowMinutes < endMinutes;
   }
 
@@ -115,21 +135,29 @@ class AppSettingsService {
   /// Returns true if within window AND haven't forced today yet
   static bool shouldForceMorningRitual() {
     if (!isWithinMorningRitualWindow()) return false;
-    
+
     try {
       final settingsBox = Hive.box(_settingsBoxName);
-      final lastForcedDate = settingsBox.get(_morningRitualLastForcedDateKey) as String?;
-      final today = DateTime.now().toIso8601String().substring(0, 10); // YYYY-MM-DD
-      
+      final lastForcedDate =
+          settingsBox.get(_morningRitualLastForcedDateKey) as String?;
+      final today = DateTime.now().toIso8601String().substring(
+        0,
+        10,
+      ); // YYYY-MM-DD
+
       // Already forced today
       if (lastForcedDate == today) {
-        if (kDebugMode) print('AppSettingsService: Already forced morning ritual today');
+        if (kDebugMode) {
+          print('AppSettingsService: Already forced morning ritual today');
+        }
         return false;
       }
-      
+
       return true;
     } catch (e) {
-      if (kDebugMode) print('AppSettingsService: Error checking last forced date - $e');
+      if (kDebugMode) {
+        print('AppSettingsService: Error checking last forced date - $e');
+      }
       return false;
     }
   }
@@ -138,11 +166,18 @@ class AppSettingsService {
   static Future<void> markMorningRitualForced() async {
     try {
       final settingsBox = Hive.box(_settingsBoxName);
-      final today = DateTime.now().toIso8601String().substring(0, 10); // YYYY-MM-DD
+      final today = DateTime.now().toIso8601String().substring(
+        0,
+        10,
+      ); // YYYY-MM-DD
       await settingsBox.put(_morningRitualLastForcedDateKey, today);
-      if (kDebugMode) print('AppSettingsService: Marked morning ritual as forced for $today');
+      if (kDebugMode) {
+        print('AppSettingsService: Marked morning ritual as forced for $today');
+      }
     } catch (e) {
-      if (kDebugMode) print('AppSettingsService: Error marking morning ritual forced - $e');
+      if (kDebugMode) {
+        print('AppSettingsService: Error marking morning ritual forced - $e');
+      }
     }
   }
 
@@ -154,8 +189,10 @@ class AppSettingsService {
 
     final result = <String, dynamic>{
       'morningRitualAutoLoadEnabled': settings['enabled'] as bool,
-      'morningRitualStartTime': '${startTime.hour.toString().padLeft(2, '0')}:${startTime.minute.toString().padLeft(2, '0')}:00',
-      'morningRitualEndTime': '${endTime.hour.toString().padLeft(2, '0')}:${endTime.minute.toString().padLeft(2, '0')}:00',
+      'morningRitualStartTime':
+          '${startTime.hour.toString().padLeft(2, '0')}:${startTime.minute.toString().padLeft(2, '0')}:00',
+      'morningRitualEndTime':
+          '${endTime.hour.toString().padLeft(2, '0')}:${endTime.minute.toString().padLeft(2, '0')}:00',
       'fourthStepCompactViewEnabled': getFourthStepCompactViewEnabled(),
     };
 
@@ -171,7 +208,9 @@ class AppSettingsService {
         result['selectedAppId'] = selectedAppId;
       }
     } catch (e) {
-      if (kDebugMode) print('AppSettingsService: Error exporting UI prefs - $e');
+      if (kDebugMode) {
+        print('AppSettingsService: Error exporting UI prefs - $e');
+      }
     }
 
     return result;
@@ -184,10 +223,10 @@ class AppSettingsService {
 
       final compactViewEnabled =
           data['fourthStepCompactViewEnabled'] as bool? ?? false;
-      
+
       TimeOfDay startTime = const TimeOfDay(hour: 5, minute: 0);
       TimeOfDay endTime = const TimeOfDay(hour: 9, minute: 0);
-      
+
       // Parse start time (format: "HH:MM:SS")
       final startTimeStr = data['morningRitualStartTime'] as String?;
       if (startTimeStr != null) {
@@ -199,7 +238,7 @@ class AppSettingsService {
           );
         }
       }
-      
+
       // Parse end time (format: "HH:MM:SS")
       final endTimeStr = data['morningRitualEndTime'] as String?;
       if (endTimeStr != null) {
@@ -211,7 +250,7 @@ class AppSettingsService {
           );
         }
       }
-      
+
       await saveMorningRitualSettings(
         enabled: enabled,
         startTime: startTime,
@@ -233,9 +272,13 @@ class AppSettingsService {
         await settingsBox.put('selected_app_id', selectedAppId);
       }
 
-      if (kDebugMode) print('AppSettingsService: Imported morning ritual settings from sync');
+      if (kDebugMode) {
+        print('AppSettingsService: Imported morning ritual settings from sync');
+      }
     } catch (e) {
-      if (kDebugMode) print('AppSettingsService: Error importing settings from sync - $e');
+      if (kDebugMode) {
+        print('AppSettingsService: Error importing settings from sync - $e');
+      }
     }
   }
 }

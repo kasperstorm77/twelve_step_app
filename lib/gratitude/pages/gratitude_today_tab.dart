@@ -51,10 +51,13 @@ class _GratitudeTodayTabState extends State<GratitudeTodayTab> {
   }
 
   Future<void> _saveEntry() async {
-    if (_towardsController.text.trim().isEmpty || _forController.text.trim().isEmpty) return;
+    if (_towardsController.text.trim().isEmpty ||
+        _forController.text.trim().isEmpty) {
+      return;
+    }
 
     final box = Hive.box<GratitudeEntry>('gratitude_box');
-    
+
     if (_editingEntry != null) {
       // Update existing entry
       final index = box.values.toList().indexOf(_editingEntry!);
@@ -88,7 +91,7 @@ class _GratitudeTodayTabState extends State<GratitudeTodayTab> {
 
   void _editEntry(GratitudeEntry entry) {
     if (!entry.canEdit) return;
-    
+
     setState(() {
       _editingEntry = entry;
       _isFormExpanded = true;
@@ -105,9 +108,9 @@ class _GratitudeTodayTabState extends State<GratitudeTodayTab> {
       builder: (context) => AlertDialog(
         title: Text(
           t(context, 'gratitude_delete_title'),
-          style: Theme.of(context).textTheme.titleMedium?.copyWith(
-            fontWeight: FontWeight.bold,
-          ),
+          style: Theme.of(
+            context,
+          ).textTheme.titleMedium?.copyWith(fontWeight: FontWeight.bold),
         ),
         content: Text(t(context, 'gratitude_delete_confirm')),
         actions: [
@@ -117,9 +120,7 @@ class _GratitudeTodayTabState extends State<GratitudeTodayTab> {
           ),
           TextButton(
             onPressed: () => Navigator.of(context).pop(true),
-            style: TextButton.styleFrom(
-              foregroundColor: Colors.red,
-            ),
+            style: TextButton.styleFrom(foregroundColor: Colors.red),
             child: Text(t(context, 'delete')),
           ),
         ],
@@ -156,7 +157,7 @@ class _GratitudeTodayTabState extends State<GratitudeTodayTab> {
     final today = DateTime.now();
     final isEditingExisting = _editingEntry != null;
     final hideExtras = _isFormExpanded;
-    
+
     return Column(
       children: [
         // Date header - hide when form is focused to make room
@@ -199,80 +200,80 @@ class _GratitudeTodayTabState extends State<GratitudeTodayTab> {
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.stretch,
                 children: [
-                if (isEditingExisting)
-                  Padding(
-                    padding: const EdgeInsets.only(bottom: 8.0),
-                    child: Text(
-                      t(context, 'gratitude_edit_entry'),
-                      style: Theme.of(context).textTheme.titleMedium,
-                    ),
-                  ),
-                MouseRegion(
-                  cursor: SystemMouseCursors.text,
-                  child: GestureDetector(
-                    onTap: () => _expandFormAndFocus(_towardsFocus),
-                    child: AbsorbPointer(
-                      absorbing: !_isFormExpanded,
-                      child: TextField(
-                        controller: _towardsController,
-                        focusNode: _towardsFocus,
-                        decoration: InputDecoration(
-                          labelText: t(context, 'gratitude_towards_label'),
-                          hintText: t(context, 'gratitude_towards_hint'),
-                          border: const OutlineInputBorder(),
-                        ),
-                        textCapitalization: TextCapitalization.sentences,
-                      ),
-                    ),
-                  ),
-                ),
-                const SizedBox(height: 8),
-                MouseRegion(
-                  cursor: SystemMouseCursors.text,
-                  child: GestureDetector(
-                    onTap: () => _expandFormAndFocus(_forFocus),
-                    child: AbsorbPointer(
-                      absorbing: !_isFormExpanded,
-                      child: TextField(
-                        controller: _forController,
-                        focusNode: _forFocus,
-                        decoration: InputDecoration(
-                          labelText: t(context, 'gratitude_for_label'),
-                          hintText: t(context, 'gratitude_for_hint'),
-                          border: const OutlineInputBorder(),
-                        ),
-                        textCapitalization: TextCapitalization.sentences,
-                        onSubmitted: (_) => _saveEntry(),
-                      ),
-                    ),
-                  ),
-                ),
-                const SizedBox(height: 8),
-                Wrap(
-                  alignment: WrapAlignment.end,
-                  spacing: 8,
-                  runSpacing: 8,
-                  children: [
-                    if (_isFormExpanded)
-                      TextButton(
-                        onPressed: _cancelEdit,
-                        child: Text(t(context, 'cancel')),
-                      ),
-                    ElevatedButton(
-                      onPressed: _saveEntry,
+                  if (isEditingExisting)
+                    Padding(
+                      padding: const EdgeInsets.only(bottom: 8.0),
                       child: Text(
-                        _editingEntry != null
-                            ? t(context, 'update')
-                            : t(context, 'add'),
+                        t(context, 'gratitude_edit_entry'),
+                        style: Theme.of(context).textTheme.titleMedium,
                       ),
                     ),
-                  ],
-                ),
-              ],
+                  MouseRegion(
+                    cursor: SystemMouseCursors.text,
+                    child: GestureDetector(
+                      onTap: () => _expandFormAndFocus(_towardsFocus),
+                      child: AbsorbPointer(
+                        absorbing: !_isFormExpanded,
+                        child: TextField(
+                          controller: _towardsController,
+                          focusNode: _towardsFocus,
+                          decoration: InputDecoration(
+                            labelText: t(context, 'gratitude_towards_label'),
+                            hintText: t(context, 'gratitude_towards_hint'),
+                            border: const OutlineInputBorder(),
+                          ),
+                          textCapitalization: TextCapitalization.sentences,
+                        ),
+                      ),
+                    ),
+                  ),
+                  const SizedBox(height: 8),
+                  MouseRegion(
+                    cursor: SystemMouseCursors.text,
+                    child: GestureDetector(
+                      onTap: () => _expandFormAndFocus(_forFocus),
+                      child: AbsorbPointer(
+                        absorbing: !_isFormExpanded,
+                        child: TextField(
+                          controller: _forController,
+                          focusNode: _forFocus,
+                          decoration: InputDecoration(
+                            labelText: t(context, 'gratitude_for_label'),
+                            hintText: t(context, 'gratitude_for_hint'),
+                            border: const OutlineInputBorder(),
+                          ),
+                          textCapitalization: TextCapitalization.sentences,
+                          onSubmitted: (_) => _saveEntry(),
+                        ),
+                      ),
+                    ),
+                  ),
+                  const SizedBox(height: 8),
+                  Wrap(
+                    alignment: WrapAlignment.end,
+                    spacing: 8,
+                    runSpacing: 8,
+                    children: [
+                      if (_isFormExpanded)
+                        TextButton(
+                          onPressed: _cancelEdit,
+                          child: Text(t(context, 'cancel')),
+                        ),
+                      ElevatedButton(
+                        onPressed: _saveEntry,
+                        child: Text(
+                          _editingEntry != null
+                              ? t(context, 'update')
+                              : t(context, 'add'),
+                        ),
+                      ),
+                    ],
+                  ),
+                ],
+              ),
             ),
           ),
         ),
-      ),
 
         // Today's entries list - hide when form is focused to make room
         if (!hideExtras) ...[
@@ -280,7 +281,9 @@ class _GratitudeTodayTabState extends State<GratitudeTodayTab> {
 
           Expanded(
             child: ValueListenableBuilder(
-              valueListenable: Hive.box<GratitudeEntry>('gratitude_box').listenable(),
+              valueListenable: Hive.box<GratitudeEntry>(
+                'gratitude_box',
+              ).listenable(),
               builder: (context, Box<GratitudeEntry> box, _) {
                 final entries = _service.getEntriesForDate(box, today);
 
@@ -292,13 +295,18 @@ class _GratitudeTodayTabState extends State<GratitudeTodayTab> {
                         Icon(
                           Icons.favorite_border,
                           size: 64,
-                          color: Theme.of(context).colorScheme.primary.withValues(alpha: 0.3),
+                          color: Theme.of(
+                            context,
+                          ).colorScheme.primary.withValues(alpha: 0.3),
                         ),
                         const SizedBox(height: 16),
                         Text(
                           t(context, 'gratitude_no_entries_today'),
-                          style: Theme.of(context).textTheme.bodyLarge?.copyWith(
-                                color: Theme.of(context).colorScheme.onSurface.withValues(alpha: 0.5),
+                          style: Theme.of(context).textTheme.bodyLarge
+                              ?.copyWith(
+                                color: Theme.of(
+                                  context,
+                                ).colorScheme.onSurface.withValues(alpha: 0.5),
                               ),
                         ),
                       ],
@@ -307,7 +315,12 @@ class _GratitudeTodayTabState extends State<GratitudeTodayTab> {
                 }
 
                 return ListView.builder(
-                  padding: EdgeInsets.fromLTRB(12, 0, 12, MediaQuery.of(context).padding.bottom + 32),
+                  padding: EdgeInsets.fromLTRB(
+                    12,
+                    0,
+                    12,
+                    MediaQuery.of(context).padding.bottom + 32,
+                  ),
                   itemCount: entries.length,
                   itemBuilder: (context, index) {
                     final entry = entries[index];
@@ -330,7 +343,9 @@ class _GratitudeTodayTabState extends State<GratitudeTodayTab> {
                                     Text(
                                       entry.gratitudeTowards,
                                       style: TextStyle(
-                                        color: Theme.of(context).colorScheme.primary,
+                                        color: Theme.of(
+                                          context,
+                                        ).colorScheme.primary,
                                         fontWeight: FontWeight.w600,
                                       ),
                                     ),
@@ -338,15 +353,23 @@ class _GratitudeTodayTabState extends State<GratitudeTodayTab> {
                                       const SizedBox(height: 4),
                                       Text(
                                         entry.gratefulFor,
-                                        style: Theme.of(context).textTheme.bodyMedium,
+                                        style: Theme.of(
+                                          context,
+                                        ).textTheme.bodyMedium,
                                       ),
                                     ],
                                     const SizedBox(height: 4),
                                     Text(
                                       DateFormat.jm().format(entry.createdAt),
-                                      style: Theme.of(context).textTheme.bodySmall?.copyWith(
-                                        color: Theme.of(context).colorScheme.onSurface.withValues(alpha: 0.5),
-                                      ),
+                                      style: Theme.of(context)
+                                          .textTheme
+                                          .bodySmall
+                                          ?.copyWith(
+                                            color: Theme.of(context)
+                                                .colorScheme
+                                                .onSurface
+                                                .withValues(alpha: 0.5),
+                                          ),
                                     ),
                                   ],
                                 ),

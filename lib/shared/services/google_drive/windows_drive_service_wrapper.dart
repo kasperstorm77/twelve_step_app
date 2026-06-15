@@ -11,26 +11,30 @@ import 'windows_drive_service.dart';
 /// Matches MobileDriveService API with debouncing, events, and backup management
 class WindowsDriveServiceWrapper {
   final WindowsDriveService _driveService;
-  
+
   bool _syncEnabled;
-  
+
   // Debouncing for uploads
   Timer? _uploadTimer;
   final Duration _uploadDelay;
 
   // Events
-  final StreamController<bool> _syncStateController = StreamController.broadcast();
-  final StreamController<String> _uploadController = StreamController.broadcast();
-  final StreamController<String> _downloadController = StreamController.broadcast();
-  final StreamController<String> _errorController = StreamController.broadcast();
+  final StreamController<bool> _syncStateController =
+      StreamController.broadcast();
+  final StreamController<String> _uploadController =
+      StreamController.broadcast();
+  final StreamController<String> _downloadController =
+      StreamController.broadcast();
+  final StreamController<String> _errorController =
+      StreamController.broadcast();
 
   WindowsDriveServiceWrapper({
     required WindowsDriveService driveService,
     bool syncEnabled = false,
     Duration uploadDelay = const Duration(milliseconds: 700),
-  })  : _driveService = driveService,
-        _syncEnabled = syncEnabled,
-        _uploadDelay = uploadDelay;
+  }) : _driveService = driveService,
+       _syncEnabled = syncEnabled,
+       _uploadDelay = uploadDelay;
 
   // Factory constructor
   static Future<WindowsDriveServiceWrapper> create({
@@ -50,7 +54,7 @@ class WindowsDriveServiceWrapper {
   bool get syncEnabled => _syncEnabled;
   bool get isAuthenticated => _driveService.isSignedIn;
   WindowsDriveService get driveService => _driveService;
-  
+
   // Streams
   Stream<bool> get onSyncStateChanged => _syncStateController.stream;
   Stream<String> get onUpload => _uploadController.stream;
@@ -64,14 +68,20 @@ class WindowsDriveServiceWrapper {
 
   /// Set sync enabled state
   Future<void> setSyncEnabled(bool enabled) async {
-    if (kDebugMode) print('WindowsDriveServiceWrapper: setSyncEnabled($enabled)');
+    if (kDebugMode) {
+      print('WindowsDriveServiceWrapper: setSyncEnabled($enabled)');
+    }
     _syncEnabled = enabled;
     _syncStateController.add(enabled);
   }
 
   /// Schedule an upload with debouncing (700ms delay by default)
   void scheduleUpload(String content) {
-    if (kDebugMode) print('WindowsDriveServiceWrapper: scheduleUpload called - syncEnabled=$_syncEnabled, isSignedIn=${_driveService.isSignedIn}');
+    if (kDebugMode) {
+      print(
+        'WindowsDriveServiceWrapper: scheduleUpload called - syncEnabled=$_syncEnabled, isSignedIn=${_driveService.isSignedIn}',
+      );
+    }
     if (!_syncEnabled || !_driveService.isSignedIn) {
       if (kDebugMode) print('WindowsDriveServiceWrapper: ⚠️ Upload skipped');
       return;
@@ -82,7 +92,9 @@ class WindowsDriveServiceWrapper {
 
     // Schedule new upload
     _uploadTimer = Timer(_uploadDelay, () async {
-      if (kDebugMode) print('WindowsDriveServiceWrapper: Executing scheduled upload');
+      if (kDebugMode) {
+        print('WindowsDriveServiceWrapper: Executing scheduled upload');
+      }
       await _performUpload(content);
     });
   }
@@ -122,18 +134,20 @@ class WindowsDriveServiceWrapper {
         if (kDebugMode) print('Windows Drive: No backup files found');
         return null;
       }
-      
+
       // backups are sorted newest first, so take the first one
       final mostRecent = backups.first;
       final fileName = mostRecent['fileName'] as String;
-      if (kDebugMode) print('Windows Drive: Downloading most recent backup: $fileName');
-      
+      if (kDebugMode) {
+        print('Windows Drive: Downloading most recent backup: $fileName');
+      }
+
       final content = await _driveService.downloadBackupContent(fileName);
-      
+
       if (content != null) {
         _downloadController.add(content);
       }
-      
+
       return content;
     } catch (e) {
       if (kDebugMode) print('Windows Drive: Download failed: $e');
@@ -159,7 +173,9 @@ class WindowsDriveServiceWrapper {
   }
 
   /// Get the newest backup's Drive-modified timestamp (fast conflict check).
-  Future<DateTime?> getNewestBackupModifiedTime({bool runCleanup = false}) async {
+  Future<DateTime?> getNewestBackupModifiedTime({
+    bool runCleanup = false,
+  }) async {
     if (!_driveService.isSignedIn) {
       if (kDebugMode) print('Windows Drive: Not signed in');
       return null;
@@ -169,13 +185,17 @@ class WindowsDriveServiceWrapper {
   }
 
   /// Get the newest backup's `lastModified` timestamp from the JSON itself.
-  Future<DateTime?> getNewestBackupJsonLastModified({bool runCleanup = false}) async {
+  Future<DateTime?> getNewestBackupJsonLastModified({
+    bool runCleanup = false,
+  }) async {
     if (!_driveService.isSignedIn) {
       if (kDebugMode) print('Windows Drive: Not signed in');
       return null;
     }
 
-    return _driveService.getNewestBackupJsonLastModified(runCleanup: runCleanup);
+    return _driveService.getNewestBackupJsonLastModified(
+      runCleanup: runCleanup,
+    );
   }
 
   /// Download content from a specific backup file
@@ -197,7 +217,7 @@ class WindowsDriveServiceWrapper {
   /// Check if file exists on Drive
   Future<bool> fileExists() async {
     if (!_driveService.isSignedIn) return false;
-    
+
     try {
       return await _driveService.fileExists(
         fileName: _driveService.config.fileName,
@@ -211,7 +231,7 @@ class WindowsDriveServiceWrapper {
   /// Delete file from Drive
   Future<bool> deleteContent() async {
     if (!_driveService.isSignedIn) return false;
-    
+
     try {
       return await _driveService.deleteFile(
         fileName: _driveService.config.fileName,

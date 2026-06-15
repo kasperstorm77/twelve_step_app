@@ -8,10 +8,7 @@ import '../../shared/localizations.dart';
 class GratitudeListTab extends StatelessWidget {
   final Function(DateTime) onDateSelected;
 
-  const GratitudeListTab({
-    super.key,
-    required this.onDateSelected,
-  });
+  const GratitudeListTab({super.key, required this.onDateSelected});
 
   Future<void> _deleteEntry(BuildContext context, GratitudeEntry entry) async {
     if (!entry.canDelete) return;
@@ -21,9 +18,9 @@ class GratitudeListTab extends StatelessWidget {
       builder: (context) => AlertDialog(
         title: Text(
           t(context, 'gratitude_delete_title'),
-          style: Theme.of(context).textTheme.titleMedium?.copyWith(
-            fontWeight: FontWeight.bold,
-          ),
+          style: Theme.of(
+            context,
+          ).textTheme.titleMedium?.copyWith(fontWeight: FontWeight.bold),
         ),
         content: Text(t(context, 'gratitude_delete_confirm')),
         actions: [
@@ -33,9 +30,7 @@ class GratitudeListTab extends StatelessWidget {
           ),
           TextButton(
             onPressed: () => Navigator.of(context).pop(true),
-            style: TextButton.styleFrom(
-              foregroundColor: Colors.red,
-            ),
+            style: TextButton.styleFrom(foregroundColor: Colors.red),
             child: Text(t(context, 'delete')),
           ),
         ],
@@ -59,7 +54,7 @@ class GratitudeListTab extends StatelessWidget {
       builder: (context, Box<GratitudeEntry> box, _) {
         final service = GratitudeService();
         final allEntries = service.getAllEntries(box);
-        
+
         if (allEntries.isEmpty) {
           return Center(
             child: Column(
@@ -68,20 +63,26 @@ class GratitudeListTab extends StatelessWidget {
                 Icon(
                   Icons.favorite_border,
                   size: 64,
-                  color: Theme.of(context).colorScheme.primary.withValues(alpha: 0.3),
+                  color: Theme.of(
+                    context,
+                  ).colorScheme.primary.withValues(alpha: 0.3),
                 ),
                 const SizedBox(height: 16),
                 Text(
                   t(context, 'gratitude_no_entries'),
                   style: Theme.of(context).textTheme.titleMedium?.copyWith(
-                    color: Theme.of(context).colorScheme.onSurface.withValues(alpha: 0.5),
+                    color: Theme.of(
+                      context,
+                    ).colorScheme.onSurface.withValues(alpha: 0.5),
                   ),
                 ),
                 const SizedBox(height: 8),
                 Text(
                   t(context, 'gratitude_no_entries_hint'),
                   style: Theme.of(context).textTheme.bodyLarge?.copyWith(
-                    color: Theme.of(context).colorScheme.onSurface.withValues(alpha: 0.5),
+                    color: Theme.of(
+                      context,
+                    ).colorScheme.onSurface.withValues(alpha: 0.5),
                   ),
                   textAlign: TextAlign.center,
                 ),
@@ -96,7 +97,12 @@ class GratitudeListTab extends StatelessWidget {
           ..sort((a, b) => b.compareTo(a));
 
         return ListView.builder(
-          padding: EdgeInsets.fromLTRB(12, 8, 12, MediaQuery.of(context).padding.bottom + 32),
+          padding: EdgeInsets.fromLTRB(
+            12,
+            8,
+            12,
+            MediaQuery.of(context).padding.bottom + 32,
+          ),
           itemCount: sortedDates.length,
           itemBuilder: (context, index) {
             final date = sortedDates[index];
@@ -108,12 +114,16 @@ class GratitudeListTab extends StatelessWidget {
     );
   }
 
-  Widget _buildDateCard(BuildContext context, DateTime date, List<GratitudeEntry> entries) {
+  Widget _buildDateCard(
+    BuildContext context,
+    DateTime date,
+    List<GratitudeEntry> entries,
+  ) {
     final now = DateTime.now();
     final today = DateTime(now.year, now.month, now.day);
     final dateOnly = DateTime(date.year, date.month, date.day);
     final isToday = dateOnly.isAtSameMomentAs(today);
-    
+
     return Card(
       margin: const EdgeInsets.symmetric(vertical: 6),
       child: Padding(
@@ -126,9 +136,12 @@ class GratitudeListTab extends StatelessWidget {
               children: [
                 Container(
                   width: 60,
-                  padding: const EdgeInsets.symmetric(vertical: 8, horizontal: 4),
+                  padding: const EdgeInsets.symmetric(
+                    vertical: 8,
+                    horizontal: 4,
+                  ),
                   decoration: BoxDecoration(
-                    color: isToday 
+                    color: isToday
                         ? Theme.of(context).colorScheme.primary
                         : Theme.of(context).colorScheme.primaryContainer,
                     borderRadius: BorderRadius.circular(8),
@@ -140,9 +153,11 @@ class GratitudeListTab extends StatelessWidget {
                         style: TextStyle(
                           fontSize: 12,
                           fontWeight: FontWeight.bold,
-                          color: isToday 
+                          color: isToday
                               ? Theme.of(context).colorScheme.onPrimary
-                              : Theme.of(context).colorScheme.onPrimaryContainer,
+                              : Theme.of(
+                                  context,
+                                ).colorScheme.onPrimaryContainer,
                         ),
                       ),
                       Text(
@@ -150,18 +165,22 @@ class GratitudeListTab extends StatelessWidget {
                         style: TextStyle(
                           fontSize: 20,
                           fontWeight: FontWeight.bold,
-                          color: isToday 
+                          color: isToday
                               ? Theme.of(context).colorScheme.onPrimary
-                              : Theme.of(context).colorScheme.onPrimaryContainer,
+                              : Theme.of(
+                                  context,
+                                ).colorScheme.onPrimaryContainer,
                         ),
                       ),
                       Text(
                         DateFormat.E().format(date),
                         style: TextStyle(
                           fontSize: 10,
-                          color: isToday 
+                          color: isToday
                               ? Theme.of(context).colorScheme.onPrimary
-                              : Theme.of(context).colorScheme.onPrimaryContainer,
+                              : Theme.of(
+                                  context,
+                                ).colorScheme.onPrimaryContainer,
                         ),
                       ),
                     ],
@@ -174,15 +193,19 @@ class GratitudeListTab extends StatelessWidget {
                     children: [
                       Text(
                         DateFormat.yMMMMd().format(date),
-                        style: Theme.of(context).textTheme.titleMedium?.copyWith(
-                          fontWeight: FontWeight.bold,
-                        ),
+                        style: Theme.of(context).textTheme.titleMedium
+                            ?.copyWith(fontWeight: FontWeight.bold),
                       ),
                       const SizedBox(height: 4),
                       Text(
-                        t(context, 'gratitude_entries_count').replaceAll('%d', entries.length.toString()),
+                        t(
+                          context,
+                          'gratitude_entries_count',
+                        ).replaceAll('%d', entries.length.toString()),
                         style: Theme.of(context).textTheme.bodySmall?.copyWith(
-                          color: Theme.of(context).colorScheme.onSurface.withValues(alpha: 0.6),
+                          color: Theme.of(
+                            context,
+                          ).colorScheme.onSurface.withValues(alpha: 0.6),
                         ),
                       ),
                     ],
@@ -190,55 +213,58 @@ class GratitudeListTab extends StatelessWidget {
                 ),
               ],
             ),
-            
+
             const Divider(height: 16),
-            
+
             // Entries for this date
-            ...entries.map((entry) => Padding(
-              padding: const EdgeInsets.symmetric(vertical: 4),
-              child: Row(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  const Icon(Icons.favorite, color: Colors.pink, size: 20),
-                  const SizedBox(width: 8),
-                  Expanded(
-                    child: Column(
-                      crossAxisAlignment: CrossAxisAlignment.start,
-                      children: [
-                        Text(
-                          entry.gratitudeTowards,
-                          style: Theme.of(context).textTheme.bodyMedium?.copyWith(
-                            fontWeight: FontWeight.w500,
+            ...entries.map(
+              (entry) => Padding(
+                padding: const EdgeInsets.symmetric(vertical: 4),
+                child: Row(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    const Icon(Icons.favorite, color: Colors.pink, size: 20),
+                    const SizedBox(width: 8),
+                    Expanded(
+                      child: Column(
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        children: [
+                          Text(
+                            entry.gratitudeTowards,
+                            style: Theme.of(context).textTheme.bodyMedium
+                                ?.copyWith(fontWeight: FontWeight.w500),
                           ),
-                        ),
-                        if (entry.gratefulFor.isNotEmpty) ...[
+                          if (entry.gratefulFor.isNotEmpty) ...[
+                            const SizedBox(height: 2),
+                            Text(
+                              entry.gratefulFor,
+                              style: Theme.of(context).textTheme.bodyMedium,
+                            ),
+                          ],
                           const SizedBox(height: 2),
                           Text(
-                            entry.gratefulFor,
-                            style: Theme.of(context).textTheme.bodyMedium,
+                            DateFormat.jm().format(entry.createdAt),
+                            style: Theme.of(context).textTheme.bodySmall
+                                ?.copyWith(
+                                  color: Theme.of(context).colorScheme.onSurface
+                                      .withValues(alpha: 0.5),
+                                ),
                           ),
                         ],
-                        const SizedBox(height: 2),
-                        Text(
-                          DateFormat.jm().format(entry.createdAt),
-                          style: Theme.of(context).textTheme.bodySmall?.copyWith(
-                            color: Theme.of(context).colorScheme.onSurface.withValues(alpha: 0.5),
-                          ),
-                        ),
-                      ],
+                      ),
                     ),
-                  ),
-                  if (entry.canDelete)
-                    IconButton(
-                      icon: const Icon(Icons.delete_outline, size: 20),
-                      onPressed: () => _deleteEntry(context, entry),
-                      color: Colors.red,
-                      padding: EdgeInsets.zero,
-                      constraints: const BoxConstraints(),
-                    ),
-                ],
+                    if (entry.canDelete)
+                      IconButton(
+                        icon: const Icon(Icons.delete_outline, size: 20),
+                        onPressed: () => _deleteEntry(context, entry),
+                        color: Colors.red,
+                        padding: EdgeInsets.zero,
+                        constraints: const BoxConstraints(),
+                      ),
+                  ],
+                ),
               ),
-            )),
+            ),
           ],
         ),
       ),

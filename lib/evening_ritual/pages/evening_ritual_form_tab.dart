@@ -35,7 +35,9 @@ class _EveningRitualFormTabState extends State<EveningRitualFormTab> {
 
   void _onFocusChange() {
     // Notify parent when focus changes (editing started/stopped)
-    widget.onEditingChanged?.call(_detailFocusNode.hasFocus || _selectedType != null);
+    widget.onEditingChanged?.call(
+      _detailFocusNode.hasFocus || _selectedType != null,
+    );
   }
 
   @override
@@ -48,8 +50,10 @@ class _EveningRitualFormTabState extends State<EveningRitualFormTab> {
 
   void _loadThinkingFocus() {
     final entries = ReflectionService.getReflectionsByDate(widget.selectedDate);
-    final thinkingEntry = entries.where((e) => e.thinkingFocus != null).firstOrNull;
-    
+    final thinkingEntry = entries
+        .where((e) => e.thinkingFocus != null)
+        .firstOrNull;
+
     if (thinkingEntry != null) {
       setState(() {
         _thinkingFocusValue = thinkingEntry.thinkingFocus! / 10.0;
@@ -77,7 +81,11 @@ class _EveningRitualFormTabState extends State<EveningRitualFormTab> {
   bool get _isToday {
     final now = DateTime.now();
     final today = DateTime(now.year, now.month, now.day);
-    final selected = DateTime(widget.selectedDate.year, widget.selectedDate.month, widget.selectedDate.day);
+    final selected = DateTime(
+      widget.selectedDate.year,
+      widget.selectedDate.month,
+      widget.selectedDate.day,
+    );
     return today == selected;
   }
 
@@ -110,7 +118,9 @@ class _EveningRitualFormTabState extends State<EveningRitualFormTab> {
     if (_editingEntry != null) {
       // Update existing entry
       _editingEntry!.type = _selectedType!;
-      _editingEntry!.detail = _detailController.text.isEmpty ? null : _detailController.text;
+      _editingEntry!.detail = _detailController.text.isEmpty
+          ? null
+          : _detailController.text;
       await ReflectionService.updateReflection(_editingEntry!);
     } else {
       // Create new entry
@@ -122,7 +132,7 @@ class _EveningRitualFormTabState extends State<EveningRitualFormTab> {
       );
       await ReflectionService.addReflection(entry);
     }
-    
+
     _resetForm();
 
     if (mounted) {
@@ -145,7 +155,9 @@ class _EveningRitualFormTabState extends State<EveningRitualFormTab> {
 
   Future<void> _saveThinkingFocus() async {
     final entries = ReflectionService.getReflectionsByDate(widget.selectedDate);
-    var thinkingEntry = entries.where((e) => e.thinkingFocus != null).firstOrNull;
+    var thinkingEntry = entries
+        .where((e) => e.thinkingFocus != null)
+        .firstOrNull;
 
     if (thinkingEntry == null) {
       thinkingEntry = ReflectionEntry(
@@ -178,9 +190,9 @@ class _EveningRitualFormTabState extends State<EveningRitualFormTab> {
                 Text(
                   DateFormat.yMMMMd().format(widget.selectedDate),
                   style: Theme.of(context).textTheme.titleMedium?.copyWith(
-                        color: Theme.of(context).colorScheme.onPrimaryContainer,
-                        fontWeight: FontWeight.bold,
-                      ),
+                    color: Theme.of(context).colorScheme.onPrimaryContainer,
+                    fontWeight: FontWeight.bold,
+                  ),
                 ),
                 if (!isEditable) ...[
                   const SizedBox(width: 8),
@@ -215,8 +227,8 @@ class _EveningRitualFormTabState extends State<EveningRitualFormTab> {
                   child: Text(
                     t(context, 'past_date_read_only'),
                     style: Theme.of(context).textTheme.bodySmall?.copyWith(
-                          color: Theme.of(context).colorScheme.onSurfaceVariant,
-                        ),
+                      color: Theme.of(context).colorScheme.onSurfaceVariant,
+                    ),
                   ),
                 ),
               ],
@@ -227,14 +239,23 @@ class _EveningRitualFormTabState extends State<EveningRitualFormTab> {
           child: ValueListenableBuilder(
             valueListenable: ReflectionService.getBox().listenable(),
             builder: (context, Box<ReflectionEntry> box, _) {
-              final entries = ReflectionService.getReflectionsByDate(widget.selectedDate);
-              final regularEntries = entries.where((e) => e.thinkingFocus == null).toList();
+              final entries = ReflectionService.getReflectionsByDate(
+                widget.selectedDate,
+              );
+              final regularEntries = entries
+                  .where((e) => e.thinkingFocus == null)
+                  .toList();
 
               // Slider value is managed separately in state and loaded via initState/didUpdateWidget
               // This prevents the slider from jumping back when the user is dragging it
-              
+
               return SingleChildScrollView(
-                padding: EdgeInsets.fromLTRB(16, 16, 16, MediaQuery.of(context).padding.bottom + 32),
+                padding: EdgeInsets.fromLTRB(
+                  16,
+                  16,
+                  16,
+                  MediaQuery.of(context).padding.bottom + 32,
+                ),
                 child: Column(
                   crossAxisAlignment: CrossAxisAlignment.stretch,
                   children: [
@@ -253,9 +274,15 @@ class _EveningRitualFormTabState extends State<EveningRitualFormTab> {
                                 DropdownButtonFormField<ReflectionType>(
                                   initialValue: _selectedType,
                                   decoration: InputDecoration(
-                                    labelText: t(context, 'select_reflection_type'),
+                                    labelText: t(
+                                      context,
+                                      'select_reflection_type',
+                                    ),
                                     border: const OutlineInputBorder(),
-                                    contentPadding: const EdgeInsets.symmetric(horizontal: 12, vertical: 16),
+                                    contentPadding: const EdgeInsets.symmetric(
+                                      horizontal: 12,
+                                      vertical: 16,
+                                    ),
                                   ),
                                   style: Theme.of(context).textTheme.bodyMedium,
                                   isExpanded: true,
@@ -263,10 +290,14 @@ class _EveningRitualFormTabState extends State<EveningRitualFormTab> {
                                     return ReflectionType.values.map((type) {
                                       return Container(
                                         alignment: Alignment.centerLeft,
-                                        constraints: const BoxConstraints(maxWidth: 280),
+                                        constraints: const BoxConstraints(
+                                          maxWidth: 280,
+                                        ),
                                         child: Text(
                                           t(context, type.labelKey()),
-                                          style: Theme.of(context).textTheme.bodyMedium,
+                                          style: Theme.of(
+                                            context,
+                                          ).textTheme.bodyMedium,
                                           overflow: TextOverflow.ellipsis,
                                           maxLines: 1,
                                         ),
@@ -278,7 +309,9 @@ class _EveningRitualFormTabState extends State<EveningRitualFormTab> {
                                       value: type,
                                       child: Text(
                                         t(context, type.labelKey()),
-                                        style: Theme.of(context).textTheme.bodyMedium,
+                                        style: Theme.of(
+                                          context,
+                                        ).textTheme.bodyMedium,
                                         overflow: TextOverflow.visible,
                                       ),
                                     );
@@ -293,23 +326,30 @@ class _EveningRitualFormTabState extends State<EveningRitualFormTab> {
                                 )
                               else
                                 Column(
-                                  crossAxisAlignment: CrossAxisAlignment.stretch,
+                                  crossAxisAlignment:
+                                      CrossAxisAlignment.stretch,
                                   children: [
                                     Row(
-                                      crossAxisAlignment: CrossAxisAlignment.end,
+                                      crossAxisAlignment:
+                                          CrossAxisAlignment.end,
                                       children: [
                                         Expanded(
                                           child: TextField(
                                             controller: _detailController,
                                             focusNode: _detailFocusNode,
                                             decoration: InputDecoration(
-                                              labelText: t(context, _selectedType!.labelKey()),
-                                              border: const OutlineInputBorder(),
+                                              labelText: t(
+                                                context,
+                                                _selectedType!.labelKey(),
+                                              ),
+                                              border:
+                                                  const OutlineInputBorder(),
                                             ),
                                             maxLines: 3,
                                             minLines: 1,
                                             autofocus: true,
-                                            textInputAction: TextInputAction.newline,
+                                            textInputAction:
+                                                TextInputAction.newline,
                                           ),
                                         ),
                                         const SizedBox(width: 8),
@@ -319,7 +359,10 @@ class _EveningRitualFormTabState extends State<EveningRitualFormTab> {
                                             IconButton.filled(
                                               onPressed: _saveEntry,
                                               icon: const Icon(Icons.add),
-                                              tooltip: t(context, 'add_reflection'),
+                                              tooltip: t(
+                                                context,
+                                                'add_reflection',
+                                              ),
                                             ),
                                             const SizedBox(height: 4),
                                             IconButton(
@@ -327,7 +370,9 @@ class _EveningRitualFormTabState extends State<EveningRitualFormTab> {
                                               icon: const Icon(Icons.close),
                                               tooltip: t(context, 'cancel'),
                                               style: IconButton.styleFrom(
-                                                foregroundColor: Theme.of(context).colorScheme.error,
+                                                foregroundColor: Theme.of(
+                                                  context,
+                                                ).colorScheme.error,
                                               ),
                                             ),
                                           ],
@@ -345,8 +390,9 @@ class _EveningRitualFormTabState extends State<EveningRitualFormTab> {
 
                     if (regularEntries.isNotEmpty)
                       ...regularEntries.map((entry) {
-                        final isEditingThis = _editingEntry?.internalId == entry.internalId;
-                        
+                        final isEditingThis =
+                            _editingEntry?.internalId == entry.internalId;
+
                         if (isEditingThis) {
                           // Show inline editing mode
                           return Card(
@@ -359,7 +405,9 @@ class _EveningRitualFormTabState extends State<EveningRitualFormTab> {
                                   Text(
                                     t(context, entry.type.labelKey()),
                                     style: TextStyle(
-                                      color: Theme.of(context).colorScheme.primary,
+                                      color: Theme.of(
+                                        context,
+                                      ).colorScheme.primary,
                                       fontWeight: FontWeight.w600,
                                     ),
                                   ),
@@ -372,13 +420,17 @@ class _EveningRitualFormTabState extends State<EveningRitualFormTab> {
                                           controller: _detailController,
                                           focusNode: _detailFocusNode,
                                           decoration: InputDecoration(
-                                            labelText: t(context, 'reflection_detail'),
+                                            labelText: t(
+                                              context,
+                                              'reflection_detail',
+                                            ),
                                             border: const OutlineInputBorder(),
                                           ),
                                           maxLines: 3,
                                           minLines: 1,
                                           autofocus: true,
-                                          textInputAction: TextInputAction.newline,
+                                          textInputAction:
+                                              TextInputAction.newline,
                                         ),
                                       ),
                                       const SizedBox(width: 8),
@@ -396,7 +448,9 @@ class _EveningRitualFormTabState extends State<EveningRitualFormTab> {
                                             icon: const Icon(Icons.close),
                                             tooltip: t(context, 'cancel'),
                                             style: IconButton.styleFrom(
-                                              foregroundColor: Theme.of(context).colorScheme.error,
+                                              foregroundColor: Theme.of(
+                                                context,
+                                              ).colorScheme.error,
                                             ),
                                           ),
                                         ],
@@ -408,7 +462,7 @@ class _EveningRitualFormTabState extends State<EveningRitualFormTab> {
                             ),
                           );
                         }
-                        
+
                         // Show normal view mode
                         return Card(
                           margin: const EdgeInsets.only(bottom: 8),
@@ -419,20 +473,26 @@ class _EveningRitualFormTabState extends State<EveningRitualFormTab> {
                               children: [
                                 Expanded(
                                   child: Column(
-                                    crossAxisAlignment: CrossAxisAlignment.start,
+                                    crossAxisAlignment:
+                                        CrossAxisAlignment.start,
                                     children: [
                                       Text(
                                         t(context, entry.type.labelKey()),
                                         style: TextStyle(
-                                          color: Theme.of(context).colorScheme.primary,
+                                          color: Theme.of(
+                                            context,
+                                          ).colorScheme.primary,
                                           fontWeight: FontWeight.w600,
                                         ),
                                       ),
-                                      if (entry.detail != null && entry.detail!.isNotEmpty) ...[
+                                      if (entry.detail != null &&
+                                          entry.detail!.isNotEmpty) ...[
                                         const SizedBox(height: 4),
                                         Text(
                                           entry.detail!,
-                                          style: Theme.of(context).textTheme.bodyMedium,
+                                          style: Theme.of(
+                                            context,
+                                          ).textTheme.bodyMedium,
                                         ),
                                       ],
                                     ],
@@ -447,7 +507,11 @@ class _EveningRitualFormTabState extends State<EveningRitualFormTab> {
                                         onPressed: () => _editEntry(entry),
                                       ),
                                       IconButton(
-                                        icon: const Icon(Icons.delete, size: 20, color: Colors.red),
+                                        icon: const Icon(
+                                          Icons.delete,
+                                          size: 20,
+                                          color: Colors.red,
+                                        ),
                                         onPressed: () => _confirmDelete(entry),
                                       ),
                                     ],
@@ -524,8 +588,8 @@ class _EveningRitualFormTabState extends State<EveningRitualFormTab> {
               child: Text(
                 _getSliderLabel(_thinkingFocusValue),
                 style: Theme.of(context).textTheme.bodySmall?.copyWith(
-                      color: Theme.of(context).colorScheme.primary,
-                    ),
+                  color: Theme.of(context).colorScheme.primary,
+                ),
               ),
             ),
           ],
@@ -551,9 +615,9 @@ class _EveningRitualFormTabState extends State<EveningRitualFormTab> {
       builder: (context) => AlertDialog(
         title: Text(
           t(context, 'delete_reflection'),
-          style: Theme.of(context).textTheme.titleMedium?.copyWith(
-            fontWeight: FontWeight.bold,
-          ),
+          style: Theme.of(
+            context,
+          ).textTheme.titleMedium?.copyWith(fontWeight: FontWeight.bold),
         ),
         content: Text(t(context, 'delete_reflection_confirm')),
         actions: [

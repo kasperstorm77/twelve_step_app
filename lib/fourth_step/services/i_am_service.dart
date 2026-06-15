@@ -15,7 +15,7 @@ class IAmService {
   /// NOTE: This does NOT trigger a Drive upload - it's for initialization only
   Future<void> initializeDefaults() async {
     final box = Hive.box<IAmDefinition>('i_am_definitions');
-    
+
     if (box.isEmpty) {
       final defaultIAm = IAmDefinition(
         id: _uuid.v4(),
@@ -29,7 +29,10 @@ class IAmService {
   }
 
   /// Add a new I Am definition
-  Future<void> addDefinition(Box<IAmDefinition> box, IAmDefinition definition) async {
+  Future<void> addDefinition(
+    Box<IAmDefinition> box,
+    IAmDefinition definition,
+  ) async {
     await box.add(definition);
     // Trigger Drive sync by uploading inventory (which includes I Am definitions)
     final entriesBox = await Hive.openBox<InventoryEntry>('entries');
@@ -37,7 +40,11 @@ class IAmService {
   }
 
   /// Update an existing I Am definition
-  Future<void> updateDefinition(Box<IAmDefinition> box, int index, IAmDefinition definition) async {
+  Future<void> updateDefinition(
+    Box<IAmDefinition> box,
+    int index,
+    IAmDefinition definition,
+  ) async {
     await box.putAt(index, definition);
     // Trigger Drive sync
     final entriesBox = await Hive.openBox<InventoryEntry>('entries');
@@ -61,7 +68,7 @@ class IAmService {
   /// Returns null if not found (clean API - caller handles null case)
   IAmDefinition? findById(Box<IAmDefinition> box, String? id) {
     if (id == null || id.isEmpty) return null;
-    
+
     try {
       return box.values.firstWhere((def) => def.id == id);
     } catch (e) {
@@ -80,23 +87,35 @@ class IAmService {
   /// Count how many entries reference a specific I Am definition
   /// Checks both legacy single iAmId and new iAmIds list
   int getUsageCount(Box<InventoryEntry> entriesBox, String iAmId) {
-    return entriesBox.values.where((entry) => entry.effectiveIAmIds.contains(iAmId)).length;
+    return entriesBox.values
+        .where((entry) => entry.effectiveIAmIds.contains(iAmId))
+        .length;
   }
 
   /// Get all entries that reference a specific I Am definition
   /// Checks both legacy single iAmId and new iAmIds list
-  List<InventoryEntry> getEntriesUsingIAm(Box<InventoryEntry> entriesBox, String iAmId) {
-    return entriesBox.values.where((entry) => entry.effectiveIAmIds.contains(iAmId)).toList();
+  List<InventoryEntry> getEntriesUsingIAm(
+    Box<InventoryEntry> entriesBox,
+    String iAmId,
+  ) {
+    return entriesBox.values
+        .where((entry) => entry.effectiveIAmIds.contains(iAmId))
+        .toList();
   }
 
   /// Check if an I Am definition is in use by any entry
   /// Checks both legacy single iAmId and new iAmIds list
   bool isInUse(Box<InventoryEntry> entriesBox, String iAmId) {
-    return entriesBox.values.any((entry) => entry.effectiveIAmIds.contains(iAmId));
+    return entriesBox.values.any(
+      (entry) => entry.effectiveIAmIds.contains(iAmId),
+    );
   }
 
   /// Find orphaned entries (entries with iAmId that doesn't exist in definitions)
-  List<InventoryEntry> findOrphanedEntries(Box<InventoryEntry> entriesBox, Box<IAmDefinition> iAmBox) {
+  List<InventoryEntry> findOrphanedEntries(
+    Box<InventoryEntry> entriesBox,
+    Box<IAmDefinition> iAmBox,
+  ) {
     final validIds = iAmBox.values.map((def) => def.id).toSet();
     return entriesBox.values.where((entry) {
       final ids = entry.effectiveIAmIds;

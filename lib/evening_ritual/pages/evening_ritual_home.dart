@@ -18,7 +18,8 @@ class EveningRitualHome extends StatefulWidget {
   State<EveningRitualHome> createState() => _EveningRitualHomeState();
 }
 
-class _EveningRitualHomeState extends State<EveningRitualHome> with SingleTickerProviderStateMixin {
+class _EveningRitualHomeState extends State<EveningRitualHome>
+    with SingleTickerProviderStateMixin {
   late final TabController _tabController;
   DateTime _selectedDay = DateTime.now();
   DateTime _focusedDay = DateTime.now();
@@ -51,9 +52,7 @@ class _EveningRitualHomeState extends State<EveningRitualHome> with SingleTicker
   void _openDataManagement() async {
     await Navigator.push(
       context,
-      MaterialPageRoute(
-        builder: (context) => const DataManagementPage(),
-      ),
+      MaterialPageRoute(builder: (context) => const DataManagementPage()),
     );
     // Force rebuild after returning from Data Management
     // to ensure restored data is displayed
@@ -71,9 +70,9 @@ class _EveningRitualHomeState extends State<EveningRitualHome> with SingleTicker
       builder: (dialogContext) => AlertDialog(
         title: Text(
           t(context, 'select_app'),
-          style: Theme.of(context).textTheme.titleMedium?.copyWith(
-            fontWeight: FontWeight.bold,
-          ),
+          style: Theme.of(
+            context,
+          ).textTheme.titleMedium?.copyWith(fontWeight: FontWeight.bold),
         ),
         content: SingleChildScrollView(
           child: Column(
@@ -94,18 +93,25 @@ class _EveningRitualHomeState extends State<EveningRitualHome> with SingleTicker
                   child: Row(
                     children: [
                       Icon(
-                        isSelected ? Icons.radio_button_checked : Icons.radio_button_unchecked,
-                        color: isSelected ? Theme.of(context).colorScheme.primary : null,
+                        isSelected
+                            ? Icons.radio_button_checked
+                            : Icons.radio_button_unchecked,
+                        color: isSelected
+                            ? Theme.of(context).colorScheme.primary
+                            : null,
                         size: 20,
                       ),
                       const SizedBox(width: 12),
                       Expanded(
                         child: Text(
                           app.name,
-                          style: Theme.of(context).textTheme.bodyMedium?.copyWith(
-                            fontWeight: isSelected ? FontWeight.w600 : null,
-                            color: isSelected ? Theme.of(context).colorScheme.primary : null,
-                          ),
+                          style: Theme.of(context).textTheme.bodyMedium
+                              ?.copyWith(
+                                fontWeight: isSelected ? FontWeight.w600 : null,
+                                color: isSelected
+                                    ? Theme.of(context).colorScheme.primary
+                                    : null,
+                              ),
                         ),
                       ),
                     ],
@@ -129,7 +135,10 @@ class _EveningRitualHomeState extends State<EveningRitualHome> with SingleTicker
   Widget build(BuildContext context) {
     return Scaffold(
       appBar: AppBar(
-        title: Text(t(context, 'evening_ritual_title'), style: const TextStyle(fontSize: 18)),
+        title: Text(
+          t(context, 'evening_ritual_title'),
+          style: const TextStyle(fontSize: 18),
+        ),
         actions: [
           // App Switcher Icon
           IconButton(
@@ -162,8 +171,14 @@ class _EveningRitualHomeState extends State<EveningRitualHome> with SingleTicker
           PopupMenuButton<String>(
             onSelected: _changeLanguage,
             itemBuilder: (context) => [
-              PopupMenuItem(value: 'en', child: Text(t(context, 'lang_english'))),
-              PopupMenuItem(value: 'da', child: Text(t(context, 'lang_danish'))),
+              PopupMenuItem(
+                value: 'en',
+                child: Text(t(context, 'lang_english')),
+              ),
+              PopupMenuItem(
+                value: 'da',
+                child: Text(t(context, 'lang_danish')),
+              ),
             ],
             icon: const Icon(Icons.language),
             padding: EdgeInsets.zero,
@@ -184,67 +199,70 @@ class _EveningRitualHomeState extends State<EveningRitualHome> with SingleTicker
           children: [
             // Form Tab with Calendar at top (hidden during editing)
             Column(
-            children: [
-              // Hide calendar when editing for more screen space
-              if (!_isEditing)
-                Card(
-                  margin: const EdgeInsets.all(8.0),
-                  child: TableCalendar(
-                    firstDay: DateTime.utc(2020, 1, 1),
-                    lastDay: DateTime.utc(2030, 12, 31),
-                    focusedDay: _focusedDay,
-                    selectedDayPredicate: (day) => isSameDay(_selectedDay, day),
-                    calendarFormat: CalendarFormat.week,
-                    availableCalendarFormats: const {
-                      CalendarFormat.week: 'Week',
-                      CalendarFormat.month: 'Month',
-                    },
-                    eventLoader: (day) {
-                      return ReflectionService.hasReflectionsForDate(day) ? [true] : [];
-                    },
-                    onDaySelected: (selectedDay, focusedDay) {
-                      setState(() {
-                        _selectedDay = selectedDay;
-                        _focusedDay = focusedDay;
-                      });
-                    },
-                    onPageChanged: (focusedDay) {
-                      setState(() {
-                        _focusedDay = focusedDay;
-                      });
-                    },
-                    calendarStyle: CalendarStyle(
-                      todayDecoration: BoxDecoration(
-                        color: Theme.of(context).colorScheme.primary.withValues(alpha: 0.5),
-                        shape: BoxShape.circle,
-                      ),
-                      selectedDecoration: BoxDecoration(
-                        color: Theme.of(context).colorScheme.primary,
-                        shape: BoxShape.circle,
-                      ),
-                      markerDecoration: BoxDecoration(
-                        color: Theme.of(context).colorScheme.secondary,
-                        shape: BoxShape.circle,
+              children: [
+                // Hide calendar when editing for more screen space
+                if (!_isEditing)
+                  Card(
+                    margin: const EdgeInsets.all(8.0),
+                    child: TableCalendar(
+                      firstDay: DateTime.utc(2020, 1, 1),
+                      lastDay: DateTime.utc(2030, 12, 31),
+                      focusedDay: _focusedDay,
+                      selectedDayPredicate: (day) =>
+                          isSameDay(_selectedDay, day),
+                      calendarFormat: CalendarFormat.week,
+                      availableCalendarFormats: const {
+                        CalendarFormat.week: 'Week',
+                        CalendarFormat.month: 'Month',
+                      },
+                      eventLoader: (day) {
+                        return ReflectionService.hasReflectionsForDate(day)
+                            ? [true]
+                            : [];
+                      },
+                      onDaySelected: (selectedDay, focusedDay) {
+                        setState(() {
+                          _selectedDay = selectedDay;
+                          _focusedDay = focusedDay;
+                        });
+                      },
+                      onPageChanged: (focusedDay) {
+                        setState(() {
+                          _focusedDay = focusedDay;
+                        });
+                      },
+                      calendarStyle: CalendarStyle(
+                        todayDecoration: BoxDecoration(
+                          color: Theme.of(
+                            context,
+                          ).colorScheme.primary.withValues(alpha: 0.5),
+                          shape: BoxShape.circle,
+                        ),
+                        selectedDecoration: BoxDecoration(
+                          color: Theme.of(context).colorScheme.primary,
+                          shape: BoxShape.circle,
+                        ),
+                        markerDecoration: BoxDecoration(
+                          color: Theme.of(context).colorScheme.secondary,
+                          shape: BoxShape.circle,
+                        ),
                       ),
                     ),
                   ),
+                Expanded(
+                  child: EveningRitualFormTab(
+                    selectedDate: _selectedDay,
+                    onEditingChanged: (isEditing) {
+                      setState(() {
+                        _isEditing = isEditing;
+                      });
+                    },
+                  ),
                 ),
-              Expanded(
-                child: EveningRitualFormTab(
-                  selectedDate: _selectedDay,
-                  onEditingChanged: (isEditing) {
-                    setState(() {
-                      _isEditing = isEditing;
-                    });
-                  },
-                ),
-              ),
-            ],
-          ),
-            // List Tab
-            EveningRitualListTab(
-              onDateSelected: _onDateSelected,
+              ],
             ),
+            // List Tab
+            EveningRitualListTab(onDateSelected: _onDateSelected),
           ],
         ),
       ),

@@ -133,7 +133,7 @@ class AppHelpService {
   /// Show help dialog for current app
   static void showHelpDialog(BuildContext context, String appId) {
     final helpContent = getHelpContent(context, appId);
-    
+
     showDialog(
       context: context,
       builder: (context) => AlertDialog(
@@ -148,9 +148,9 @@ class AppHelpService {
             Expanded(
               child: Text(
                 helpContent.title,
-                style: Theme.of(context).textTheme.titleMedium?.copyWith(
-                  fontWeight: FontWeight.bold,
-                ),
+                style: Theme.of(
+                  context,
+                ).textTheme.titleMedium?.copyWith(fontWeight: FontWeight.bold),
               ),
             ),
           ],
@@ -199,10 +199,7 @@ class AppHelpContent {
   final String title;
   final List<HelpSection> sections;
 
-  AppHelpContent({
-    required this.title,
-    required this.sections,
-  });
+  AppHelpContent({required this.title, required this.sections});
 }
 
 /// Data class for help section
@@ -210,8 +207,5 @@ class HelpSection {
   final String title;
   final String content;
 
-  HelpSection({
-    required this.title,
-    required this.content,
-  });
+  HelpSection({required this.title, required this.content});
 }

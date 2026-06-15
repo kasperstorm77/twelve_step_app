@@ -12,7 +12,11 @@ class PaperTabController {
   VoidCallback? _showBack;
   VoidCallback? _showBackInstant;
 
-  void attach({required VoidCallback showFront, required VoidCallback showBack, required VoidCallback showBackInstant}) {
+  void attach({
+    required VoidCallback showFront,
+    required VoidCallback showBack,
+    required VoidCallback showBackInstant,
+  }) {
     _showFront = showFront;
     _showBack = showBack;
     _showBackInstant = showBackInstant;
@@ -36,13 +40,19 @@ class PaperTab extends StatefulWidget {
   final VoidCallback? onNavigateToArchive;
   final ValueNotifier<bool>? forceShowBack;
 
-  const PaperTab({super.key, this.controller, this.onNavigateToArchive, this.forceShowBack});
+  const PaperTab({
+    super.key,
+    this.controller,
+    this.onNavigateToArchive,
+    this.forceShowBack,
+  });
 
   @override
   State<PaperTab> createState() => _PaperTabState();
 }
 
-class _PaperTabState extends State<PaperTab> with SingleTickerProviderStateMixin {
+class _PaperTabState extends State<PaperTab>
+    with SingleTickerProviderStateMixin {
   late AnimationController _flipController;
   late Animation<double> _flipAnimation;
   late final ScrollController _frontScrollController;
@@ -65,10 +75,10 @@ class _PaperTabState extends State<PaperTab> with SingleTickerProviderStateMixin
     );
     _frontScrollController = ScrollController();
     _backScrollController = ScrollController();
-    
+
     // Listen for animation to apply pending scroll offset after flip midpoint
     _flipController.addListener(_onFlipAnimationUpdate);
-    
+
     _attachController();
     widget.forceShowBack?.addListener(_onForceShowBack);
   }
@@ -88,11 +98,13 @@ class _PaperTabState extends State<PaperTab> with SingleTickerProviderStateMixin
     // Apply pending scroll offset after a frame to let the ListView build
     if (_hasPendingOffset) {
       final value = _flipController.value;
-      final targetController = _showingFront ? _frontScrollController : _backScrollController;
-      
+      final targetController = _showingFront
+          ? _frontScrollController
+          : _backScrollController;
+
       // Check if we're past midpoint in the right direction
       final pastMidpoint = _showingFront ? value < 0.5 : value > 0.5;
-      
+
       if (pastMidpoint) {
         _hasPendingOffset = false;
         WidgetsBinding.instance.addPostFrameCallback((_) {
@@ -178,9 +190,7 @@ class _PaperTabState extends State<PaperTab> with SingleTickerProviderStateMixin
   void _openAddForm(Box<BarrierPowerPair> box) {
     Navigator.push(
       context,
-      MaterialPageRoute(
-        builder: (context) => PairFormPage(box: box),
-      ),
+      MaterialPageRoute(builder: (context) => PairFormPage(box: box)),
     );
   }
 
@@ -221,14 +231,15 @@ class _PaperTabState extends State<PaperTab> with SingleTickerProviderStateMixin
           onHorizontalDragUpdate: (details) {
             _dragDeltaX += details.delta.dx;
           },
-          onHorizontalDragEnd: (_) => _handleHorizontalSwipe(activePairs.isNotEmpty),
+          onHorizontalDragEnd: (_) =>
+              _handleHorizontalSwipe(activePairs.isNotEmpty),
           child: Column(
             children: [
               // Paper title showing which side
               Padding(
                 padding: const EdgeInsets.all(16),
                 child: Text(
-                  _showingFront 
+                  _showingFront
                       ? t(context, 'agnosticism_barriers_title')
                       : t(context, 'agnosticism_powers_title'),
                   style: Theme.of(context).textTheme.titleMedium?.copyWith(
@@ -245,12 +256,24 @@ class _PaperTabState extends State<PaperTab> with SingleTickerProviderStateMixin
                   builder: (context, child) {
                     final angle = _flipAnimation.value * math.pi;
                     final isFrontVisible = angle < math.pi / 2;
-                    
+
                     // Build the visible side with flip transform
                     final visibleSide = isFrontVisible
-                        ? _buildPaperSide(context, box, activePairs, true, _frontScrollController)
-                        : _buildPaperSide(context, box, activePairs, false, _backScrollController);
-                    
+                        ? _buildPaperSide(
+                            context,
+                            box,
+                            activePairs,
+                            true,
+                            _frontScrollController,
+                          )
+                        : _buildPaperSide(
+                            context,
+                            box,
+                            activePairs,
+                            false,
+                            _backScrollController,
+                          );
+
                     return Transform(
                       alignment: Alignment.center,
                       transform: Matrix4.identity()
@@ -273,10 +296,15 @@ class _PaperTabState extends State<PaperTab> with SingleTickerProviderStateMixin
                 padding: const EdgeInsets.symmetric(vertical: 8),
                 child: ElevatedButton.icon(
                   onPressed: activePairs.isNotEmpty ? _flipPaper : null,
-                  icon: Icon(_showingFront ? Icons.flip_to_back : Icons.flip_to_front),
+                  icon: Icon(
+                    _showingFront ? Icons.flip_to_back : Icons.flip_to_front,
+                  ),
                   label: Text(t(context, 'agnosticism_flip')),
                   style: ElevatedButton.styleFrom(
-                    padding: const EdgeInsets.symmetric(horizontal: 32, vertical: 12),
+                    padding: const EdgeInsets.symmetric(
+                      horizontal: 32,
+                      vertical: 12,
+                    ),
                   ),
                 ),
               ),
@@ -292,7 +320,10 @@ class _PaperTabState extends State<PaperTab> with SingleTickerProviderStateMixin
                     style: ElevatedButton.styleFrom(
                       backgroundColor: Theme.of(context).colorScheme.primary,
                       foregroundColor: Theme.of(context).colorScheme.onPrimary,
-                      padding: const EdgeInsets.symmetric(horizontal: 32, vertical: 12),
+                      padding: const EdgeInsets.symmetric(
+                        horizontal: 32,
+                        vertical: 12,
+                      ),
                     ),
                   ),
                 ),
@@ -323,8 +354,13 @@ class _PaperTabState extends State<PaperTab> with SingleTickerProviderStateMixin
     }
   }
 
-  Widget _buildPaperSide(BuildContext context, Box<BarrierPowerPair> box, 
-      List<BarrierPowerPair> pairs, bool isFront, ScrollController scrollController) {
+  Widget _buildPaperSide(
+    BuildContext context,
+    Box<BarrierPowerPair> box,
+    List<BarrierPowerPair> pairs,
+    bool isFront,
+    ScrollController scrollController,
+  ) {
     if (pairs.isEmpty) {
       return Center(
         child: Column(
@@ -348,7 +384,12 @@ class _PaperTabState extends State<PaperTab> with SingleTickerProviderStateMixin
     }
 
     return ListView.builder(
-      padding: EdgeInsets.fromLTRB(12, 0, 12, MediaQuery.of(context).padding.bottom + 16),
+      padding: EdgeInsets.fromLTRB(
+        12,
+        0,
+        12,
+        MediaQuery.of(context).padding.bottom + 16,
+      ),
       controller: scrollController,
       itemCount: pairs.length,
       itemBuilder: (context, index) {
@@ -358,23 +399,36 @@ class _PaperTabState extends State<PaperTab> with SingleTickerProviderStateMixin
     );
   }
 
-  Widget _buildPairBox(BuildContext context, Box<BarrierPowerPair> box, 
-      BarrierPowerPair pair, bool isFront) {
+  Widget _buildPairBox(
+    BuildContext context,
+    Box<BarrierPowerPair> box,
+    BarrierPowerPair pair,
+    bool isFront,
+  ) {
     final colorScheme = Theme.of(context).colorScheme;
     final textStyle = Theme.of(context).textTheme.bodyMedium;
 
     return LayoutBuilder(
       builder: (context, constraints) {
-        final availableWidth = constraints.maxWidth - 32 - 48; // padding + icon space
-        final barrierHeight = _measureTextHeight(pair.barrier, availableWidth, textStyle);
-        final powerHeight = _measureTextHeight(pair.power, availableWidth, textStyle);
+        final availableWidth =
+            constraints.maxWidth - 32 - 48; // padding + icon space
+        final barrierHeight = _measureTextHeight(
+          pair.barrier,
+          availableWidth,
+          textStyle,
+        );
+        final powerHeight = _measureTextHeight(
+          pair.power,
+          availableWidth,
+          textStyle,
+        );
         final maxContentHeight = math.max(barrierHeight, powerHeight);
         const verticalPadding = 24.0; // symmetric 12 top/bottom
 
-        final backgroundColor = isFront 
+        final backgroundColor = isFront
             ? colorScheme.errorContainer.withValues(alpha: 0.3)
             : colorScheme.primaryContainer.withValues(alpha: 0.3);
-        final borderColor = isFront 
+        final borderColor = isFront
             ? colorScheme.error.withValues(alpha: 0.5)
             : colorScheme.primary.withValues(alpha: 0.5);
 
@@ -386,7 +440,9 @@ class _PaperTabState extends State<PaperTab> with SingleTickerProviderStateMixin
             borderRadius: BorderRadius.circular(8),
           ),
           child: ConstrainedBox(
-            constraints: BoxConstraints(minHeight: maxContentHeight + verticalPadding),
+            constraints: BoxConstraints(
+              minHeight: maxContentHeight + verticalPadding,
+            ),
             child: Padding(
               padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
               child: Row(

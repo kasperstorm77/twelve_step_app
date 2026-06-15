@@ -25,20 +25,26 @@ class MorningRitualHistoryTab extends StatelessWidget {
                 Icon(
                   Icons.calendar_today,
                   size: 64,
-                  color: Theme.of(context).colorScheme.primary.withValues(alpha: 0.3),
+                  color: Theme.of(
+                    context,
+                  ).colorScheme.primary.withValues(alpha: 0.3),
                 ),
                 const SizedBox(height: 16),
                 Text(
                   t(context, 'morning_ritual_no_history'),
                   style: Theme.of(context).textTheme.titleMedium?.copyWith(
-                    color: Theme.of(context).colorScheme.onSurface.withValues(alpha: 0.5),
+                    color: Theme.of(
+                      context,
+                    ).colorScheme.onSurface.withValues(alpha: 0.5),
                   ),
                 ),
                 const SizedBox(height: 8),
                 Text(
                   t(context, 'morning_ritual_no_history_hint'),
                   style: Theme.of(context).textTheme.bodySmall?.copyWith(
-                    color: Theme.of(context).colorScheme.onSurface.withValues(alpha: 0.5),
+                    color: Theme.of(
+                      context,
+                    ).colorScheme.onSurface.withValues(alpha: 0.5),
                   ),
                   textAlign: TextAlign.center,
                 ),
@@ -52,7 +58,12 @@ class MorningRitualHistoryTab extends StatelessWidget {
           ..sort((a, b) => b.date.compareTo(a.date));
 
         return ListView.builder(
-          padding: EdgeInsets.fromLTRB(8, 8, 8, MediaQuery.of(context).padding.bottom + 32),
+          padding: EdgeInsets.fromLTRB(
+            8,
+            8,
+            8,
+            MediaQuery.of(context).padding.bottom + 32,
+          ),
           itemCount: sortedEntries.length,
           itemBuilder: (context, index) {
             final entry = sortedEntries[index];
@@ -65,7 +76,7 @@ class MorningRitualHistoryTab extends StatelessWidget {
 
   Widget _buildDateCard(BuildContext context, MorningRitualEntry entry) {
     final date = entry.date;
-    
+
     return Card(
       margin: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
       child: InkWell(
@@ -79,7 +90,10 @@ class MorningRitualHistoryTab extends StatelessWidget {
                   // Date indicator
                   Container(
                     width: 60,
-                    padding: const EdgeInsets.symmetric(vertical: 8, horizontal: 4),
+                    padding: const EdgeInsets.symmetric(
+                      vertical: 8,
+                      horizontal: 4,
+                    ),
                     decoration: BoxDecoration(
                       color: Theme.of(context).colorScheme.primaryContainer,
                       borderRadius: BorderRadius.circular(8),
@@ -88,29 +102,38 @@ class MorningRitualHistoryTab extends StatelessWidget {
                       children: [
                         Text(
                           DateFormat.MMM().format(date),
-                          style: Theme.of(context).textTheme.bodySmall?.copyWith(
-                            color: Theme.of(context).colorScheme.onPrimaryContainer,
-                            fontWeight: FontWeight.bold,
-                          ),
+                          style: Theme.of(context).textTheme.bodySmall
+                              ?.copyWith(
+                                color: Theme.of(
+                                  context,
+                                ).colorScheme.onPrimaryContainer,
+                                fontWeight: FontWeight.bold,
+                              ),
                         ),
                         Text(
                           DateFormat.d().format(date),
-                          style: Theme.of(context).textTheme.titleLarge?.copyWith(
-                            color: Theme.of(context).colorScheme.onPrimaryContainer,
-                            fontWeight: FontWeight.bold,
-                          ),
+                          style: Theme.of(context).textTheme.titleLarge
+                              ?.copyWith(
+                                color: Theme.of(
+                                  context,
+                                ).colorScheme.onPrimaryContainer,
+                                fontWeight: FontWeight.bold,
+                              ),
                         ),
                         Text(
                           DateFormat.y().format(date),
-                          style: Theme.of(context).textTheme.bodySmall?.copyWith(
-                            color: Theme.of(context).colorScheme.onPrimaryContainer,
-                          ),
+                          style: Theme.of(context).textTheme.bodySmall
+                              ?.copyWith(
+                                color: Theme.of(
+                                  context,
+                                ).colorScheme.onPrimaryContainer,
+                              ),
                         ),
                       ],
                     ),
                   ),
                   const SizedBox(width: 12),
-                  
+
                   // Content summary
                   Expanded(
                     child: Column(
@@ -120,20 +143,22 @@ class MorningRitualHistoryTab extends StatelessWidget {
                           children: [
                             Text(
                               DateFormat.EEEE().format(date),
-                              style: Theme.of(context).textTheme.titleMedium?.copyWith(
-                                fontWeight: FontWeight.bold,
-                              ),
+                              style: Theme.of(context).textTheme.titleMedium
+                                  ?.copyWith(fontWeight: FontWeight.bold),
                             ),
                             const SizedBox(width: 8),
                             // Status indicator
                             Container(
-                              padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 2),
+                              padding: const EdgeInsets.symmetric(
+                                horizontal: 8,
+                                vertical: 2,
+                              ),
                               decoration: BoxDecoration(
                                 color: entry.isFullyCompleted
                                     ? Colors.green.withValues(alpha: 0.2)
                                     : entry.completedCount > 0
-                                        ? Colors.orange.withValues(alpha: 0.2)
-                                        : Colors.red.withValues(alpha: 0.2),
+                                    ? Colors.orange.withValues(alpha: 0.2)
+                                    : Colors.red.withValues(alpha: 0.2),
                                 borderRadius: BorderRadius.circular(12),
                               ),
                               child: Row(
@@ -143,26 +168,27 @@ class MorningRitualHistoryTab extends StatelessWidget {
                                     entry.isFullyCompleted
                                         ? Icons.check_circle
                                         : entry.completedCount > 0
-                                            ? Icons.info
-                                            : Icons.cancel,
+                                        ? Icons.info
+                                        : Icons.cancel,
                                     size: 14,
                                     color: entry.isFullyCompleted
                                         ? Colors.green
                                         : entry.completedCount > 0
-                                            ? Colors.orange
-                                            : Colors.red,
+                                        ? Colors.orange
+                                        : Colors.red,
                                   ),
                                   const SizedBox(width: 4),
                                   Text(
                                     '${entry.completedCount}/${entry.items.length}',
-                                    style: Theme.of(context).textTheme.bodySmall?.copyWith(
-                                      fontWeight: FontWeight.bold,
-                                      color: entry.isFullyCompleted
-                                          ? Colors.green
-                                          : entry.completedCount > 0
+                                    style: Theme.of(context).textTheme.bodySmall
+                                        ?.copyWith(
+                                          fontWeight: FontWeight.bold,
+                                          color: entry.isFullyCompleted
+                                              ? Colors.green
+                                              : entry.completedCount > 0
                                               ? Colors.orange
                                               : Colors.red,
-                                    ),
+                                        ),
                                   ),
                                 ],
                               ),
@@ -171,45 +197,55 @@ class MorningRitualHistoryTab extends StatelessWidget {
                         ),
                         const SizedBox(height: 4),
                         // Show first few items
-                        ...entry.items.take(2).map((record) => Padding(
-                          padding: const EdgeInsets.only(top: 2),
-                          child: Row(
-                            children: [
-                              Icon(
-                                record.status == RitualItemStatus.completed
-                                    ? Icons.check
-                                    : Icons.close,
-                                size: 14,
-                                color: record.status == RitualItemStatus.completed
-                                    ? Colors.green
-                                    : Colors.red,
-                              ),
-                              const SizedBox(width: 4),
-                              Expanded(
-                                child: Text(
-                                  record.originalDurationSeconds != null
-                                      ? '${record.ritualItemName} (${record.formattedDuration})'
-                                      : record.ritualItemName,
-                                  style: Theme.of(context).textTheme.bodySmall,
-                                  maxLines: 1,
-                                  overflow: TextOverflow.ellipsis,
+                        ...entry.items
+                            .take(2)
+                            .map(
+                              (record) => Padding(
+                                padding: const EdgeInsets.only(top: 2),
+                                child: Row(
+                                  children: [
+                                    Icon(
+                                      record.status ==
+                                              RitualItemStatus.completed
+                                          ? Icons.check
+                                          : Icons.close,
+                                      size: 14,
+                                      color:
+                                          record.status ==
+                                              RitualItemStatus.completed
+                                          ? Colors.green
+                                          : Colors.red,
+                                    ),
+                                    const SizedBox(width: 4),
+                                    Expanded(
+                                      child: Text(
+                                        record.originalDurationSeconds != null
+                                            ? '${record.ritualItemName} (${record.formattedDuration})'
+                                            : record.ritualItemName,
+                                        style: Theme.of(
+                                          context,
+                                        ).textTheme.bodySmall,
+                                        maxLines: 1,
+                                        overflow: TextOverflow.ellipsis,
+                                      ),
+                                    ),
+                                  ],
                                 ),
                               ),
-                            ],
-                          ),
-                        )),
+                            ),
                         if (entry.items.length > 2)
                           Text(
                             '+${entry.items.length - 2} ${t(context, 'more')}',
-                            style: Theme.of(context).textTheme.bodySmall?.copyWith(
-                              fontStyle: FontStyle.italic,
-                              color: Theme.of(context).colorScheme.primary,
-                            ),
+                            style: Theme.of(context).textTheme.bodySmall
+                                ?.copyWith(
+                                  fontStyle: FontStyle.italic,
+                                  color: Theme.of(context).colorScheme.primary,
+                                ),
                           ),
                       ],
                     ),
                   ),
-                  
+
                   const Icon(Icons.chevron_right),
                 ],
               ),
@@ -245,8 +281,12 @@ class MorningRitualHistoryTab extends StatelessWidget {
       context: context,
       builder: (dialogContext) => AlertDialog(
         title: Text(t(context, 'morning_ritual_delete_entry')),
-        content: Text(t(context, 'morning_ritual_delete_entry_confirm')
-            .replaceAll('{date}', DateFormat.yMMMMd().format(entry.date))),
+        content: Text(
+          t(
+            context,
+            'morning_ritual_delete_entry_confirm',
+          ).replaceAll('{date}', DateFormat.yMMMMd().format(entry.date)),
+        ),
         actions: [
           TextButton(
             onPressed: () => Navigator.of(dialogContext).pop(),
