@@ -85,6 +85,11 @@ The three canonical docs (open the one that fits, then come back):
 - Keep the three docs current: a changed invariant → `architecture.md`;
   a notable pivot or fix → append to `historic_implementation.md`; a
   landed or new roadmap item → `implementation_plan.md` — same PR.
+- After editing any Hive model (`lib/**/models/**`), regenerate the
+  adapters with `dart run build_runner build --delete-conflicting-outputs`
+  before `flutter analyze`/`flutter test` — a stale `*.g.dart` fails the
+  build. Full local setup (codegen, gitignored credential files, platform
+  config) lives in [docs/LOCAL_SETUP.md](docs/LOCAL_SETUP.md).
 - Before reporting a change done: `flutter analyze` is clean and
   `flutter test` passes. Keep `main.dart`'s open-box set in sync with
   `SyncPayloadBuilder`.
