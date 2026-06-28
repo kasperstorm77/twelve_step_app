@@ -128,6 +128,80 @@ exists. Add tests for:
 Standing procedures. They change only when the platform tooling or
 OAuth configuration changes.
 
+### Store release runbook (Google Play + TestFlight)
+
+Releases are automated by `scripts/` + the **`deploy-release`** agent
+(`.claude/agents/deploy-release.md`). The agent runs two ordered phases:
+**A)** bump `pubspec.yaml` `version: X.Y.Z+BUILD`, write the bilingual
+notes in `release.md` (top block = the shipped release), update docs, run
+`flutter analyze`/`flutter test`, commit + push `main`; then **B)** deploy
+— Android/Play on every host, iOS/TestFlight on macOS only.
+
+**Version SSOT.** `pubspec.yaml` `version: X.Y.Z+BUILD` feeds *both*
+stores: Flutter maps `X.Y.Z`→versionName/CFBundleShortVersionString and
+`BUILD`→versionCode/CFBundleVersion. Both stores dedupe on `BUILD`, so it
+must strictly increase each upload (patch release: `2.2.13+106` →
+`2.2.14+107`). No `build.gradle.kts` / `Info.plist` edits needed.
+
+**The scripts:**
+- `scripts/build-aab.sh` — `flutter build appbundle --release`; verifies
+  the signer is the release key (not the debug fallback).
+- `scripts/upload-aab-to-play.sh [--dry-run|--yes]` — drives the Google
+  Play Developer API (`edits.insert → bundles.upload → tracks.update →
+  edits.commit`) to the **alpha** (Closed testing) track, attaching the
+  en-GB + da-DK notes from `release.md` (≤ 500 chars/locale enforced).
+- `scripts/upload-ipa-to-testflight.sh --build` — *macOS only*; builds the
+  App Store IPA, verifies it's `Apple Distribution`-signed, uploads via
+  `altool`, then sets the TestFlight "What to Test" notes automatically via
+  the App Store Connect API (`scripts/lib/asc-testflight-notes.mjs`).
+
+**Local-only credential files (all git-ignored — see `.gitignore`):**
+
+| File | Store | What it is | Scope |
+|---|---|---|---|
+| `play-service-account.json` | Play | Google Cloud service-account key, Android Publisher API | Per Play developer account (covers all apps it's granted) |
+| `app_sp_pw` | Apple | Apple ID app-specific password (for `altool`) | Per **Apple ID** — works for every app |
+| `AuthKey_<KEYID>.p8` + `asc_issuer` | Apple | App Store Connect API key (App Manager) + Issuer ID | Per **team** — works for every app in the team |
+
+Android release signing reuses the existing `android/key.properties` +
+keystore (already git-ignored).
+
+#### Bringing the credentials over from another app (what the user asked)
+
+These credentials are **account/team-scoped, not app-scoped**, so you can
+**copy the files over** — with a couple of one-time console steps:
+
+- **Play — `play-service-account.json`:** copy it. Then in **Play Console
+  → Users & permissions** confirm that service account (its
+  `client_email`) has access to *this* app with **"Release to testing
+  tracks."** An account-level invitation already covers every app; only if
+  it was granted app-by-app do you add this app. **One extra one-time
+  step for a brand-new app:** Play refuses the *first* bundle over the API
+  — upload one AAB by hand in the Console once (Testing → Closed testing →
+  Create release), after which the script handles every release. The app
+  listing must exist for package `dk.stormstyrken.twelvestepsapp`.
+- **Apple — `app_sp_pw`:** copy it; an app-specific password authorises
+  the whole Apple ID, nothing per-app to do. The app must exist as a
+  record in **App Store Connect** for bundle id
+  `dk.stormstyrken.twelvestepsapp` (create it once if it doesn't).
+- **Apple — `AuthKey_<KEYID>.p8` + `asc_issuer`:** copy them; the API key
+  is a **team** key (role App Manager), valid for every app in the team —
+  no per-app setup. Without these the IPA still uploads; only the
+  auto-notes fall back to a manual paste.
+- **Xcode signing (macOS):** the team that owns the API key must also own
+  the app record; automatic signing in Xcode (Runner → Signing &
+  Capabilities → your Team) mints the Distribution cert/profile.
+
+**Locale caveat.** The scripts send release notes for `en-GB` + `da-DK`
+(matching the developer's other app). Confirm the Play listing and the App
+Store record actually have those languages; if your Play listing's default
+is e.g. `en-US`, change the locale strings in `upload-aab-to-play.sh`
+(the `releaseNotes` array) or the API rejects the unknown locale.
+
+> **Not testable on this (non-Apple) machine.** The TestFlight script is
+> macOS/Xcode-only; it's syntax-checked here and meant to be run from a
+> Mac. The Android path runs on any host.
+
 ### Desktop OAuth setup runbook
 
 OAuth for **desktop platforms only** (Windows / macOS / Linux). Mobile

@@ -106,6 +106,7 @@ The three canonical docs (open the one that fits, then come back):
 | Sync a new box | export in [`sync_payload_builder.dart`](lib/shared/services/sync_payload_builder.dart), import in [`backup_restore_service.dart`](lib/shared/services/backup_restore_service.dart) |
 | New string | add `en` + `da` in [`localizations.dart`](lib/shared/localizations.dart) |
 | Drive / auth change | [`all_apps_drive_service_impl.dart`](lib/shared/services/all_apps_drive_service_impl.dart) + `lib/shared/services/google_drive/` |
+| Ship a release | `deploy-release` agent + `scripts/{build-aab,upload-aab-to-play,upload-ipa-to-testflight}.sh`; notes in `release.md`; setup in [implementation_plan.md](docs/implementation_plan.md) Store release runbook |
 
 When the docs and the code disagree, the code wins — fix the doc in the
 same PR.

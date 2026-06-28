@@ -38,6 +38,15 @@ android/*.keystore
 debug.keystore
 my-release-key.jks
 
+# Store-publishing credentials (local-only) - DO NOT COMMIT
+# Google Play Developer API service-account key (scripts/upload-aab-to-play.sh)
+play-service-account.json
+# Apple ID app-specific password for altool (scripts/upload-ipa-to-testflight.sh)
+app_sp_pw
+# App Store Connect API key + Issuer ID for auto TestFlight notes
+AuthKey_*.p8
+asc_issuer
+
 # IntelliJ related
 *.iml
 *.ipr

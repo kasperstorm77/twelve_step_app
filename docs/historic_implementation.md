@@ -190,6 +190,26 @@ Two desktop/UX bug fixes:
   that `flutter_ringtone_player` is android/ios-only — desktop has no
   real alarm sound (implementation_plan P2.4).
 
+## Phase 17 — Automated store-release tooling
+Added a one-command release path, ported from the sibling Life-happens
+project and tailored to Flutter:
+- `scripts/build-aab.sh` (release AAB + signer check),
+  `scripts/upload-aab-to-play.sh` (Google Play Developer API →
+  closed-testing "alpha", bilingual notes from `release.md`),
+  `scripts/upload-ipa-to-testflight.sh` (macOS-only: App Store IPA →
+  TestFlight via `altool`) + `scripts/lib/asc-testflight-notes.mjs` (sets
+  the "What to Test" notes via the App Store Connect API — no manual paste).
+- A **`deploy-release`** subagent (`.claude/agents/deploy-release.md`) that
+  runs the whole thing in two ordered phases (code+docs→`main`, *then*
+  deploy), with the version SSOT in `pubspec.yaml` (`X.Y.Z+BUILD` feeds
+  versionCode + CFBundleVersion).
+- `release.md` (newest-first bilingual notes; top block = the shipped
+  release) and `.gitignore` entries for the publishing credentials
+  (`play-service-account.json`, `app_sp_pw`, `AuthKey_*.p8`, `asc_issuer`).
+  Setup + the "can I just copy the credentials over" answer live in the
+  [Store release runbook](./implementation_plan.md). The TestFlight half is
+  unverifiable on the (non-Apple) dev box — syntax-checked, run from a Mac.
+
 ---
 
 ## Data-format migration notes
