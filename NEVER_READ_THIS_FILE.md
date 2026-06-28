@@ -1,3 +1,3 @@
-Read the documentation and implementation plan + historic implementation. Familiarize yourself with the instructions and adhere to them.
+Read the documentation and implementation plan + historic implementation. Familiarize yourself with the instructions and adhere to them. Fix/investigate the below, if bugs or issues are found when fixing/investigating, register them in the implementation plan to fix for later. Ensure to read the instruction on how to output text to me:
 
 When fixed, update the implementation plans and documentation and push to main.
