@@ -30,6 +30,13 @@ days saved as `MorningRitualEntry`. See
   (main.dart after Drive sync, and `AppWidget` on resume) — keep both.
 - **Early-completing a running timer records `skipped`**, not
   `completed`. Wake-lock is held **only** while a timer actively counts.
+- **The timer-end alarm plays to its natural end** (`looping: false`) —
+  never force-stop it after a fixed delay (that truncated the sound). It
+  is silenced by `_stopAlarmSound()` when the user advances
+  (complete/skip/previous/start over) or leaves the page (`dispose`).
 - `soundId` is persisted/synced but `_playAlarm` currently ignores it
   (always system alarm) — see implementation_plan P2.1.
+- `flutter_ringtone_player` ships **android/ios only**, so on desktop the
+  alarm falls through to a single `SystemSound.alert` (often silent on
+  Linux) — see implementation_plan P2.4.
 </content>

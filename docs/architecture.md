@@ -296,13 +296,23 @@ rejected by the Drive media layer and the upload silently fails.
 
 ### 3.5 Local backups
 [`LocalBackupService`](../lib/shared/services/local_backup_service.dart)
-mirrors every Drive backup to `<AppDocuments>/backups/` with the same
+mirrors every Drive backup to a `backups/` folder with the same
 filename pattern and the same `SyncPayloadBuilder` content. It runs on
 every change (debounced 1000ms) **even when not signed into Drive**, so
 there is always a recovery path. It is also used to take a **pre-restore
 safety backup** before any destructive import. Local retention keeps
 today's = all and one/day for 7 days, then **deletes** older (no
 monthly tier, unlike Drive).
+
+**Where it lives is platform-dependent — and load-bearing.** On
+**mobile** the folder sits under `getApplicationDocumentsDirectory()`,
+which is the app-private sandbox. On **desktop** that same call resolves
+to the user's *real* `~/Documents` (XDG `DOCUMENTS`), so the service
+uses `getApplicationSupportDirectory()` there instead (`~/.local/share/…`
+on Linux) — otherwise every debounced change floods the user's Documents
+with dated JSON. A one-time best-effort migration relocates backups an
+older desktop build left in `~/Documents/backups/` into the new
+app-private dir. Don't switch desktop back to the documents dir.
 
 ### 3.6 Restore / import path
 [`BackupRestoreService`](../lib/shared/services/backup_restore_service.dart)

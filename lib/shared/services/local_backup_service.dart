@@ -2,6 +2,7 @@ import 'dart:async';
 import 'dart:io';
 import 'package:flutter/foundation.dart';
 import 'package:path_provider/path_provider.dart';
+import '../utils/platform_helper.dart';
 import 'sync_payload_builder.dart';
 
 // --------------------------------------------------------------------------
@@ -34,15 +35,78 @@ class LocalBackupService {
   /// Flag to prevent concurrent backups
   bool _backupInProgress = false;
 
-  /// Get the local backup directory
+  /// One-time guard for the legacy desktop-backup migration.
+  bool _legacyMigrationDone = false;
+
+  /// Base app directory the `backups/` folder lives under.
+  ///
+  /// On **desktop** (Linux/macOS/Windows) `getApplicationDocumentsDirectory()`
+  /// resolves to the user's *real* Documents folder (XDG `DOCUMENTS`), so
+  /// writing dated backups there floods the user's documents. Use the
+  /// app-private support directory instead. On **mobile** the documents dir is
+  /// already app-sandboxed, so keep it (existing backups live there).
+  Future<Directory> _getAppBaseDirectory() async {
+    if (PlatformHelper.isDesktop) {
+      return getApplicationSupportDirectory();
+    }
+    return getApplicationDocumentsDirectory();
+  }
+
+  /// Get the local backup directory, creating it if needed.
   Future<Directory> _getBackupDirectory() async {
-    final appDir = await getApplicationDocumentsDirectory();
+    final appDir = await _getAppBaseDirectory();
     final backupDir = Directory('${appDir.path}/backups');
     if (!await backupDir.exists()) {
       await backupDir.create(recursive: true);
     }
+    await _migrateLegacyDesktopBackups(backupDir);
     return backupDir;
   }
+
+  /// Best-effort, one-time relocation of backups an older build wrote into the
+  /// user's real Documents folder on desktop. Moves only our own backup files
+  /// into [newBackupDir] and removes the now-empty legacy folder. Never throws.
+  Future<void> _migrateLegacyDesktopBackups(Directory newBackupDir) async {
+    if (_legacyMigrationDone || !PlatformHelper.isDesktop) return;
+    _legacyMigrationDone = true;
+    try {
+      final docsDir = await getApplicationDocumentsDirectory();
+      final legacyDir = Directory('${docsDir.path}/backups');
+      if (legacyDir.path == newBackupDir.path || !await legacyDir.exists()) {
+        return;
+      }
+      for (final entity in await legacyDir.list().toList()) {
+        if (entity is! File) continue;
+        final name = entity.path.split('/').last;
+        if (!name.startsWith(_baseFileName)) continue;
+        final target = File('${newBackupDir.path}/$name');
+        if (await target.exists()) {
+          await entity.delete();
+        } else {
+          // copy+delete is robust even across filesystems (rename is not).
+          await entity.copy(target.path);
+          await entity.delete();
+        }
+      }
+      if ((await legacyDir.list().toList()).isEmpty) {
+        await legacyDir.delete();
+      }
+    } catch (e) {
+      if (kDebugMode) {
+        print('LocalBackupService: legacy backup migration failed: $e');
+      }
+    }
+  }
+
+  /// Test hook: resolve (and create) the backup directory, exercising the
+  /// desktop vs. mobile placement and the legacy migration.
+  @visibleForTesting
+  Future<Directory> getBackupDirectoryForTesting() => _getBackupDirectory();
+
+  /// Test hook: re-arm the one-time legacy migration so each test starts fresh
+  /// (the service is a process-wide singleton).
+  @visibleForTesting
+  void resetLegacyMigrationForTesting() => _legacyMigrationDone = false;
 
   /// Schedule a debounced backup (mirrors Drive's scheduleUploadFromBox)
   void scheduleBackup() {

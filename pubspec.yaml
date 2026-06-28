@@ -49,6 +49,9 @@ dev_dependencies:
   flutter_lints: ^5.0.0
   flutter_launcher_icons: ^0.14.1
   analyzer: ^6.4.1
+  # Test-only: mock path_provider to assert backup directory placement.
+  path_provider_platform_interface: ^2.1.0
+  plugin_platform_interface: ^2.1.0
 
 
 flutter_launcher_icons:

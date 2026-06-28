@@ -68,7 +68,7 @@ class _MorningRitualTodayTabState extends State<MorningRitualTodayTab> {
   @override
   void dispose() {
     _timer?.cancel();
-    FlutterRingtonePlayer().stop();
+    _stopAlarmSound();
     // Ensure wake lock is disabled when leaving the page
     WakelockPlus.disable();
     MorningRitualService.ritualItemsBox.listenable().removeListener(
@@ -92,6 +92,7 @@ class _MorningRitualTodayTabState extends State<MorningRitualTodayTab> {
 
   void _resetRitual() {
     _timer?.cancel();
+    _stopAlarmSound();
     setState(() {
       _ritualStarted = false;
       _currentItemIndex = 0;
@@ -103,6 +104,13 @@ class _MorningRitualTodayTabState extends State<MorningRitualTodayTab> {
     });
     // NOTE: deliberately does NOT clear the persisted draft — switching to
     // another date must not wipe today's in-progress ritual.
+  }
+
+  /// Silence the timer-end alarm. Called when the user moves on from an item
+  /// (complete/skip/previous/start over) or leaves the page, so the alarm
+  /// plays to its natural end otherwise instead of being cut off mid-sound.
+  void _stopAlarmSound() {
+    FlutterRingtonePlayer().stop();
   }
 
   /// Persist the current in-progress ritual so it can be resumed after the user
@@ -273,7 +281,11 @@ class _MorningRitualTodayTabState extends State<MorningRitualTodayTab> {
     if (soundEnabled) {
       try {
         // Use flutter_ringtone_player to play the system alarm sound
-        // This works reliably on both Android and iOS
+        // This works reliably on both Android and iOS.
+        // `looping: false` lets the alarm tone play once to its natural end —
+        // we deliberately do NOT force-stop it after a fixed delay, which used
+        // to truncate the sound. It is silenced by `_stopAlarmSound()` when the
+        // user advances to the next item or leaves the page (see dispose).
         await FlutterRingtonePlayer().play(
           android: AndroidSounds.alarm,
           ios: IosSounds.alarm,
@@ -281,11 +293,6 @@ class _MorningRitualTodayTabState extends State<MorningRitualTodayTab> {
           volume: 1.0,
           asAlarm: true, // Uses alarm audio stream for proper volume control
         );
-
-        // Stop after 2 seconds (alarm sound can be long)
-        Future.delayed(const Duration(seconds: 2), () {
-          FlutterRingtonePlayer().stop();
-        });
       } catch (e) {
         // Fallback to system sound if ringtone player fails
         debugPrint('FlutterRingtonePlayer failed: $e');
@@ -385,6 +392,7 @@ class _MorningRitualTodayTabState extends State<MorningRitualTodayTab> {
     }
 
     _timer?.cancel();
+    _stopAlarmSound();
 
     final record = RitualItemRecord(
       ritualItemId: item.id,
@@ -419,6 +427,7 @@ class _MorningRitualTodayTabState extends State<MorningRitualTodayTab> {
     if (item == null) return;
 
     _timer?.cancel();
+    _stopAlarmSound();
 
     final record = RitualItemRecord(
       ritualItemId: item.id,
@@ -449,6 +458,7 @@ class _MorningRitualTodayTabState extends State<MorningRitualTodayTab> {
     if (_currentItemIndex <= 0) return;
 
     _timer?.cancel();
+    _stopAlarmSound();
 
     setState(() {
       // Remove the last completed record (we're going back)
@@ -488,6 +498,7 @@ class _MorningRitualTodayTabState extends State<MorningRitualTodayTab> {
 
     if (confirmed == true) {
       _timer?.cancel();
+      _stopAlarmSound();
       setState(() {
         _currentItemIndex = 0;
         _completedRecords = [];

@@ -55,6 +55,21 @@ notifications, and verify the 8th-step content is complete.
 Choose one and use it everywhere so a user with no saved window sees a
 consistent value.
 
+### P2.4 No real Morning Ritual alarm sound on desktop
+`flutter_ringtone_player` (4.0.0+x) declares **android + ios platforms
+only**, so on Linux/macOS/Windows the timer-end `_playAlarm` throws
+`MissingPluginException` and falls through to a single
+`SystemSound.play(SystemSoundType.alert)` — which on Linux is typically
+silent. The per-item sound toggle therefore does nothing on desktop.
+Either wire a desktop-capable player (e.g. `audioplayers` / `just_audio`
+with a short bundled alarm asset) gated by `PlatformHelper.isDesktop`, or
+surface the limitation in the UI. *(Found while fixing the alarm
+cut-off; the cut-off itself — a hardcoded 2s force-stop — is already
+fixed.)*
+
+**Why:** the timer is usable on desktop, so a user expecting the alarm
+to ring at the end of a meditation gets nothing.
+
 ---
 
 ## P3 — Engineering polish

@@ -168,6 +168,28 @@ Store descriptions, and a separate AI Madplan privacy policy. CSV
 export was also fixed for locale-correct output (semicolon separator,
 UTF-8 BOM). Productization/compliance rather than feature work.
 
+## Phase 16 — Desktop polish: local-backup location & alarm cut-off
+Two desktop/UX bug fixes:
+- **Local backups flooded the user's Documents on desktop.**
+  `LocalBackupService` rooted its `backups/` folder at
+  `getApplicationDocumentsDirectory()`, which on desktop resolves to the
+  *real* `~/Documents` (XDG `DOCUMENTS`), not an app sandbox. Every
+  debounced change (and the launch-time mutations) dropped a dated JSON
+  there. Fixed by using `getApplicationSupportDirectory()` on desktop
+  (`PlatformHelper.isDesktop`) while keeping the already-sandboxed
+  documents dir on mobile, plus a one-time best-effort migration of
+  stray `~/Documents/backups/` files into the new app-private dir. See
+  [architecture.md §3.5](./architecture.md). Guarded by
+  `test/local_backup_directory_test.dart`.
+- **Morning Ritual alarm was cut off.** `_playAlarm` force-stopped the
+  ringtone after a hardcoded 2 seconds; with `looping: false` the alarm
+  tone is finite, so the delay just truncated it. Removed the timed stop
+  so the sound plays to its natural end, and added `_stopAlarmSound()`
+  on user-advance (complete/skip/previous/start over) and `dispose` so it
+  is silenced intentionally rather than on a timer. While here, noted
+  that `flutter_ringtone_player` is android/ios-only — desktop has no
+  real alarm sound (implementation_plan P2.4).
+
 ---
 
 ## Data-format migration notes
