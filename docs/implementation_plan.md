@@ -27,6 +27,37 @@ ever committed, rotate the credential and scrub history.
 though desktop OAuth secrets are "app-identifying" rather than truly
 secret.
 
+### P1.2 Bring the store-publishing credentials onto the release Mac
+
+**What you need on the Mac — short answer: copy the credential files,
+they're account/team-scoped, not per-app.** The release scripts +
+`deploy-release` agent are in place, but the first store release from the
+Mac needs these one-time setup steps. All credential files live git-ignored
+at the repo root; full detail in the [Store release runbook](#store-release-runbook-google-play--testflight).
+
+- [ ] Copy the three credential files to the repo root on the Mac (all
+      git-ignored): `play-service-account.json` (Play API key),
+      `app_sp_pw` (Apple ID app-specific password), and
+      `AuthKey_<KEYID>.p8` + `asc_issuer` (App Store Connect API key +
+      Issuer ID). They are account/team-scoped, so copying is enough.
+- [ ] **Play Console → Users & permissions:** confirm that service account
+      has **"Release to testing tracks"** for this app (an account-level
+      invite already covers it).
+- [ ] **Play, brand-new app only:** upload the *first* AAB by hand in the
+      Console once — Play's API refuses the first bundle. The listing must
+      exist for `dk.stormstyrken.twelvestepsapp`.
+- [ ] **App Store Connect:** ensure an app record exists for bundle id
+      `dk.stormstyrken.twelvestepsapp`; in Xcode set Runner → Signing &
+      Capabilities → your Team (automatic signing mints the Distribution
+      cert).
+- [ ] **Locale check:** the upload scripts send `en-GB` + `da-DK` notes —
+      verify the Play listing has those languages, else change the locale
+      strings in `scripts/upload-aab-to-play.sh`.
+
+**Why now:** these are the only blockers between the landed tooling and an
+actual TestFlight / Play closed-testing release; without them the scripts
+stop at a missing-credential pre-flight error.
+
 ---
 
 ## P2 — Half-implemented behaviour the code already hints at
