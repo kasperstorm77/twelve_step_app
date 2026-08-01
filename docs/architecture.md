@@ -75,6 +75,17 @@ in `main.dart` *after* the Drive sync/conflict check (so a freshly
 restored window is honoured) and re-checked on resume via `AppWidget`'s
 `WidgetsBindingObserver`.
 
+The portable Morning contract reserves nullable, append-only randomizer data:
+`RitualItem.randomizerSourceId` is Hive field 11 / JSON
+`randomizerSourceId`; `RitualItemRecord.selectedContentId` and
+`selectedContentText` are Hive fields 5 and 6 with the same JSON names. The
+restore service and canonical payload builder preserve these fields through
+schema `8.0` JSON, local backup, and Drive, while missing fields decode as
+null. A present source ID must be non-blank and prayer-only, and changing an
+imported randomized prayer to a timer clears it before export. The current
+runner remains unchanged and continues to show `prayerText`;
+full Just for Today selection behavior is roadmap item P2.5.
+
 ### 1.4 Evening Ritual (`lib/evening_ritual/`)
 A nightly 10th-step self-examination. Each day the user records one or
 more **reflection entries** chosen from a fixed set of `ReflectionType`

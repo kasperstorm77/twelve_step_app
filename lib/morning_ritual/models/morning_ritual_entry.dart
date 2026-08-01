@@ -3,6 +3,16 @@ import 'package:uuid/uuid.dart';
 
 part 'morning_ritual_entry.g.dart';
 
+abstract final class RitualItemRecordHiveFields {
+  static const selectedContentId = 5;
+  static const selectedContentText = 6;
+}
+
+abstract final class RitualItemRecordJsonKeys {
+  static const selectedContentId = 'selectedContentId';
+  static const selectedContentText = 'selectedContentText';
+}
+
 /// Status of a ritual item completion
 @HiveType(typeId: 11)
 enum RitualItemStatus {
@@ -32,13 +42,24 @@ class RitualItemRecord {
   @HiveField(4)
   final int? originalDurationSeconds; // For timers, original timer duration
 
+  @HiveField(RitualItemRecordHiveFields.selectedContentId)
+  final String? selectedContentId;
+
+  @HiveField(RitualItemRecordHiveFields.selectedContentText)
+  final String? selectedContentText;
+
   RitualItemRecord({
     required this.ritualItemId,
     required this.ritualItemName,
     required this.status,
     this.actualDurationSeconds,
     this.originalDurationSeconds,
-  });
+    this.selectedContentId,
+    this.selectedContentText,
+  }) : assert(
+         (selectedContentId == null) == (selectedContentText == null),
+         'Selected content ID and text must both be present or absent',
+       );
 
   /// Format the original duration as mm:ss
   String get formattedDuration {
@@ -54,15 +75,28 @@ class RitualItemRecord {
     'status': status.index,
     'actualDurationSeconds': actualDurationSeconds,
     'originalDurationSeconds': originalDurationSeconds,
+    RitualItemRecordJsonKeys.selectedContentId: selectedContentId,
+    RitualItemRecordJsonKeys.selectedContentText: selectedContentText,
   };
 
   factory RitualItemRecord.fromJson(Map<String, dynamic> json) {
+    final selectedContentId =
+        json[RitualItemRecordJsonKeys.selectedContentId] as String?;
+    final selectedContentText =
+        json[RitualItemRecordJsonKeys.selectedContentText] as String?;
+    if ((selectedContentId == null) != (selectedContentText == null)) {
+      throw const FormatException(
+        'Selected content ID and text must both be present or absent',
+      );
+    }
     return RitualItemRecord(
       ritualItemId: json['ritualItemId'] as String,
       ritualItemName: json['ritualItemName'] as String,
       status: RitualItemStatus.values[json['status'] as int],
       actualDurationSeconds: json['actualDurationSeconds'] as int?,
       originalDurationSeconds: json['originalDurationSeconds'] as int?,
+      selectedContentId: selectedContentId,
+      selectedContentText: selectedContentText,
     );
   }
 }

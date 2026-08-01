@@ -14,6 +14,10 @@ and defer actual selection/UI behavior to a new canonical roadmap task.
 **Tech Stack:** Flutter, Dart, Hive, shared JSON/Google Drive payload, Flutter
 unit tests.
 
+**Status:** Passive field implementation, review, documentation, and repository
+verification are complete. Final commit, remote synchronization, and SHA
+read-back remain in Task 4.
+
 ## Global Constraints
 
 - Follow root `CLAUDE.md` plus `lib/morning_ritual/CLAUDE.md` and
@@ -49,7 +53,7 @@ unit tests.
 - Produces: the three nullable fields at the frozen Hive/JSON IDs.
 - Produces: missing-field decoding as null.
 
-- [ ] **Step 1: Write the failing model tests**
+- [x] **Step 1: Write the failing model tests**
 
 ```dart
 expect(
@@ -70,18 +74,18 @@ expect(
 );
 ```
 
-- [ ] **Step 2: Run the test and verify compilation fails for missing fields**
+- [x] **Step 2: Run the test and verify compilation fails for missing fields**
 
 ```bash
 flutter test test/morning_ritual_randomizer_portability_test.dart
 ```
 
-- [ ] **Step 3: Add the nullable fields and JSON preservation**
+- [x] **Step 3: Add the nullable fields and JSON preservation**
 
 Update constructors, `copyWith`, `toJson`, and `fromJson`. Keep missing fields
 null. Preserve `lastModified` behavior and all existing defaults.
 
-- [ ] **Step 4: Regenerate adapters**
+- [x] **Step 4: Regenerate adapters**
 
 ```bash
 dart run build_runner build --delete-conflicting-outputs
@@ -90,7 +94,7 @@ dart run build_runner build --delete-conflicting-outputs
 Inspect that `RitualItemAdapter` writes field 11 and
 `RitualItemRecordAdapter` writes fields 5 and 6, with nullable reads.
 
-- [ ] **Step 5: Run the model test and verify it passes**
+- [x] **Step 5: Run the model test and verify it passes**
 
 Run the Task 1 test command. Expected: pass.
 
@@ -105,7 +109,7 @@ Run the Task 1 test command. Expected: pass.
 - Consumes: model `toJson`/`fromJson`.
 - Produces: `8.0` payload round-trip without new top-level fields.
 
-- [ ] **Step 1: Add the failing backup round-trip assertion**
+- [x] **Step 1: Add the failing backup round-trip assertion**
 
 Open the normal test Hive boxes, restore a payload containing all three
 fields, rebuild with `SyncPayloadBuilder`, and assert:
@@ -120,19 +124,19 @@ expect(record['selectedContentText'], 'Just for today...');
 expect(rebuilt['version'], '8.0');
 ```
 
-- [ ] **Step 2: Run the test and verify the new values are currently dropped**
+- [x] **Step 2: Run the test and verify the new values are currently dropped**
 
 ```bash
 flutter test test/morning_ritual_randomizer_portability_test.dart
 ```
 
-- [ ] **Step 3: Make only the minimal restore/export correction if the model change is insufficient**
+- [x] **Step 3: Make only the minimal restore/export correction if the model change is insufficient**
 
 The expected implementation is no service change because both services call
 the model serializers. If the failing test proves otherwise, update only the
 single canonical import/export path; do not add an alternate map builder.
 
-- [ ] **Step 4: Verify new and existing Morning progress tests pass**
+- [x] **Step 4: Verify new and existing Morning progress tests pass**
 
 ```bash
 flutter test test/morning_ritual_randomizer_portability_test.dart test/morning_ritual_progress_test.dart
@@ -150,18 +154,18 @@ flutter test test/morning_ritual_randomizer_portability_test.dart test/morning_r
 - Produces: current-state field-ID documentation.
 - Produces: incomplete P2 task for full Just for Today randomizer behavior.
 
-- [ ] **Step 1: Update current field invariants**
+- [x] **Step 1: Update current field invariants**
 
 Document `RitualItem` field 11 and `RitualItemRecord` fields 5–6 as nullable,
 append-only shared fields. State that current runner behavior remains prayer
 text and that unknown/missing values are safe.
 
-- [ ] **Step 2: Append the passive-compatibility outcome**
+- [x] **Step 2: Append the passive-compatibility outcome**
 
 Record why a new enum ordinal was rejected and that schema `8.0` plus top-level
 keys remain unchanged.
 
-- [ ] **Step 3: Add P2.5 full randomizer implementation task**
+- [x] **Step 3: Add P2.5 full randomizer implementation task**
 
 The task must require:
 
@@ -179,14 +183,14 @@ The task must require:
 **Files:**
 - Verify every changed/generated file.
 
-- [ ] **Step 1: Format and inspect generated code**
+- [x] **Step 1: Format and inspect generated code**
 
 ```bash
 dart format .
 git diff --check
 ```
 
-- [ ] **Step 2: Run complete repository verification**
+- [x] **Step 2: Run complete repository verification**
 
 ```bash
 flutter analyze

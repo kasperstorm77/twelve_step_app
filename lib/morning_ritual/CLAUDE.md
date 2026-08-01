@@ -12,8 +12,11 @@ days saved as `MorningRitualEntry`. See
 - **Enum ordinal order:** timer=0/prayer=1; completed=0/skipped=1/missed=2.
   Append only.
 - **`RitualItem` later fields are additive:** `lastModified`=7,
-  `vibrateEnabled`=8, `soundEnabled`=9, `soundId`=10 (the highest index).
-  Never renumber; add new fields at index 11+.
+  `vibrateEnabled`=8, `soundEnabled`=9, `soundId`=10, and nullable
+  `randomizerSourceId`=11. Never renumber; add new fields at index 12+.
+- **`RitualItemRecord` portable snapshots are append-only:** nullable
+  `selectedContentId`=5 and nullable `selectedContentText`=6. The two values
+  must both be present or both be absent. Never renumber; add at index 7+.
 - **JSON keys:** `morningRitualItems`, `morningRitualEntries` (no alias);
   auto-load window in `appSettings.morningRitualAutoLoadEnabled` /
   `morningRitualStartTime` / `morningRitualEndTime` (`HH:MM:SS`).
@@ -36,6 +39,13 @@ days saved as `MorningRitualEntry`. See
   (complete/skip/previous/start over) or leaves the page (`dispose`).
 - `soundId` is persisted/synced but `_playAlarm` currently ignores it
   (always system alarm) — see implementation_plan P2.1.
+- The nullable randomizer definition/history fields are passively preserved by
+  Hive, JSON restore, the canonical payload builder, local backup, and Drive.
+  Missing fields decode as null for released payloads. A present source ID must
+  be non-blank and is valid only for `prayer`; changing such a definition to
+  `timer` clears it before re-export. The current runner does not select or
+  display randomized content; implement that only through
+  implementation-plan P2.5 without changing `prayer=1`.
 - `flutter_ringtone_player` ships **android/ios only**, so on desktop the
   alarm falls through to a single `SystemSound.alert` (often silent on
   Linux) — see implementation_plan P2.4.

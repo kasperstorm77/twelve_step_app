@@ -3,6 +3,14 @@ import 'package:uuid/uuid.dart';
 
 part 'ritual_item.g.dart';
 
+abstract final class RitualItemHiveFields {
+  static const randomizerSourceId = 11;
+}
+
+abstract final class RitualItemJsonKeys {
+  static const randomizerSourceId = 'randomizerSourceId';
+}
+
 /// Type of ritual item in the morning ritual definition
 @HiveType(typeId: 9)
 enum RitualItemType {
@@ -51,6 +59,10 @@ class RitualItem extends HiveObject {
   @HiveField(10)
   String? soundId;
 
+  /// Portable identifier for a data-driven reading source.
+  @HiveField(RitualItemHiveFields.randomizerSourceId)
+  String? randomizerSourceId;
+
   RitualItem({
     String? id,
     required this.name,
@@ -62,6 +74,7 @@ class RitualItem extends HiveObject {
     this.vibrateEnabled = true,
     this.soundEnabled = true,
     this.soundId,
+    this.randomizerSourceId,
     DateTime? lastModified,
   }) : id = id ?? const Uuid().v4(),
        lastModified = lastModified ?? DateTime.now();
@@ -92,11 +105,14 @@ class RitualItem extends HiveObject {
     bool? vibrateEnabled,
     bool? soundEnabled,
     String? soundId,
+    String? randomizerSourceId,
+    bool clearRandomizerSourceId = false,
   }) {
+    final effectiveType = type ?? this.type;
     return RitualItem(
       id: id,
       name: name ?? this.name,
-      type: type ?? this.type,
+      type: effectiveType,
       durationSeconds: durationSeconds ?? this.durationSeconds,
       prayerText: prayerText ?? this.prayerText,
       sortOrder: sortOrder ?? this.sortOrder,
@@ -104,6 +120,10 @@ class RitualItem extends HiveObject {
       vibrateEnabled: vibrateEnabled ?? this.vibrateEnabled,
       soundEnabled: soundEnabled ?? this.soundEnabled,
       soundId: soundId ?? this.soundId,
+      randomizerSourceId:
+          effectiveType == RitualItemType.timer || clearRandomizerSourceId
+          ? null
+          : randomizerSourceId ?? this.randomizerSourceId,
       lastModified: DateTime.now(),
     );
   }
@@ -119,14 +139,33 @@ class RitualItem extends HiveObject {
     'vibrateEnabled': vibrateEnabled,
     'soundEnabled': soundEnabled,
     'soundId': soundId,
+    RitualItemJsonKeys.randomizerSourceId: randomizerSourceId,
     'lastModified': lastModified.toIso8601String(),
   };
 
   factory RitualItem.fromJson(Map<String, dynamic> json) {
+    final type = RitualItemType.values[json['type'] as int];
+    final rawRandomizerSourceId = json[RitualItemJsonKeys.randomizerSourceId];
+    final String? randomizerSourceId;
+    if (rawRandomizerSourceId == null) {
+      randomizerSourceId = null;
+    } else if (rawRandomizerSourceId is String &&
+        rawRandomizerSourceId.trim().isNotEmpty) {
+      randomizerSourceId = rawRandomizerSourceId;
+    } else {
+      throw const FormatException(
+        'randomizerSourceId must be null or a non-blank string',
+      );
+    }
+    if (randomizerSourceId != null && type != RitualItemType.prayer) {
+      throw const FormatException(
+        'randomizerSourceId is valid only for prayer definitions',
+      );
+    }
     return RitualItem(
       id: json['id'] as String,
       name: json['name'] as String,
-      type: RitualItemType.values[json['type'] as int],
+      type: type,
       durationSeconds: json['durationSeconds'] as int?,
       prayerText: json['prayerText'] as String?,
       sortOrder: json['sortOrder'] as int? ?? 0,
@@ -134,6 +173,7 @@ class RitualItem extends HiveObject {
       vibrateEnabled: json['vibrateEnabled'] as bool? ?? true,
       soundEnabled: json['soundEnabled'] as bool? ?? true,
       soundId: json['soundId'] as String?,
+      randomizerSourceId: randomizerSourceId,
       lastModified: json['lastModified'] != null
           ? DateTime.parse(json['lastModified'] as String)
           : DateTime.now(),

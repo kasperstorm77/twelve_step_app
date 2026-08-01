@@ -210,6 +210,31 @@ project and tailored to Flutter:
   [Store release runbook](./implementation_plan.md). The TestFlight half is
   unverifiable on the (non-Apple) dev box — syntax-checked, run from a Mac.
 
+## Phase 18 — Passive Morning randomizer portability
+
+Extended the existing Morning definition and history models with the additive
+fields reserved by the shared recovery contract: `RitualItem` Hive field 11 /
+JSON `randomizerSourceId`, plus `RitualItemRecord` Hive fields 5 and 6 / JSON
+`selectedContentId` and `selectedContentText`. Missing fields decode as null,
+and a present history snapshot requires both ID and text. The generated Hive
+adapters write and read the frozen field indices.
+
+No third item type was introduced: `timer=0` and `prayer=1` retain their
+released meanings, schema `8.0` and all top-level keys remain unchanged, and
+the current runner still shows ordinary `prayerText`. A restore-and-rebuild
+test proves the three values survive `BackupRestoreService` and the canonical
+`SyncPayloadBuilder` used by JSON, local backup, and Google Drive. Full
+bilingual Just for Today selection and display remains deliberately open as
+implementation-plan P2.5.
+
+The final compatibility audit also made `randomizerSourceId` a non-blank,
+prayer-only value at JSON decode. Editing an imported randomized prayer into a
+timer clears that source before the canonical payload is rebuilt, so Twelve
+Steps cannot emit a definition that Emotional Sobriety must reject.
+Final verification completed with zero analyzer issues, all 15 repository
+tests passing, resolved local documentation links, and no Git whitespace
+errors.
+
 ---
 
 ## Data-format migration notes

@@ -2,8 +2,6 @@
 
 A free, comprehensive recovery companion for people working the 12 Steps. Seven integrated tools to support your daily recovery practice.
 
-![Main Screen](img/mainScreen.png)
-
 ## Download
 
 | Platform | Status | Link |
@@ -86,13 +84,6 @@ Available in **English** and **Danish**. Switch languages instantly from any scr
 
 ### ⚡ Seamless App Switching
 All seven tools are integrated into one app. Switch between them instantly using the grid icon in the top bar.
-
----
-
-## Screenshots
-
-![Settings](img/settings.png)
-![Feature](img/feature.png)
 
 ---
 
