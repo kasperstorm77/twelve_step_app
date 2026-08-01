@@ -101,6 +101,47 @@ fixed.)*
 **Why:** the timer is usable on desktop, so a user expecting the alarm
 to ring at the end of a meditation gets nothing.
 
+### P2.5 Implement the Just for Today Morning randomizer
+
+The shared Morning definition and history models reserve nullable portable
+fields for a data-driven randomizer:
+
+- `RitualItem.randomizerSourceId` at Hive field 11 / JSON
+  `randomizerSourceId`;
+- `RitualItemRecord.selectedContentId` at Hive field 5 / JSON
+  `selectedContentId`; and
+- `RitualItemRecord.selectedContentText` at Hive field 6 / JSON
+  `selectedContentText`.
+
+Add a bilingual, non-hardcoded content source named `just_for_today` using the
+same ten stable option IDs as Emotional Sobriety. When a new daily Morning
+draft starts, choose one option uniformly, persist the selection so resume and
+previous navigation do not redraw it, show it in the prayer/reading runner,
+and snapshot its ID and displayed text into completed or skipped history.
+Missed and static items keep both history fields null.
+
+The implementation must retain `RitualItemType.prayer=1`, keep backup schema
+`8.0` and existing top-level keys, use the canonical payload builder and
+restore service for JSON and Drive, and prove cross-app fixtures in both
+directions. Every visible string and option must have meaning-equivalent
+English and Danish content.
+
+**Acceptance:**
+
+- [ ] All ten stable option IDs resolve from data rather than Dart literals or
+      a special-case default item ID.
+- [ ] An injected picker proves every option index is reachable.
+- [ ] Start, resume, previous, complete, skip, missed-day, history, JSON, and
+      Drive round-trip tests preserve the required selection semantics.
+- [ ] Current Emotional Sobriety definitions and history import and re-export
+      without field loss.
+- [ ] `flutter analyze` and the complete `flutter test` suite pass.
+
+Follow
+[`docs/superpowers/plans/2026-08-01-morning-randomizer-portable-fields.md`](superpowers/plans/2026-08-01-morning-randomizer-portable-fields.md)
+for the already-approved passive field foundation; write a separate executable
+plan for the runner behavior before implementation.
+
 ---
 
 ## P3 — Engineering polish
