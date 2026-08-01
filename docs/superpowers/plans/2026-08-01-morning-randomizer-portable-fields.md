@@ -14,9 +14,9 @@ and defer actual selection/UI behavior to a new canonical roadmap task.
 **Tech Stack:** Flutter, Dart, Hive, shared JSON/Google Drive payload, Flutter
 unit tests.
 
-**Status:** Passive field implementation, review, documentation, and repository
-verification are complete. Final commit, remote synchronization, and SHA
-read-back remain in Task 4.
+**Status:** Complete. Passive field implementation, review, documentation,
+verification, repository commits, remote synchronization, and exact SHA
+read-back finished on 2026-08-01.
 
 ## Global Constraints
 
@@ -208,7 +208,7 @@ git commit -m "feat: preserve morning randomizer fields"
 
 Verified implementation commit: `3c6a334`.
 
-- [ ] **Step 4: Fetch, divergence-check, and push main**
+- [x] **Step 4: Fetch, divergence-check, and push main**
 
 ```bash
 git fetch origin main
@@ -216,7 +216,7 @@ git rev-list --left-right --count HEAD...origin/main
 git push origin main
 ```
 
-- [ ] **Step 5: Read back the remote SHA and clean state**
+- [x] **Step 5: Read back the remote SHA and clean state**
 
 Require local `HEAD`, `origin/main`, and `git ls-remote origin refs/heads/main`
 to match and `git status --short` to be empty.
