@@ -197,7 +197,7 @@ flutter analyze
 flutter test
 ```
 
-- [ ] **Step 3: Review intended scope and commit**
+- [x] **Step 3: Review intended scope and commit**
 
 ```bash
 git status --short
@@ -205,6 +205,8 @@ git diff --stat
 git add lib/morning_ritual docs test/morning_ritual_randomizer_portability_test.dart
 git commit -m "feat: preserve morning randomizer fields"
 ```
+
+Verified implementation commit: `3c6a334`.
 
 - [ ] **Step 4: Fetch, divergence-check, and push main**
 
