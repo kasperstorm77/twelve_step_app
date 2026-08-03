@@ -111,7 +111,25 @@ ios/Runner.xcodeproj/*
 !ios/Runner.xcodeproj/project.pbxproj
 !ios/Runner.xcodeproj/xcshareddata/
 linux/
-macos/
+macos/*
+!macos/Podfile
+!macos/Runner/
+macos/Runner/*
+!macos/Runner/Info.plist
+!macos/Runner/AppDelegate.swift
+!macos/Runner/MainFlutterWindow.swift
+!macos/Runner/Assets.xcassets/
+!macos/Runner/Base.lproj/
+!macos/Runner/Configs/
+!macos/Runner/*.entitlements
+!macos/Runner.xcodeproj/
+macos/Runner.xcodeproj/*
+!macos/Runner.xcodeproj/project.pbxproj
+!macos/Runner.xcodeproj/xcshareddata/
+!macos/Runner.xcworkspace/
+macos/Runner.xcworkspace/*
+!macos/Runner.xcworkspace/contents.xcworkspacedata
+!macos/Runner.xcworkspace/xcshareddata/
 windows/
 
 # Web build output and generated files (keep only index.html)
