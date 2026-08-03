@@ -1,19 +1,74 @@
 # Documentation setup guidelines
 
-Set up the project's agent docs from the codebase and whatever already exists in the `docs/` folder. Two deliverables:
+Use this standard for the project architecture, data model, implementation
+plan, UI design guide, history, README, and agent instructions.
 
-## 1. Write the CLAUDE.md files
+## 1. Writing rules
 
-Following [claude_md_best_practices.md](./claude_md_best_practices.md) throughout, create a top-level `CLAUDE.md` plus one `CLAUDE.md` per logical area of the app. Base their content on the codebase and the existing `docs/` documents.
+1. **Assign one owner.** Place each fact in one canonical document. Link to the
+   owner from every other document.
+2. **State one rule at a time.** Use a short, self-contained sentence or bullet.
+3. **Write affirmatively.** Start constraints with verbs such as `Use`, `Keep`,
+   `Require`, `Preserve`, `Reject`, `Route`, or `Record`.
+4. **Use present tense.** Describe current behavior as fact. Write plan work as
+   imperative instructions. Place narrative tense in
+   `historic_implementation.md`.
+5. **Lead with authority.** Name the owner, input, output, state, or action at
+   the start of a sentence.
+6. **Make rules testable.** Include exact symbols, paths, values, states,
+   boundaries, and verification commands.
+7. **Prefer structured forms.** Use tables for mappings, numbered lists for
+   ordered flows, bullets for independent rules, and diagrams for topology.
+8. **Keep paragraphs small.** Give each paragraph one purpose. Convert dense
+   clauses into parallel bullets.
+9. **Use stable terms.** Match code names, UI labels, enum values, and file
+   names exactly. Preserve source grammar inside exact literals.
+10. **Keep current documents current.** Move rationale and completed work to
+    history. Keep accepted future work in the implementation plan.
+11. **Expose uncertainty.** Put an implementation gap in the plan with an
+    acceptance test. Keep the current contract factual.
+12. **Optimize retrieval.** Use descriptive sentence-case headings, stable
+    section IDs, local links, and concise citation keys.
 
-## 2. Consolidate the docs
+## 2. Canonical ownership
 
-Merge every `docs/*.md` file into exactly the three documents below. Exclude only sub-folders and `docs/LOCAL_SETUP.md`, if either is present. When done, these three (plus the excluded items) are the only docs remaining. No documented functionality may be lost — relocate it, don't drop it.
+| Document | Owns | Required shape |
+| --- | --- | --- |
+| `CLAUDE.md` | Agent priorities, safety rules, commands, document map | Short imperative quick reference |
+| `AGENTS.md` | Cross-agent entry point | Link to `CLAUDE.md` |
+| `architecture.md` | Current behavior, component boundaries, pipeline, engineering rules | Purpose, rules, topology, ordered pipeline, boundaries, operations, verification |
+| `data_model.md` | Persisted and runtime shapes, identity, state, artifacts, ownership | Principles, layouts, schemas, transitions, transactions, normalization |
+| `ui_design_guide.md` | Visible layout, interactions, action meaning, feedback, accessibility | Screen order, control tables, state rules, verification register |
+| `implementation_plan.md` | Accepted future work in priority order | Outcome, driver, work rules, acceptance, validation, document impact |
+| `historic_implementation.md` | Completed work and decision rationale | Dated phases with outcomes, reasons, tradeoffs, and verification |
+| `README.md` | User setup and operation | Prerequisites, installation, daily use, remote setup, troubleshooting |
 
-Build each from the codebase and existing docs. Keep their jobs separate; no overlap.
+`docs/static_guidelines/` contains reusable writing standards. Canonical project
+facts live in the documents listed in the table.
 
-- **architecture.md** — what the system does and how it must behave *now*. Functional features + the non-functional invariants every change must preserve. Current state only; no history, no future work.
-- **historic_implementation.md** — what's been built, phase by phase, and why each pivot happened. Orientation, not an index: note that file/line citations rot. Append as work lands. Look at earlier git commits for information also.
-- **implementation_plan.md** — what's next, in priority order. PR-sized items with the *why*, including deliberate "not yet" decisions. New work is added here first.
+## 3. Update loop
 
-**Relationship to CLAUDE.md:** CLAUDE.md holds the hard rules; these docs hold the detail behind them — invariant → architecture.md, rationale → historic_implementation.md, pending work → implementation_plan.md. CLAUDE.md links to them instead of duplicating. When a rule's invariant, rationale, or roadmap changes, update the matching doc in the same pass.
+Apply this loop to every documentation change:
+
+1. Identify the canonical owner.
+2. Read the implementation and every affected canonical section.
+3. Update the owner with present-tense, affirmative, rule-based wording.
+4. Replace repeated detail in companion documents with a direct link.
+5. Put accepted work in `implementation_plan.md`.
+6. Move completed plan content and decision rationale to
+   `historic_implementation.md`.
+7. Update `CLAUDE.md` when an agent rule, boundary, command, or document map
+   changes.
+8. Verify headings, links, anchors, exact literals, and Markdown formatting.
+9. Review every current-document sentence for current tense, affirmative
+   construction, one owner, and one purpose.
+
+## 4. Source practices
+
+This standard incorporates these current technical-writing practices:
+
+- [GitHub: write short, self-contained AI instructions](https://docs.github.com/en/copilot/concepts/prompting/response-customization#writing-effective-custom-instructions)
+- [Google: use present tense for system behavior](https://developers.google.com/style/tense)
+- [Google: use descriptive, hierarchical, sentence-case headings](https://developers.google.com/style/headings)
+- [Microsoft: lead with intent and make content concise and scannable](https://learn.microsoft.com/en-us/contribute/content/style-quick-start)
+- [Diátaxis: structure reference material like the system](https://diataxis.fr/reference/)
