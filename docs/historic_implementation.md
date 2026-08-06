@@ -404,6 +404,15 @@ that was needed. App Store Connect accepted the build with warning 90068
 (`MinimumOSVersion 13.0`; Apple requires 15.0 from Spring 2027), now tracked
 as P1.3.
 
+Verifying that release afterwards turned up something the tooling had always
+hidden: **uploading is not distributing.** Build 107 was `VALID` in App Store
+Connect and installable by nobody, because the app had never had a TestFlight
+beta group — builds 100–106 were all uploaded into the void the same way. An
+internal group (*Internal Testing*, `hasAccessToAllBuilds`) now exists, so
+every future upload is distributed automatically without a beta review. The
+Play side was fine: the alpha track read back `2.3.0` / versionCode 107,
+status `completed`, with both locales' notes.
+
 ---
 
 ## Data-format migration notes

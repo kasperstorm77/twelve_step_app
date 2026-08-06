@@ -297,6 +297,22 @@ These credentials are **account/team-scoped, not app-scoped**, so you can
   the app record; automatic signing in Xcode (Runner → Signing &
   Capabilities → your Team) mints the Distribution cert/profile.
 
+**Uploading is not distributing.** A build can be `processingState: VALID` in
+App Store Connect and still be installable by nobody: TestFlight only shows a
+build to testers in a group. This app had **no beta group at all** until
+2026-08-06 (builds 100–106 were uploaded but never distributed). There is now
+an **internal** group, *Internal Testing*, with `hasAccessToAllBuilds: true` —
+internal groups need no beta review and pick up every new build automatically,
+so `upload-ipa-to-testflight.sh` is genuinely the last step from now on. Adding
+an *external* tester would still require a Beta App Review.
+
+Check distribution, not just upload:
+```bash
+# groups on the app — an empty list means nobody can install anything
+curl -s -H "Authorization: Bearer $TOKEN" \
+  "https://api.appstoreconnect.apple.com/v1/betaGroups?filter[app]=6756220504"
+```
+
 **Locale caveat.** The scripts send release notes for `en-GB` + `da-DK`
 (matching the developer's other app). Confirm the Play listing and the App
 Store record actually have those languages; if your Play listing's default
