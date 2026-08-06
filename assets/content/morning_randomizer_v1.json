@@ -1,0 +1,95 @@
+{
+  "schemaVersion": 1,
+  "catalogId": "morning_randomizer_v1",
+  "sources": [
+    {
+      "id": "just_for_today",
+      "title": {
+        "en": "Just for Today",
+        "da": "Kun for i dag"
+      },
+      "options": [
+        {
+          "id": "happy_and_still",
+          "order": 1,
+          "text": {
+            "en": "Just for today, I will be happy. I will have no expectations, nor will I make demands today. I will give up my need to know or understand anything. Instead, I will pause and seek the will and guidance of God, which will come intuitively, if I just become still and quiet.",
+            "da": "Kun for i dag vil jeg være glad. Jeg vil ikke have forventninger eller stille krav i dag. Jeg vil give slip på behovet for at vide eller forstå noget. I stedet vil jeg standse op og søge Guds vilje og vejledning, som vil komme intuitivt, hvis jeg blot bliver stille og rolig."
+          }
+        },
+        {
+          "id": "adjust_to_what_is",
+          "order": 2,
+          "text": {
+            "en": "Just for today, I will adjust to what is instead of arranging everything around my own desires. I will take the day as it comes and find my place in the stream of life.",
+            "da": "Kun for i dag vil jeg tilpasse mig det, der er, i stedet for at forme alting efter mine egne ønsker. Jeg vil tage dagen, som den kommer, og finde min plads i livets strøm."
+          }
+        },
+        {
+          "id": "one_day_only",
+          "order": 3,
+          "text": {
+            "en": "Just for today, I will try to live through this day only and not tackle my whole life problem at once. I can do something for twelve hours that would appall me if I felt that I had to keep it up for a lifetime.",
+            "da": "Kun for i dag vil jeg prøve kun at leve denne ene dag og ikke tage fat på hele mit livs problem på én gang. Jeg kan gøre noget i tolv timer, som ville forfærde mig, hvis jeg følte, at jeg skulle blive ved med det hele livet."
+          }
+        },
+        {
+          "id": "agreeable_conduct",
+          "order": 4,
+          "text": {
+            "en": "Just for today, I will take care with my appearance, speak quietly, and act courteously. I will neither criticize, find fault, nor try to improve or regulate anyone except myself.",
+            "da": "Kun for i dag vil jeg gøre noget ud af mig selv, tale roligt og handle høfligt. Jeg vil hverken kritisere, lede efter fejl eller forsøge at forbedre eller styre andre end mig selv."
+          }
+        },
+        {
+          "id": "others_opinions",
+          "order": 5,
+          "text": {
+            "en": "Just for today, it is none of my business what anyone thinks about me or about anything else, and I do not have the power to make anyone change. That is God's job.",
+            "da": "Kun for i dag: Det er ikke min sag, hvad nogen tænker om mig eller om noget andet, og jeg har ikke magt til at få nogen til at forandre sig. Det er Guds opgave."
+          }
+        },
+        {
+          "id": "present_moment",
+          "order": 6,
+          "text": {
+            "en": "Just for today, I will remember that it is not the experience of today that drives people to despair - it is remorse or bitterness for something that happened yesterday and the dread of what tomorrow may bring. The past is gone; it is just an image in my mind. I have no stake in the future, for it is as yet unborn. The present moment is the only real moment, and only in the present moment can a conscious contact with God be found.",
+            "da": "Kun for i dag vil jeg huske, at det ikke er oplevelsen af i dag, der driver mennesker til fortvivlelse - det er anger eller bitterhed over noget, der skete i går, og frygten for, hvad morgendagen kan bringe. Fortiden er forbi; den er kun et billede i mit sind. Jeg har ingen andel i fremtiden, for den er endnu ikke født. Nuet er det eneste virkelige øjeblik, og kun i nuet kan en bevidst kontakt med Gud findes."
+          }
+        },
+        {
+          "id": "cease_fighting",
+          "order": 7,
+          "text": {
+            "en": "Just for today, I will stop fighting everything and everyone, even alcohol. What I resist keeps occupying me.",
+            "da": "Kun for i dag vil jeg holde op med at bekæmpe alt og alle - selv alkohol. Det, jeg kæmper imod, bliver ved med at fylde."
+          }
+        },
+        {
+          "id": "unafraid_beauty",
+          "order": 8,
+          "text": {
+            "en": "Just for today, I will be unafraid. Especially I will not be afraid to enjoy what is beautiful. I will remember that I am a spiritual mirror, and I will choose to believe that as I give love to the world, the world will reflect love back to me.",
+            "da": "Kun for i dag vil jeg være uden frygt. Især vil jeg ikke være bange for at nyde det smukke. Jeg vil huske, at jeg er et åndeligt spejl, og jeg vil vælge at tro på, at når jeg giver kærlighed til verden, vil verden spejle kærlighed tilbage til mig."
+          }
+        },
+        {
+          "id": "quiet_half_hour",
+          "order": 9,
+          "text": {
+            "en": "Just for today, I will spend a quiet half hour alone and relax. I will seek a saner perspective on my life and peace of mind through spiritual living.",
+            "da": "Kun for i dag vil jeg være alene og slappe af i en stille halv time. Jeg vil søge et mere nøgternt perspektiv på mit liv og sindsro gennem et åndeligt liv."
+          }
+        },
+        {
+          "id": "exercise_the_soul",
+          "order": 10,
+          "text": {
+            "en": "Just for today, I will exercise my soul in three ways: I will do someone a good turn and not get found out - if anybody knows of it, it will not count - and I will do at least two things I do not want to do, just for exercise.",
+            "da": "Kun for i dag vil jeg øve min sjæl på tre måder: Jeg vil gøre nogen en god gerning uden at blive opdaget - hvis nogen kender til den, tæller den ikke - og jeg vil gøre mindst to ting, jeg ikke har lyst til, alene for øvelsens skyld."
+          }
+        }
+      ]
+    }
+  ]
+}

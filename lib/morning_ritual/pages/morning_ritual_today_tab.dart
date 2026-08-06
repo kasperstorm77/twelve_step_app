@@ -7,6 +7,7 @@ import 'package:vibration/vibration.dart';
 import 'package:wakelock_plus/wakelock_plus.dart';
 import '../models/ritual_item.dart';
 import '../models/morning_ritual_entry.dart';
+import '../services/morning_randomizer_source.dart';
 import '../services/morning_ritual_service.dart';
 import '../../shared/localizations.dart';
 
@@ -33,6 +34,11 @@ class _MorningRitualTodayTabState extends State<MorningRitualTodayTab> {
   List<RitualItem> _ritualItems = [];
   List<RitualItemRecord> _completedRecords = [];
   DateTime? _ritualStartedAt;
+
+  /// This run's randomized readings, keyed by ritual item id. Drawn once when
+  /// the ritual starts and then held: resume and "previous" must show the same
+  /// reading, never a fresh draw.
+  final Map<String, MorningRandomizerSelection> _randomizerSelections = {};
 
   // Timer state
   Timer? _timer;
@@ -101,6 +107,7 @@ class _MorningRitualTodayTabState extends State<MorningRitualTodayTab> {
       _remainingSeconds = 0;
       _timerRunning = false;
       _timerPaused = false;
+      _randomizerSelections.clear();
     });
     // NOTE: deliberately does NOT clear the persisted draft — switching to
     // another date must not wipe today's in-progress ritual.
@@ -122,7 +129,73 @@ class _MorningRitualTodayTabState extends State<MorningRitualTodayTab> {
       currentItemIndex: _currentItemIndex,
       startedAt: _ritualStartedAt,
       records: _completedRecords,
+      randomizerSelections: _randomizerSelections.values.toList(
+        growable: false,
+      ),
     );
+  }
+
+  /// Draw a reading for every randomized item that doesn't have one yet, and
+  /// drop draws for items that are no longer part of the ritual.
+  ///
+  /// Only *missing* draws are made, so this is safe to call on start, on
+  /// resume, and after "start over": the day's reading stays the day's
+  /// reading. A source this build cannot resolve simply yields no selection
+  /// and the item falls back to its own `prayerText`.
+  Future<void> _ensureRandomizerSelections() async {
+    final randomized = MorningRitualService.randomizedItems(_ritualItems);
+    final liveIds = randomized.map((item) => item.id).toSet();
+    _randomizerSelections.removeWhere((id, _) => !liveIds.contains(id));
+
+    final missing = randomized
+        .where((item) => !_randomizerSelections.containsKey(item.id))
+        .toList(growable: false);
+    if (missing.isEmpty) return;
+
+    final localeCode = mounted
+        ? Localizations.localeOf(context).languageCode
+        : 'en';
+    final picked = await MorningRitualService.pickRandomizerSelections(
+      items: missing,
+      localeCode: localeCode,
+    );
+    if (picked.isEmpty) return;
+    if (!mounted) return;
+    setState(() {
+      for (final selection in picked) {
+        _randomizerSelections[selection.ritualItemId] = selection;
+      }
+    });
+    // Persist the draw immediately so a restart resumes the same reading.
+    _saveProgress();
+  }
+
+  /// The text to read for [item]: the reading drawn for this run when the item
+  /// is randomized, otherwise its own prayer text.
+  String? _displayTextFor(RitualItem item) {
+    final selection = _randomizerSelections[item.id];
+    if (selection != null) return selection.selectedContentText;
+    return item.prayerText;
+  }
+
+  /// The reading to show for a finished record. The stored snapshot is the
+  /// truth — it is what the person actually read, and it may have been written
+  /// by the other app — but when the option is still in this build's catalog
+  /// we re-resolve it so history reads in the currently selected language.
+  String _historyReadingText(RitualItemRecord record) {
+    final snapshot = record.selectedContentText ?? '';
+    final optionId = record.selectedContentId;
+    if (optionId == null) return snapshot;
+    final sourceId = MorningRitualService.getRitualItemById(
+      record.ritualItemId,
+    )?.randomizerSourceId;
+    if (sourceId == null) return snapshot;
+    return MorningRandomizerSource.textForOption(
+          sourceId,
+          optionId,
+          Localizations.localeOf(context).languageCode,
+        ) ??
+        snapshot;
   }
 
   /// Resume an in-progress ritual that was saved earlier today. Only today's
@@ -159,14 +232,31 @@ class _MorningRitualTodayTabState extends State<MorningRitualTodayTab> {
         ? (DateTime.tryParse(startedAtStr) ?? DateTime.now())
         : DateTime.now();
 
+    // Restore the readings drawn when this ritual started, so resuming shows
+    // the same text rather than a fresh draw. Any randomized item added since
+    // the draft was saved gets its own draw.
+    _randomizerSelections
+      ..clear()
+      ..addEntries(
+        MorningRitualService.selectionsFromProgress(
+          progress,
+        ).map((s) => MapEntry(s.ritualItemId, s)),
+      );
+
     // Initialise the current item (e.g. timer display). The current timer item
     // resumes at the start of that item; already-completed items are preserved.
     _setupCurrentItem();
 
     // Tell the parent the ritual is in progress (hides the calendar). Deferred
-    // so we never call the parent's setState during this build.
+    // so we never call the parent's setState during this build — and so the
+    // locale lookup inside `_ensureRandomizerSelections` is legal: this method
+    // runs from initState, where reading an inherited widget asserts.
     WidgetsBinding.instance.addPostFrameCallback((_) {
-      if (mounted) widget.onRitualStartedChanged?.call(true);
+      if (!mounted) return;
+      widget.onRitualStartedChanged?.call(true);
+      // The draft normally carries every draw already; this only fills in a
+      // randomized item added since the draft was written.
+      _ensureRandomizerSelections();
     });
   }
 
@@ -188,7 +278,7 @@ class _MorningRitualTodayTabState extends State<MorningRitualTodayTab> {
     return null;
   }
 
-  void _startRitual() {
+  Future<void> _startRitual() async {
     if (_ritualItems.isEmpty) {
       ScaffoldMessenger.of(context).showSnackBar(
         SnackBar(content: Text(t(context, 'morning_ritual_no_items_to_start'))),
@@ -201,10 +291,15 @@ class _MorningRitualTodayTabState extends State<MorningRitualTodayTab> {
       _ritualStartedAt = DateTime.now();
       _currentItemIndex = 0;
       _completedRecords = [];
+      _randomizerSelections.clear();
     });
 
     // Notify parent that ritual has started
     widget.onRitualStartedChanged?.call(true);
+
+    // Draw today's randomized readings before the first item is shown.
+    await _ensureRandomizerSelections();
+    if (!mounted) return;
 
     _setupCurrentItem();
     _saveProgress();
@@ -394,6 +489,7 @@ class _MorningRitualTodayTabState extends State<MorningRitualTodayTab> {
     _timer?.cancel();
     _stopAlarmSound();
 
+    final selection = _randomizerSelections[item.id];
     final record = RitualItemRecord(
       ritualItemId: item.id,
       ritualItemName: item.name,
@@ -404,6 +500,9 @@ class _MorningRitualTodayTabState extends State<MorningRitualTodayTab> {
       originalDurationSeconds: item.type == RitualItemType.timer
           ? item.durationSeconds
           : null,
+      // History keeps what was actually read. Static items snapshot nothing.
+      selectedContentId: selection?.selectedContentId,
+      selectedContentText: selection?.selectedContentText,
     );
 
     setState(() {
@@ -429,6 +528,7 @@ class _MorningRitualTodayTabState extends State<MorningRitualTodayTab> {
     _timer?.cancel();
     _stopAlarmSound();
 
+    final selection = _randomizerSelections[item.id];
     final record = RitualItemRecord(
       ritualItemId: item.id,
       ritualItemName: item.name,
@@ -436,6 +536,9 @@ class _MorningRitualTodayTabState extends State<MorningRitualTodayTab> {
       originalDurationSeconds: item.type == RitualItemType.timer
           ? item.durationSeconds
           : null,
+      // A skipped reading still records what was offered.
+      selectedContentId: selection?.selectedContentId,
+      selectedContentText: selection?.selectedContentText,
     );
 
     setState(() {
@@ -721,8 +824,9 @@ class _MorningRitualTodayTabState extends State<MorningRitualTodayTab> {
                       ],
                     ),
                   ] else ...[
-                    // Prayer text
-                    if (item.prayerText != null && item.prayerText!.isNotEmpty)
+                    // Prayer text — the reading drawn for this run when the
+                    // item is randomized, otherwise the item's own text.
+                    if (_displayTextFor(item)?.isNotEmpty ?? false)
                       Container(
                         padding: const EdgeInsets.all(16),
                         decoration: BoxDecoration(
@@ -732,7 +836,7 @@ class _MorningRitualTodayTabState extends State<MorningRitualTodayTab> {
                           borderRadius: BorderRadius.circular(12),
                         ),
                         child: Text(
-                          item.prayerText!,
+                          _displayTextFor(item)!,
                           style: Theme.of(context).textTheme.bodyLarge
                               ?.copyWith(fontStyle: FontStyle.italic),
                           textAlign: TextAlign.center,
@@ -865,7 +969,27 @@ class _MorningRitualTodayTabState extends State<MorningRitualTodayTab> {
                       ? '${record.ritualItemName} (${record.formattedDuration})'
                       : record.ritualItemName,
                 ),
-                subtitle: Text(t(context, record.status.labelKey())),
+                subtitle: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  mainAxisSize: MainAxisSize.min,
+                  children: [
+                    Text(t(context, record.status.labelKey())),
+                    // What was actually read that day. Rendered in the current
+                    // language when the option is still in the catalog, so
+                    // history follows the EN/DA switch; otherwise the stored
+                    // snapshot stands (it may come from the other app).
+                    if (record.selectedContentText != null)
+                      Padding(
+                        padding: const EdgeInsets.only(top: 4),
+                        child: Text(
+                          _historyReadingText(record),
+                          style: Theme.of(context).textTheme.bodySmall
+                              ?.copyWith(fontStyle: FontStyle.italic),
+                        ),
+                      ),
+                  ],
+                ),
+                isThreeLine: record.selectedContentText != null,
               ),
             ),
           ),

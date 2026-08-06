@@ -101,118 +101,42 @@ fixed.)*
 **Why:** the timer is usable on desktop, so a user expecting the alarm
 to ring at the end of a meditation gets nothing.
 
-### P2.5 Implement the Just for Today Morning randomizer
+### P2.5 The shared JSON contract — a standing rule, not a task
 
-The shared Morning definition and history models reserve nullable portable
-fields for a data-driven randomizer:
-
-- `RitualItem.randomizerSourceId` at Hive field 11 / JSON
-  `randomizerSourceId`;
-- `RitualItemRecord.selectedContentId` at Hive field 5 / JSON
-  `selectedContentId`; and
-- `RitualItemRecord.selectedContentText` at Hive field 6 / JSON
-  `selectedContentText`.
-
-Add a bilingual, non-hardcoded content source named `just_for_today` using the
-same ten stable option IDs as Emotional Sobriety. When a new daily Morning
-draft starts, choose one option uniformly, persist the selection so resume and
-previous navigation do not redraw it, show it in the prayer/reading runner,
-and snapshot its ID and displayed text into completed or skipped history.
-Missed and static items keep both history fields null.
-
-The implementation must retain `RitualItemType.prayer=1`, keep backup schema
-`8.0` and existing top-level keys, use the canonical payload builder and
-restore service for JSON and Drive, and prove cross-app fixtures in both
-directions. Every visible string and option must have meaning-equivalent
-English and Danish content.
-
-**Acceptance:**
-
-- [ ] All ten stable option IDs resolve from data rather than Dart literals or
-      a special-case default item ID.
-- [ ] An injected picker proves every option index is reachable.
-- [ ] Start, resume, previous, complete, skip, missed-day, history, JSON, and
-      Drive round-trip tests preserve the required selection semantics.
-- [ ] Current Emotional Sobriety definitions and history import and re-export
-      without field loss.
-- [ ] `flutter analyze` and the complete `flutter test` suite pass.
-
-Follow
-[`docs/superpowers/plans/2026-08-01-morning-randomizer-portable-fields.md`](superpowers/plans/2026-08-01-morning-randomizer-portable-fields.md)
-for the already-approved passive field foundation; write a separate executable
-plan for the runner behavior before implementation.
-
-### P2.6 Import an Emotional Sobriety backup (JSON and Drive)
-
-Compatibility is currently one-way. Emotional Sobriety imports this app's
-`8.0` payload and takes five sections from it — I-Am definitions, Fourth Step
-entries, agnosticism pairs, Morning definitions, and Morning history. This app
-imports only its own `8.0` payload, so a person moving the other way loses
-that work.
-
-Emotional Sobriety tracks the same gap from its side as P5.10, so close both
-against one real round trip rather than a fixture.
-
-Emotional Sobriety's file is a *different envelope*, not a newer version of
-this one: it carries `"product": "emotional-sobriety"` and `"version": "1.0"`,
-and its sections are `iAmDefinitions`, `entries`, `agnosticismPairs`,
-`morningRitualItems`, `morningRitualEntries`, plus `workshopProgress`,
-`morningRitualDraft`, and `emotionalSobrietySettings` that have no meaning
-here. Note the different agnosticism key: `agnosticismPairs`, not
-`agnosticism`.
-
-Accept it on the manual-import path only, mapping the five shared sections and
-ignoring the rest. Its Fourth Step entries carry `order` and `category` fields
-this app does not model, and its Morning items may carry
-`randomizerSourceId`; drop what cannot be represented rather than failing the
-whole import, and never let an unmapped section abort the transaction. Keep
-`isRemoteNewer()` unable to see the other app's file: automatic Drive discovery
-must stay restricted to this app's own backup, so importing the other product
-remains an explicit user choice (hard rule 8).
-
-**Acceptance:**
-
-- [ ] Manual JSON import accepts a product-tagged `emotional-sobriety` `1.0`
-      file and rejects it on the automatic Drive path.
-- [ ] The five shared sections import; Workshop progress, the Morning draft,
-      and Emotional settings are ignored without error.
-- [ ] Agnosticism pairs import from `agnosticismPairs` with `connectedFear`
-      preserved, and the five-active-pair cap is enforced on the result.
-- [ ] A round-trip fixture proves data written in Emotional Sobriety survives
-      import here and re-export back without losing the fields this app models.
-- [ ] The confirmation dialog names exactly which datasets will be replaced, in
-      English and Danish.
-- [ ] `flutter analyze` and the complete `flutter test` suite pass.
-
-### P2.7 Keep the shared JSON byte-compatible
+*The three cross-app items that used to sit here — the Just for Today
+randomizer, importing an Emotional Sobriety backup, and keeping the shared JSON
+byte-compatible — all landed. Their story is in
+[historic_implementation.md](./historic_implementation.md) Phase 20. What
+remains is the rule they established.*
 
 Cross-app transfer is the **JSON export/import path**, not Drive: `appdata` is
 per-application, so neither app can see the other's Drive file, and that is
 fine — the person moves one file.
 
-For that to work the five shared sections must serialize *identically* in both
-apps. They now do, and `test/shared_json_parity_test.dart` pins it: every
-instant carries a zone, the ritual `date` stays a local calendar day, and each
-shared record emits exactly the agreed key set. Emotional Sobriety rejects
-unknown keys and zone-less instants, so a field added on either side without
-the other is a broken import, not a warning.
-
-Treat the parity test as the contract. When a shared model changes here:
+Five sections must serialize identically in both apps: `iAmDefinitions`,
+`entries`, `agnosticism` (`agnosticismPairs` over there),
+`morningRitualItems`, `morningRitualEntries`. Emotional Sobriety rejects
+unknown keys and zone-less instants, so a field added on one side without the
+other is a broken import, not a warning.
+[`test/shared_json_parity_test.dart`](../test/shared_json_parity_test.dart) is
+the contract. When a shared model changes here:
 
 - add the field in both apps in the same change, or don't add it;
 - keep instants UTC-zoned on write and tolerant on read;
 - never convert the ritual `date` to UTC — an early-morning ritual would move
-  to the previous day.
+  to the previous day;
+- keep Morning `sortOrder` unique and contiguous from zero, and at most one
+  `randomizerSourceId` item — the other app refuses the **whole file**
+  otherwise;
+- keep the ten `just_for_today` option IDs and their text identical to that
+  app's Workshop catalog; regenerate
+  `assets/content/morning_randomizer_v1.json` from it rather than editing by
+  hand.
 
-**Acceptance:**
-
-- [ ] Any change to `BarrierPowerPair`, `RitualItem`, `MorningRitualEntry`,
-      `RitualItemRecord`, `InventoryEntry`, or `IAmDefinition` updates
-      `shared_json_parity_test.dart` and the matching Emotional Sobriety
-      decoder in the same change.
-- [ ] A payload exported here imports there, and the reverse once P2.6 lands,
-      proven by a fixture captured from the other app's real output rather than
-      hand-written.
+Both fixtures are captured from the other side's real output. Do not replace
+them with hand-written payloads — the last cross-app defect survived both test
+suites precisely because every fixture on both sides was hand-authored with
+values no device produces.
 
 ---
 
@@ -229,21 +153,46 @@ Two paths the active flow no longer uses:
 Delete them, or add a comment marking them intentionally retained.
 Either way, kill the ambiguity.
 
-### P3.2 Fix the stale source comments
-The `AllAppsDriveService` class comment says it "syncs all 5 apps"
-(it's six tools + notifications), and the `BarrierPowerPair` header
-comment claims it reuses typeId 9 (typeId 9 is now `RitualItemType`).
-Stale comments are how the next agent re-introduces a typeId clash —
-correct them.
+### P3.2 Fix the remaining stale source comment
+The `AllAppsDriveService` class comment says it "syncs all 5 apps" — it's
+six tools + notifications. Stale comments are how the next agent
+re-introduces a typeId clash. *(The `BarrierPowerPair` header, which claimed
+it reuses typeId 9, was corrected while working on Phase 20; typeId 9 belongs
+to `RitualItemType`.)*
 
 ### P3.3 Round-trip and conflict regression tests
-Only [test/morning_ritual_progress_test.dart](../test/morning_ritual_progress_test.dart)
-exists. Add tests for:
-- `SyncPayloadBuilder.buildPayload` → `BackupRestoreService` round-trip
-  for every box, including the `gratitudeEntries` / `agnosticismPapers`
-  legacy import aliases and the I-Am-before-entries ordering.
-- `isRemoteNewer()` → `blockUploads()` so the "never auto-overwrite
-  local data" invariant can't regress silently.
+Partly covered now — `emotional_sobriety_import_test.dart` and
+`morning_ritual_randomizer_portability_test.dart` exercise
+`SyncPayloadBuilder.buildPayload` → `BackupRestoreService` for the five shared
+sections. Still missing:
+- the same round trip for the boxes only this app has (people, reflections,
+  gratitude, notifications, appSettings), plus the `gratitudeEntries` /
+  `agnosticismPapers` legacy import aliases and the I-Am-before-entries
+  ordering;
+- `isRemoteNewer()` → `blockUploads()` so the "never auto-overwrite local
+  data" invariant can't regress silently.
+
+### P3.4 Give the Just for Today catalog a real update path
+`assets/content/morning_randomizer_v1.json` is generated from Emotional
+Sobriety's `workshop_exercises_v1.json`, but nothing enforces that: the two
+files can drift silently, and the only signal would be a user seeing different
+text in each app. Either add a check that regenerates and diffs the catalog,
+or record the generating command next to the asset so the next edit doesn't
+become a hand transcription.
+
+**Why:** the option IDs and their text are a cross-app contract; a paraphrase
+on one side makes the two apps disagree about what the same day meant.
+
+*(Found while implementing P2.5.)*
+
+### P3.5 `reorderRitualItems` renumbers inactive items too
+Reordering now writes `sortOrder` across **all** definitions (active first,
+then inactive) to keep the sequence gap-free for export. Nothing in the UI
+can currently create an inactive item — only an import can — so this path is
+untested against a real mixed set. Add coverage, or expose the active toggle
+and make it a real case.
+
+*(Found while fixing the contiguity defect in Phase 20.)*
 
 ---
 

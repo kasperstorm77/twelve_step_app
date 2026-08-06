@@ -282,6 +282,99 @@ and a pair archived shortly after local midnight displayed the previous day.
 
 ---
 
+## Phase 20 — The return direction: Just for Today, and importing the other app
+
+Phase 18 reserved the randomizer fields and Phase 19 aligned the wire format.
+This phase spent them: the Morning runner now actually draws a reading, and a
+person can move from Emotional Sobriety to this app instead of only the other
+way. Both directions were then proven against files each application's own
+builder produced.
+
+**Just for Today (plan P2.5).** A prayer definition may name a reading source
+in `randomizerSourceId`. The ten options live in
+`assets/content/morning_randomizer_v1.json` with `en` + `da` text and the
+stable option IDs Emotional Sobriety froze — the file was generated *from*
+that app's Workshop catalog rather than retyped, because `selectedContentId`
+and `selectedContentText` are what cross the boundary and a paraphrase would
+have made the two apps disagree about what the same day meant. A Danish draw
+made here re-resolves in that app's catalog byte-for-byte; the round-trip
+check asserts exactly that.
+
+One option is drawn when the day's ritual starts and then held. The draw is
+persisted in the device-local draft under a new `randomizerSelections` key, so
+resume, *previous* and *start over* all show the same reading — restarting the
+ritual must not hand you a different day's intention — and a draft written
+before the key existed simply resumes with no draw. Only *missing* draws are
+made, which also self-heals a randomized item added mid-day. Completed and
+skipped records snapshot the ID and the displayed text; missed days and static
+items keep both null.
+
+History re-resolves a known option ID into the currently selected language and
+otherwise renders the stored snapshot. That matters for imported history: the
+snapshot is what the person actually read and may have been written by the
+other app, so it is the fallback, never overridden.
+
+The resume path needed one correction found while writing it: it runs from
+`initState`, where reading `Localizations.localeOf(context)` asserts. The draw
+moved into the existing post-frame callback.
+
+**Importing an Emotional Sobriety backup (plan P2.6).** That app's file is a
+different envelope — `"product": "emotional-sobriety"`, `"version": "1.0"`,
+`agnosticismPairs` rather than `agnosticism`. Five sections are mapped and the
+rest ignored. Sections this app owns but that product does not are left
+*absent* from the translated payload rather than emptied, so importing one adds
+its five datasets and keeps this device's gratitude, amends, reflections and
+reminders. Acceptance is manual-path-only behind
+`allowForeignProduct` plus a dialog naming each dataset and its count; the
+automatic Drive path never passes the flag, so hard rule 8 still holds.
+
+The plan claimed the other app's Fourth Step entries carry `order` and
+`category` fields "this app does not model". The code says otherwise —
+`InventoryEntry` has both, and the parity test already pinned them — so they
+are imported rather than dropped. The plan text was wrong, not the code.
+
+**A restore could half-wipe a box.** `_applyPayload` cleared each box and then
+decoded records one at a time, so a single unreadable record threw mid-rewrite
+and left that box holding a fragment with the rest of the payload never
+applied. Every section is now decoded *before* its box is cleared; unreadable
+records are skipped and counted in `RestoreCounts.skippedRecords` and surfaced
+in the UI. This was reachable before foreign files existed; it is simply much
+easier to hit with one.
+
+**Deleting a Morning item broke the whole export.** Emotional Sobriety requires
+Morning definitions to carry unique sort orders contiguous from zero, and
+refuses the *entire file* over a gap — not just the Morning section. This app
+left a hole on every delete, and `reorderRitualItems` renumbered only active
+items, so an inactive one could collide. Verified by feeding a gapped payload
+to that app's real validator: `FormatException: Morning Ritual item order must
+be contiguous from zero`. Delete now compacts the sequence, reorder numbers
+inactive items after the active ones, and `migrateSortOrders()` repairs sets
+already on disk at startup and after every restore. Idempotent, and a no-op for
+a set that is already contiguous.
+
+Imported sets are normalized to this app's own rules rather than trusted or
+rejected: active pairs beyond the cap of five are **archived, never dropped**
+(they are the person's work, and the other app allows a configurable cap), and
+a second randomized reading loses only its source ID and stays an ordinary
+prayer, because a backup with two is refused over there.
+
+`MorningRitualService` also stopped caching its boxes in statics. A cached
+handle goes stale if a box is ever deleted and recreated — which `main.dart`'s
+corruption-recovery path does — and `Hive.box` is only a map lookup.
+
+**Proving it (plan P2.7).** Both fixtures are now captured from the other
+side's real output. `test/fixtures/emotional_sobriety_export_1_0.json` came out
+of that app's own `SyncPayloadBuilder`, and a realistic export from here —
+including a deleted definition, a Danish Just for Today draw and a connected
+fear — was fed through that app's real `BackupValidator`, which accepted it and
+matched the Danish snapshot text against its own catalog. That closes the
+acceptance on both sides; the other repository tracks the same round trip as
+its P5.10.
+
+57 tests pass, analyzer clean.
+
+---
+
 ## Data-format migration notes
 - **v6.0 → v7.0.** Added `morningRitualItems` and `morningRitualEntries`;
   renamed the backup file from `aa4step_inventory_data.json` to

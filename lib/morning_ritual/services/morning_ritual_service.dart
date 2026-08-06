@@ -1,23 +1,25 @@
 import 'dart:convert';
+import 'dart:math';
 import 'package:flutter/foundation.dart';
 import 'package:hive_flutter/hive_flutter.dart';
 import '../models/ritual_item.dart';
 import '../models/morning_ritual_entry.dart';
+import 'morning_randomizer_source.dart';
 import '../../shared/services/all_apps_drive_service.dart';
 
+/// Chooses an index in `[0, upperBound)`. Injected by tests to prove every
+/// option is reachable; production uses a secure random.
+typedef MorningRandomIndexPicker = int Function(int upperBound);
+
 class MorningRitualService {
-  static Box<RitualItem>? _ritualItemsBox;
-  static Box<MorningRitualEntry>? _entriesBox;
+  // Resolved per call rather than cached: `Hive.box` is a map lookup, and a
+  // cached handle would go stale if the box were ever deleted and recreated
+  // (main.dart's corruption-recovery path does exactly that).
+  static Box<RitualItem> get ritualItemsBox =>
+      Hive.box<RitualItem>('morning_ritual_items');
 
-  static Box<RitualItem> get ritualItemsBox {
-    _ritualItemsBox ??= Hive.box<RitualItem>('morning_ritual_items');
-    return _ritualItemsBox!;
-  }
-
-  static Box<MorningRitualEntry> get entriesBox {
-    _entriesBox ??= Hive.box<MorningRitualEntry>('morning_ritual_entries');
-    return _entriesBox!;
-  }
+  static Box<MorningRitualEntry> get entriesBox =>
+      Hive.box<MorningRitualEntry>('morning_ritual_entries');
 
   // ============ Ritual Items (Definitions) ============
 
@@ -56,6 +58,9 @@ class MorningRitualService {
   /// Delete a ritual item
   static Future<void> deleteRitualItem(String id) async {
     await ritualItemsBox.delete(id);
+    // Deleting used to leave a hole in the sequence, which Emotional Sobriety
+    // rejects on import — losing the whole transfer, not just Morning data.
+    await _compactSortOrders();
     _triggerSync();
   }
 
@@ -68,12 +73,59 @@ class MorningRitualService {
     final item = items.removeAt(oldIndex);
     items.insert(newIndex, item);
 
-    // Update sort orders
-    for (int i = 0; i < items.length; i++) {
-      final updatedItem = items[i].copyWith(sortOrder: i);
-      await ritualItemsBox.put(updatedItem.id, updatedItem);
-    }
+    // Inactive items are not shown but still share the sort-order sequence, so
+    // they are numbered after the active ones rather than left to collide.
+    final inactive = ritualItemsBox.values.where((i) => !i.isActive).toList()
+      ..sort((a, b) => a.sortOrder.compareTo(b.sortOrder));
+    await _persistOrder([...items, ...inactive]);
     _triggerSync();
+  }
+
+  /// Renumber every definition to a gap-free `0..n-1`.
+  ///
+  /// The shared contract requires Morning definitions to carry unique sort
+  /// orders contiguous from zero; a set with a gap or a duplicate is refused
+  /// wholesale by the other app. Called after a delete and once at startup so
+  /// definitions written by earlier versions are repaired in place.
+  static Future<void> _compactSortOrders() async {
+    final all = ritualItemsBox.values.toList()
+      ..sort((a, b) {
+        final byOrder = a.sortOrder.compareTo(b.sortOrder);
+        // Stable tie-break so a duplicated order resolves the same way twice.
+        return byOrder != 0 ? byOrder : a.id.compareTo(b.id);
+      });
+    await _persistOrder(all);
+  }
+
+  /// Write `sortOrder` 0..n-1 across [ordered], touching only what changes.
+  static Future<void> _persistOrder(List<RitualItem> ordered) async {
+    for (var i = 0; i < ordered.length; i++) {
+      if (ordered[i].sortOrder == i) continue;
+      await ritualItemsBox.put(
+        ordered[i].id,
+        ordered[i].copyWith(sortOrder: i),
+      );
+    }
+  }
+
+  /// Repair definitions whose sort orders have gaps or duplicates.
+  ///
+  /// Runs at startup and after a restore. Idempotent and a no-op for a set
+  /// that is already contiguous, so it never rewrites data needlessly.
+  static Future<void> migrateSortOrders() async {
+    if (!Hive.isBoxOpen('morning_ritual_items')) return;
+    try {
+      final orders = ritualItemsBox.values.map((i) => i.sortOrder).toList();
+      final isContiguous =
+          orders.toSet().length == orders.length &&
+          orders.every((order) => order >= 0 && order < orders.length);
+      if (isContiguous) return;
+      await _compactSortOrders();
+    } catch (e) {
+      if (kDebugMode) {
+        print('MorningRitualService: sort-order migration failed - $e');
+      }
+    }
   }
 
   /// Get a ritual item by ID
@@ -151,7 +203,66 @@ class MorningRitualService {
     return map;
   }
 
-  /// Create a "missed" entry for a past date when ritual wasn't started
+  // ============ Randomized readings (Just for Today) ============
+  //
+  // A prayer definition may name a data-driven reading source in
+  // `randomizerSourceId`. One option is drawn per randomized item when the
+  // day's ritual starts; the draw is persisted in the device-local draft so
+  // resuming or stepping back never redraws it, and is snapshotted into the
+  // completed/skipped history record. Emotional Sobriety uses the same source
+  // and option IDs, so a snapshot means the same thing in both apps.
+
+  /// Ritual items that draw their text from a reading source.
+  static List<RitualItem> randomizedItems(Iterable<RitualItem> items) => items
+      .where(
+        (item) =>
+            MorningRandomizerContract.isRandomized(item.randomizerSourceId),
+      )
+      .toList(growable: false);
+
+  /// Draw one option for each randomized item in [items].
+  ///
+  /// Items whose source this build cannot resolve are skipped (no selection),
+  /// so an imported definition naming an unknown source still runs — it just
+  /// shows its own `prayerText`.
+  static Future<List<MorningRandomizerSelection>> pickRandomizerSelections({
+    required Iterable<RitualItem> items,
+    required String localeCode,
+    MorningRandomIndexPicker? picker,
+  }) async {
+    final randomized = randomizedItems(items);
+    if (randomized.isEmpty) return const [];
+
+    await MorningRandomizerSource.ensureLoaded();
+    final pick = picker ?? _secureRandomIndex;
+    final selections = <MorningRandomizerSelection>[];
+    for (final item in randomized) {
+      final options = MorningRandomizerSource.optionsFor(
+        item.randomizerSourceId!,
+        localeCode,
+      );
+      if (options.isEmpty) continue;
+      final index = pick(options.length);
+      if (index < 0 || index >= options.length) continue;
+      final option = options[index];
+      selections.add(
+        MorningRandomizerSelection(
+          ritualItemId: item.id,
+          selectedContentId: option.id,
+          selectedContentText: option.text,
+        ),
+      );
+    }
+    return selections;
+  }
+
+  static int _secureRandomIndex(int upperBound) =>
+      Random.secure().nextInt(upperBound);
+
+  /// Create a "missed" entry for a past date when ritual wasn't started.
+  ///
+  /// A missed day was never run, so nothing was drawn: every record keeps
+  /// `selectedContentId` and `selectedContentText` null.
   static Future<MorningRitualEntry> createMissedEntry(DateTime date) async {
     final activeItems = getActiveRitualItems();
     final missedRecords = activeItems
@@ -197,6 +308,7 @@ class MorningRitualService {
     required int currentItemIndex,
     required DateTime? startedAt,
     required List<RitualItemRecord> records,
+    List<MorningRandomizerSelection> randomizerSelections = const [],
   }) async {
     if (!Hive.isBoxOpen('settings')) return;
     try {
@@ -205,6 +317,11 @@ class MorningRitualService {
         'currentItemIndex': currentItemIndex,
         'startedAt': startedAt?.toIso8601String(),
         'records': records.map((r) => r.toJson()).toList(),
+        // Additive: a draft written before this key existed simply resumes
+        // with no selections, and the runner falls back to `prayerText`.
+        'randomizerSelections': randomizerSelections
+            .map((s) => s.toJson())
+            .toList(),
       };
       await Hive.box('settings').put(_progressKey, jsonEncode(data));
     } catch (e) {
@@ -234,6 +351,20 @@ class MorningRitualService {
       box.delete(_progressKey);
       return null;
     }
+  }
+
+  /// Read the randomizer draws saved with an in-progress ritual. Malformed or
+  /// missing entries are dropped rather than thrown, so a draft can never make
+  /// the ritual unresumable.
+  static List<MorningRandomizerSelection> selectionsFromProgress(
+    Map<String, dynamic>? progress,
+  ) {
+    final raw = progress?['randomizerSelections'];
+    if (raw is! List) return const [];
+    return raw
+        .map(MorningRandomizerSelection.fromJson)
+        .whereType<MorningRandomizerSelection>()
+        .toList(growable: false);
   }
 
   /// Clear any saved in-progress ritual (called when the ritual is finished).

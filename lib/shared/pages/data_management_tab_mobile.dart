@@ -22,6 +22,7 @@ import 'package:flutter_file_dialog/flutter_file_dialog.dart';
 import '../services/google_sign_in_wrapper.dart';
 import '../services/all_apps_drive_service.dart';
 import '../services/backup_restore_service.dart';
+import 'foreign_import_dialog.dart';
 import '../services/local_backup_service.dart';
 import '../services/sync_payload_builder.dart';
 
@@ -1049,10 +1050,38 @@ class _DataManagementTabState extends State<DataManagementTab> {
       final file = File(path);
       final jsonString = await file.readAsString();
 
+      final payload = BackupRestoreService.parseJson(jsonString);
+      if (payload == null) {
+        if (!mounted) return;
+        messenger.showSnackBar(
+          SnackBar(content: Text(t(context, 'import_failed'))),
+        );
+        return;
+      }
+
+      // A file from another app is a separate, explicit decision: name the
+      // datasets it will replace before anything is written.
+      var allowForeignProduct = false;
+      final foreignProduct = BackupRestoreService.foreignProductOf(payload);
+      if (foreignProduct != null) {
+        final summary = BackupRestoreService.describeForeignPayload(payload);
+        if (summary == null) {
+          if (!mounted) return;
+          messenger.showSnackBar(
+            SnackBar(content: Text(t(context, 'import_foreign_unsupported'))),
+          );
+          return;
+        }
+        if (!mounted) return;
+        if (!await confirmForeignImport(context, summary)) return;
+        allowForeignProduct = true;
+      }
+
       // Use centralized BackupRestoreService for consistent restore behavior
-      final restoreResult = await BackupRestoreService.restoreFromJsonString(
-        jsonString,
+      final restoreResult = await BackupRestoreService.restoreFromPayload(
+        payload,
         createSafetyBackup: true, // Always create safety backup before restore
+        allowForeignProduct: allowForeignProduct,
       );
 
       if (!mounted) return;
@@ -1082,6 +1111,22 @@ class _DataManagementTabState extends State<DataManagementTab> {
             duration: const Duration(seconds: 4),
           ),
         );
+
+        // A foreign file can hold a record this app has no shape for. Say so
+        // rather than letting it vanish quietly.
+        if (c.skippedRecords > 0) {
+          messenger.showSnackBar(
+            SnackBar(
+              content: Text(
+                t(
+                  context,
+                  'import_skipped_records',
+                ).replaceFirst('%count%', c.skippedRecords.toString()),
+              ),
+              duration: const Duration(seconds: 5),
+            ),
+          );
+        }
 
         if (_syncEnabled && AllAppsDriveService.instance.isAuthenticated) {
           _uploadToDrive();

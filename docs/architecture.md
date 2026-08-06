@@ -75,16 +75,32 @@ in `main.dart` *after* the Drive sync/conflict check (so a freshly
 restored window is honoured) and re-checked on resume via `AppWidget`'s
 `WidgetsBindingObserver`.
 
-The portable Morning contract reserves nullable, append-only randomizer data:
-`RitualItem.randomizerSourceId` is Hive field 11 / JSON
-`randomizerSourceId`; `RitualItemRecord.selectedContentId` and
-`selectedContentText` are Hive fields 5 and 6 with the same JSON names. The
-restore service and canonical payload builder preserve these fields through
-schema `8.0` JSON, local backup, and Drive, while missing fields decode as
-null. A present source ID must be non-blank and prayer-only, and changing an
-imported randomized prayer to a timer clears it before export. The current
-runner remains unchanged and continues to show `prayerText`;
-full Just for Today selection behavior is roadmap item P2.5.
+**Randomized readings ("Just for Today").** A *prayer* item may name a
+data-driven reading source in `RitualItem.randomizerSourceId` (Hive field
+11 / JSON `randomizerSourceId`) instead of carrying fixed `prayerText`.
+The only shipped source is `just_for_today`, whose ten options live in
+[`assets/content/morning_randomizer_v1.json`](../assets/content/morning_randomizer_v1.json)
+— **data, not Dart literals** — with `en` + `da` text and the stable option
+IDs Emotional Sobriety froze (`happy_and_still` … `exercise_the_soul`).
+One option is drawn when the day's ritual starts, held in the device-local
+draft (`randomizerSelections`) so resume, *previous*, and *start over* show
+the same reading, and snapshotted into the finished record as
+`RitualItemRecord.selectedContentId` / `selectedContentText` (Hive fields 5
+and 6, same JSON names). Both snapshot fields are present or both absent;
+static items and **missed** days keep them null. History re-resolves a known
+option ID into the current language and otherwise renders the stored
+snapshot, which may have come from the other app.
+
+Two rules make the definitions portable, and both are enforced on write
+*and* on import: at most **one** randomized item may exist (the other app
+rejects a backup with two), and `sortOrder` across all definitions must be
+unique and **contiguous from zero** (a single gap makes the other app
+refuse the entire file, not just the Morning section). Deleting an item
+compacts the sequence, and `MorningRitualService.migrateSortOrders()` runs
+at startup and after every restore to repair sets already on disk. A source
+ID must be non-blank and prayer-only; changing a randomized prayer to a
+timer clears it, and an unknown source ID is preserved and simply falls back
+to `prayerText`.
 
 ### 1.4 Evening Ritual (`lib/evening_ritual/`)
 A nightly 10th-step self-examination. Each day the user records one or
@@ -253,10 +269,19 @@ Frozen top-level JSON keys:
 }
 ```
 
-**Cross-app pairs:** the `agnosticism` section is shared with Emotional
-Sobriety, which imports it as part of its shared recovery scope. Both apps
-write `connectedFear`; an absent or empty value means "not recorded yet" and
-must be preserved, never dropped.
+**Cross-app sections:** `iAmDefinitions`, `entries`, `agnosticism`,
+`morningRitualItems` and `morningRitualEntries` are shared with Emotional
+Sobriety and must serialize identically in both apps — that app rejects
+unknown keys and zone-less instants, so a field added on one side without
+the other is a broken import, not a warning.
+[`test/shared_json_parity_test.dart`](../test/shared_json_parity_test.dart)
+is the contract: it pins the exact key set of every shared record, the
+zoned-instant rule, the local-calendar-day exception for the ritual `date`,
+and checks all three against
+[`test/fixtures/emotional_sobriety_export_1_0.json`](../test/fixtures/emotional_sobriety_export_1_0.json)
+— a payload captured from that app's own builder, not hand-written. Both
+apps write `connectedFear`; an absent or empty value means "not recorded
+yet" and must be preserved, never dropped.
 
 **Legacy read-aliases (import only, never written):** restore accepts
 `gratitudeEntries` for `gratitude` and `agnosticismPapers` for
@@ -340,13 +365,45 @@ app-private dir. Don't switch desktop back to the documents dir.
 is the **single import path** (Drive restore, local restore, JSON file
 import). It validates (permissive — warns, never fails, on a missing
 `version`), takes a safety backup, then `_applyPayload` **clears and
-rewrites every box**. Ordering matters: **I Am definitions import
-before entries** (entries reference them by id), and after import it
-runs `InventoryService.migrateOrderValues()` and
+rewrites every box present in the payload**. Ordering matters: **I Am
+definitions import before entries** (entries reference them by id), and
+after import it runs `InventoryService.migrateOrderValues()`,
+`MorningRitualService.migrateSortOrders()` and
 `NotificationsService.rescheduleAll()`, updates `lastModified`, and
 fires `DataRefreshService.notifyDataRestored()` to rebuild the UI. A
-restore is a **full replace**, so local-only records not present in the
-backup are wiped.
+restore is a **full replace** of the sections the payload carries, so
+local-only records in those sections are wiped; a section the payload
+does not carry leaves its box untouched.
+
+**Every section is decoded before its box is cleared.** A record this app
+cannot read is skipped and counted in `RestoreCounts.skippedRecords`
+rather than throwing part-way through a rewrite — which used to leave the
+box holding a fragment of the backup with the rest of the payload never
+applied.
+
+### 3.6.1 Importing an Emotional Sobriety backup
+Emotional Sobriety writes a **different envelope**, not a newer version of
+this one: it tags itself `"product": "emotional-sobriety"`, `"version":
+"1.0"`, and names its agnosticism section `agnosticismPairs`. This app
+never writes a `product` key, so its own backups are never "foreign".
+
+Five sections map onto this app's keys — `iAmDefinitions`, `entries`,
+`agnosticismPairs` → `agnosticism`, `morningRitualItems`,
+`morningRitualEntries`. `workshopProgress`, `morningRitualDraft` and
+`emotionalSobrietySettings` are ignored without error. Sections this app
+owns but that product does not (people, reflections, gratitude,
+notifications, appSettings) are **absent** from the translated payload, so
+importing one adds its five datasets and keeps everything else on the
+device.
+
+The import is accepted **only on the manual JSON path**, behind
+`restoreFromPayload(..., allowForeignProduct: true)` and a confirmation
+dialog that names each dataset and its record count before anything is
+written. The automatic Drive path never sets the flag, so `isRemoteNewer()`
+can never act on another product's file (§3.3). Imported sets are then
+normalized to this app's rules: active pairs beyond the cap of five are
+**archived, never dropped**, and a second randomized reading loses only its
+source ID and stays an ordinary prayer.
 
 ### 3.7 Restore-point UX & scenarios
 When signed into Drive, the Data Management tab shows a **Select
@@ -530,7 +587,14 @@ docs/
   static_guidelines/            CLAUDE.md authoring reference (frozen)
 test/
   morning_ritual_progress_test.dart   Draft round-trip / same-day-resume guard
+  morning_randomizer_test.dart        Catalog, injected picker, draw stability
+  emotional_sobriety_import_test.dart Foreign import + normalization
+  shared_json_parity_test.dart        The cross-app wire contract
+  fixtures/                           Payloads captured from the other app
 ```
+
+assets/content/ holds the bilingual randomizer catalog; it is a data file,
+not code, and its option IDs are a cross-app contract (§1.3).
 
 `SyncPayloadBuilder` reads **every** box with `Hive.box<T>(...)`
 (non-open-safe). If `main.dart` ever stops opening one of these boxes,

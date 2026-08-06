@@ -8,9 +8,7 @@ flippable "current paper" of up to 5 active pairs, with an archive. See
 - **Type ID:** `BarrierPowerPair`=8. Box: `agnosticism_pairs`, keyed by
   `pair.id`.
 - **Do NOT reuse typeId 9** for anything here — it now belongs to
-  `RitualItemType` (morning_ritual). The live type here is **8 only**;
-  the class header comment that mentions typeId 9 is stale (see
-  implementation_plan P3.2).
+  `RitualItemType` (morning_ritual). The live type here is **8 only**.
 - **JSON key:** export writes `agnosticism`; restore must keep accepting
   the legacy alias **`agnosticismPapers`** (read-only). `fromJson`
   tolerates missing `isArchived` (→ false), `position` (→ 0) and
@@ -23,7 +21,10 @@ flippable "current paper" of up to 5 active pairs, with an archive. See
   turn into silent data loss.
 
 ## Rules
-- **`maxActivePairs = 5`** is enforced across add and restore. Active
+- **`maxActivePairs = 5`** is enforced across add **and import**: a
+  foreign or hand-edited payload with more active pairs has the excess
+  **archived, never dropped**, and active positions compacted to 0..n.
+  Active
   pairs can only be **archived**, never directly deleted; `deletePair`
   permanently deletes only archived pairs; `restorePair` is blocked at
   the cap. Keep this lifecycle.

@@ -11,9 +11,27 @@ backup, restore, app switching, settings, localization, help. See
   `main.dart`'s open set.
 - **Import/restore:** [`backup_restore_service.dart`](services/backup_restore_service.dart)
   is the only restore path. Validates permissively, takes a safety
-  backup, clears+rewrites each box, imports I Am defs **before** entries,
-  runs `migrateOrderValues` + `rescheduleAll`, fires
-  `DataRefreshService`.
+  backup, clears+rewrites each box **present in the payload**, imports I Am
+  defs **before** entries, runs `migrateOrderValues` +
+  `migrateSortOrders` + `rescheduleAll`, fires `DataRefreshService`.
+  **Decode a section before clearing its box** — the old order threw
+  mid-rewrite on one bad record and left the box holding a fragment.
+  Unreadable records are skipped and counted in
+  `RestoreCounts.skippedRecords`, never fatal.
+
+## Importing another product's backup
+- This app **never writes a `product` key**; a payload that has one is
+  foreign. `emotional-sobriety` `1.0` is the only supported foreign
+  product — five sections map on, the rest are ignored without error.
+- Accepted **only** with `allowForeignProduct: true`, which only the
+  manual JSON path passes, behind `confirmForeignImport` naming every
+  dataset and count. The Drive path must never pass it — that is what
+  keeps hard rule 8 true for someone else's file.
+- Sections the other product lacks stay **absent** from the translated
+  payload, not empty, so importing it keeps this device's gratitude,
+  amends, reflections and reminders.
+- Normalize, don't reject: pairs beyond the five-active cap are
+  **archived**, a second randomized reading loses only its source ID.
 
 ## Drive / sync rules
 - **Scope is `drive.appdata` only.** Mobile sign-in scopes

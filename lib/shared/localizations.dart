@@ -185,6 +185,28 @@ final Map<String, Map<String, String>> localizedValues = {
     'export_failed': 'Export failed',
     'import_failed': 'Import failed',
     'import_success': 'Data restored successfully',
+    // Importing a backup written by the Emotional Sobriety app
+    'import_foreign_title': 'Import from Emotional Sobriety',
+    'import_foreign_message':
+        'This file was written by the Emotional Sobriety app. Only the data '
+        'both apps share can be imported.',
+    'import_foreign_replaced': 'These datasets will be replaced:',
+    'import_foreign_ignored': 'Ignored (this app has no place for them):',
+    'import_foreign_kept':
+        'Everything else on this device is kept. A safety backup is taken '
+        'first.',
+    'import_foreign_unsupported':
+        'This backup was written by an app this version cannot import.',
+    'import_skipped_records':
+        '%count% records could not be read and were skipped.',
+    'dataset_i_am_definitions': 'I Am definitions',
+    'dataset_entries': '4th Step entries',
+    'dataset_agnosticism': 'Barrier/Power pairs',
+    'dataset_morning_ritual_items': 'Morning Ritual items',
+    'dataset_morning_ritual_entries': 'Morning Ritual history',
+    'dataset_workshop_progress': 'Workshop progress',
+    'dataset_morning_ritual_draft': 'Morning Ritual in progress',
+    'dataset_emotional_sobriety_settings': 'Emotional Sobriety settings',
     'fetch_success': 'Successfully fetched from Google Drive',
     'sign_in_failed': 'Sign-in failed',
     'sign_in_cancelled': 'Sign-in failed or cancelled',
@@ -422,6 +444,12 @@ final Map<String, Map<String, String>> localizedValues = {
     'morning_ritual_seconds': 'Seconds',
     'morning_ritual_prayer_text': 'Prayer Text',
     'morning_ritual_prayer_text_hint': 'Enter the prayer text to display',
+    'morning_ritual_just_for_today': 'Just for Today',
+    'morning_ritual_just_for_today_help':
+        'Draws one of the ten Just for Today readings when the day\'s ritual '
+        'starts, instead of a fixed text.',
+    'morning_ritual_just_for_today_single':
+        'Only one Just for Today item is supported.',
     'morning_ritual_name_required': 'Name is required',
     'morning_ritual_ready': 'Ready to Begin',
     'morning_ritual_items_count': '%count% items in your ritual',
@@ -733,6 +761,28 @@ final Map<String, Map<String, String>> localizedValues = {
     'export_failed': 'Eksport fejlede',
     'import_failed': 'Import fejlede',
     'import_success': 'Data gendannet',
+    // Import af en sikkerhedskopi skrevet af Emotional Sobriety-appen
+    'import_foreign_title': 'Importér fra Emotional Sobriety',
+    'import_foreign_message':
+        'Denne fil er skrevet af Emotional Sobriety-appen. Kun de data, som '
+        'begge apps deler, kan importeres.',
+    'import_foreign_replaced': 'Disse datasæt bliver erstattet:',
+    'import_foreign_ignored': 'Ignoreres (denne app har ikke plads til dem):',
+    'import_foreign_kept':
+        'Alt andet på denne enhed bevares. Der tages en sikkerhedskopi først.',
+    'import_foreign_unsupported':
+        'Denne sikkerhedskopi er skrevet af en app, som denne version ikke '
+        'kan importere.',
+    'import_skipped_records':
+        '%count% poster kunne ikke læses og blev sprunget over.',
+    'dataset_i_am_definitions': 'Jeg Er - definitioner',
+    'dataset_entries': '4. trins poster',
+    'dataset_agnosticism': 'Barriere/Kraft-par',
+    'dataset_morning_ritual_items': 'Morgenritual-elementer',
+    'dataset_morning_ritual_entries': 'Morgenritual-historik',
+    'dataset_workshop_progress': 'Workshop-fremdrift',
+    'dataset_morning_ritual_draft': 'Morgenritual i gang',
+    'dataset_emotional_sobriety_settings': 'Emotional Sobriety-indstillinger',
     'fetch_success': 'Hentet fra Google Drive',
     'sign_in_failed': 'Login fejlede',
     'sign_in_cancelled': 'Login fejlede eller blev annulleret',
@@ -974,6 +1024,12 @@ final Map<String, Map<String, String>> localizedValues = {
     'morning_ritual_prayer_text': 'Bøn',
     'morning_ritual_prayer_text_hint':
         'Indtast teksten på bønnen, der skal vises',
+    'morning_ritual_just_for_today': 'Kun for i dag',
+    'morning_ritual_just_for_today_help':
+        'Trækker én af de ti Kun for i dag-læsninger, når dagens ritual '
+        'begynder, i stedet for en fast tekst.',
+    'morning_ritual_just_for_today_single':
+        'Kun ét Kun for i dag-element understøttes.',
     'morning_ritual_name_required': 'Navn er påkrævet',
     'morning_ritual_ready': 'Klar til at Begynde',
     'morning_ritual_items_count': '%count% elementer i dit ritual',

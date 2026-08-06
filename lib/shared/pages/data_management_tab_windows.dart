@@ -32,6 +32,7 @@ import '../services/all_apps_drive_service_impl.dart';
 import '../services/backup_restore_service.dart';
 import '../services/local_backup_service.dart';
 import '../services/sync_payload_builder.dart';
+import 'foreign_import_dialog.dart';
 
 class DataManagementTab extends StatefulWidget {
   final Box<InventoryEntry> box;
@@ -805,7 +806,26 @@ class _DataManagementTabState extends State<DataManagementTab> {
       final jsonString = await file.readAsString();
       final data = jsonDecode(jsonString) as Map<String, dynamic>;
 
-      final restoreResult = await _importData(data);
+      // A file from another app is a separate, explicit decision: name the
+      // datasets it will replace before anything is written.
+      var allowForeignProduct = false;
+      if (BackupRestoreService.foreignProductOf(data) != null) {
+        final summary = BackupRestoreService.describeForeignPayload(data);
+        if (!mounted) return;
+        if (summary == null) {
+          ScaffoldMessenger.of(context).showSnackBar(
+            SnackBar(content: Text(t(context, 'import_foreign_unsupported'))),
+          );
+          return;
+        }
+        if (!await confirmForeignImport(context, summary)) return;
+        allowForeignProduct = true;
+      }
+
+      final restoreResult = await _importData(
+        data,
+        allowForeignProduct: allowForeignProduct,
+      );
 
       if (!mounted) return;
 
@@ -834,6 +854,22 @@ class _DataManagementTabState extends State<DataManagementTab> {
             duration: const Duration(seconds: 4),
           ),
         );
+
+        // A foreign file can hold a record this app has no shape for. Say so
+        // rather than letting it vanish quietly.
+        if (c.skippedRecords > 0) {
+          ScaffoldMessenger.of(context).showSnackBar(
+            SnackBar(
+              content: Text(
+                t(
+                  context,
+                  'import_skipped_records',
+                ).replaceFirst('%count%', c.skippedRecords.toString()),
+              ),
+              duration: const Duration(seconds: 5),
+            ),
+          );
+        }
       } else {
         ScaffoldMessenger.of(context).showSnackBar(
           SnackBar(
@@ -855,11 +891,16 @@ class _DataManagementTabState extends State<DataManagementTab> {
 
   /// Centralized import method that uses BackupRestoreService for consistent restore behavior.
   /// Returns the RestoreResult with counts and success status.
-  Future<RestoreResult> _importData(Map<String, dynamic> data) async {
+  Future<RestoreResult> _importData(
+    Map<String, dynamic> data, {
+    bool allowForeignProduct = false,
+  }) async {
     // Use centralized BackupRestoreService for consistent restore behavior
     return await BackupRestoreService.restoreFromPayload(
       data,
       createSafetyBackup: true, // Always create safety backup before restore
+      // Only the manual JSON path may pass true; Drive restores never do.
+      allowForeignProduct: allowForeignProduct,
     );
   }
 

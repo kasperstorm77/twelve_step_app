@@ -2,9 +2,11 @@ import 'package:hive/hive.dart';
 
 part 'barrier_power_pair.g.dart';
 
-/// Represents a Barrier/Power pair for the agnosticism exercise
-/// Note: Reusing typeId 8 (previously PaperStatus) and typeId 9 (previously AgnosticismPaper)
-/// The old data structure is completely replaced
+/// Represents a Barrier/Power pair for the agnosticism exercise.
+///
+/// Uses typeId **8** only (previously `PaperStatus`); the old `AgnosticismPaper`
+/// structure is completely replaced. typeId 9 is **not** free — it belongs to
+/// `RitualItemType` in morning_ritual.
 @HiveType(typeId: 8)
 class BarrierPowerPair extends HiveObject {
   /// Unique identifier for this pair

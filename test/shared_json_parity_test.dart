@@ -1,3 +1,6 @@
+import 'dart:convert';
+import 'dart:io';
+
 import 'package:flutter_test/flutter_test.dart';
 import 'package:twelvestepsapp/agnosticism/models/barrier_power_pair.dart';
 import 'package:twelvestepsapp/fourth_step/models/inventory_entry.dart';
@@ -159,6 +162,68 @@ void main() {
         'category',
       },
     );
+  });
+
+  test('the other app writes the same shared record shapes', () {
+    // The reverse direction of the contract, proven against a payload captured
+    // from Emotional Sobriety's own SyncPayloadBuilder. If either app adds a
+    // key without the other, this is where it shows up — the two apps reject
+    // unknown keys on these records, so a one-sided field is a broken import.
+    final captured =
+        jsonDecode(
+              File(
+                'test/fixtures/emotional_sobriety_export_1_0.json',
+              ).readAsStringSync(),
+            )
+            as Map<String, dynamic>;
+
+    Set<String> keysOf(String section, {int index = 0}) =>
+        ((captured[section] as List<dynamic>)[index] as Map<String, dynamic>)
+            .keys
+            .toSet();
+
+    expect(
+      keysOf('agnosticismPairs'),
+      BarrierPowerPair(
+        id: 'p',
+        barrier: 'b',
+        power: 'p',
+        createdAt: DateTime(2026, 8, 6),
+      ).toJson().keys.toSet(),
+    );
+    expect(
+      keysOf('morningRitualItems'),
+      RitualItem(
+        id: 'r',
+        name: 'n',
+        type: RitualItemType.prayer,
+      ).toJson().keys.toSet(),
+    );
+    expect(
+      keysOf('morningRitualEntries'),
+      MorningRitualEntry(
+        id: 'e',
+        date: DateTime(2026, 8, 6),
+        items: const [],
+      ).toJson().keys.toSet(),
+    );
+
+    // And it round-trips through this app's decoders unchanged.
+    for (final section in [
+      'agnosticismPairs',
+      'morningRitualItems',
+      'morningRitualEntries',
+    ]) {
+      for (final raw in captured[section] as List<dynamic>) {
+        final json = raw as Map<String, dynamic>;
+        final reencoded = switch (section) {
+          'agnosticismPairs' => BarrierPowerPair.fromJson(json).toJson(),
+          'morningRitualItems' => RitualItem.fromJson(json).toJson(),
+          _ => MorningRitualEntry.fromJson(json).toJson(),
+        };
+        expect(reencoded.keys.toSet(), json.keys.toSet());
+      }
+    }
   });
 
   test('instants written before this change still read', () {

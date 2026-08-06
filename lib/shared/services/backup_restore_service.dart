@@ -9,8 +9,11 @@ import '../../eighth_step/models/person.dart';
 import '../../evening_ritual/models/reflection_entry.dart';
 import '../../gratitude/models/gratitude_entry.dart';
 import '../../agnosticism/models/barrier_power_pair.dart';
+import '../../agnosticism/services/agnosticism_service.dart';
 import '../../morning_ritual/models/ritual_item.dart';
 import '../../morning_ritual/models/morning_ritual_entry.dart';
+import '../../morning_ritual/services/morning_randomizer_source.dart';
+import '../../morning_ritual/services/morning_ritual_service.dart';
 import '../../notifications/models/app_notification.dart';
 import '../../notifications/services/notifications_service.dart';
 import 'app_settings_service.dart';
@@ -65,6 +68,33 @@ class RestoreResult {
       'RestoreResult(success: $success, error: $error, counts: $counts)';
 }
 
+/// What a foreign (other-product) payload would bring in, so the confirmation
+/// dialog can name exactly which datasets are replaced before anything is
+/// touched.
+class ForeignImportSummary {
+  const ForeignImportSummary({
+    required this.product,
+    required this.version,
+    required this.sectionCounts,
+    required this.ignoredSections,
+  });
+
+  /// The `product` tag on the file, e.g. `emotional-sobriety`.
+  final String product;
+
+  /// The foreign schema version, e.g. `1.0`.
+  final String? version;
+
+  /// Canonical section key → number of records, for the sections this app
+  /// models. A section absent from the file is absent here and its box is left
+  /// alone.
+  final Map<String, int> sectionCounts;
+
+  /// Sections present in the file that this app has no home for. They are
+  /// skipped; they never fail the import.
+  final List<String> ignoredSections;
+}
+
 /// Counts of restored items per category
 class RestoreCounts {
   final int entries;
@@ -78,6 +108,11 @@ class RestoreCounts {
   final int notifications;
   final bool hasAppSettings;
 
+  /// Records that could not be decoded and were left out. Always 0 for a
+  /// payload this app wrote; a foreign file can carry a record this app has no
+  /// shape for, and dropping it beats failing the whole import.
+  final int skippedRecords;
+
   const RestoreCounts({
     this.entries = 0,
     this.iAmDefinitions = 0,
@@ -89,6 +124,7 @@ class RestoreCounts {
     this.morningRitualEntries = 0,
     this.notifications = 0,
     this.hasAppSettings = false,
+    this.skippedRecords = 0,
   });
 
   @override
@@ -96,7 +132,17 @@ class RestoreCounts {
       'RestoreCounts(entries: $entries, iAms: $iAmDefinitions, people: $people, '
       'reflections: $reflections, gratitude: $gratitude, agnosticism: $agnosticism, '
       'ritualItems: $morningRitualItems, ritualEntries: $morningRitualEntries, '
-      'notifications: $notifications, appSettings: $hasAppSettings)';
+      'notifications: $notifications, appSettings: $hasAppSettings, '
+      'skipped: $skippedRecords)';
+}
+
+/// A section decoded ahead of the destructive write, so a record this app
+/// cannot read never leaves a box half-rewritten.
+class _DecodedSection<T> {
+  const _DecodedSection(this.items, this.skipped);
+
+  final List<T> items;
+  final int skipped;
 }
 
 /// Centralized service for restoring/importing backup data
@@ -137,6 +183,100 @@ class BackupRestoreService {
     'morningRitualEntries',
     'notifications',
   ];
+
+  // ---------------------------------------------------------------------------
+  // Foreign (other-product) payloads
+  // ---------------------------------------------------------------------------
+  //
+  // Emotional Sobriety writes a *different envelope*, not a newer version of
+  // this one: it tags itself `"product": "emotional-sobriety"`, `"version":
+  // "1.0"`, and names its agnosticism section `agnosticismPairs`. Five of its
+  // sections mean the same thing here; the rest (Workshop progress, the Morning
+  // draft, its own settings) have no home and are ignored.
+  //
+  // This app never writes a `product` key, so its own backups are, and stay,
+  // "not foreign". Importing another product is an explicit user choice on the
+  // manual JSON path only — the automatic Drive path passes
+  // `allowForeignProduct: false`, which keeps `isRemoteNewer()` unable to act
+  // on someone else's file (hard rule 8).
+
+  static const emotionalSobrietyProductId = 'emotional-sobriety';
+
+  /// Foreign sections mapped onto this app's canonical keys.
+  static const _emotionalSobrietySectionMap = <String, String>{
+    'iAmDefinitions': 'iAmDefinitions',
+    'entries': 'entries',
+    'agnosticismPairs': 'agnosticism',
+    'morningRitualItems': 'morningRitualItems',
+    'morningRitualEntries': 'morningRitualEntries',
+  };
+
+  /// Foreign sections this app deliberately drops.
+  static const _emotionalSobrietyIgnoredSections = <String>[
+    'workshopProgress',
+    'morningRitualDraft',
+    'emotionalSobrietySettings',
+  ];
+
+  /// The `product` tag of [data], or null when the payload is this app's own.
+  static String? foreignProductOf(Map<String, dynamic> data) {
+    final product = data['product'];
+    if (product is! String || product.trim().isEmpty) return null;
+    return product.trim();
+  }
+
+  /// True when [data] is a payload this app can import via the manual path
+  /// after the user confirms.
+  static bool isSupportedForeignPayload(Map<String, dynamic> data) =>
+      foreignProductOf(data) == emotionalSobrietyProductId;
+
+  /// Describe a foreign payload without touching any box, so the confirmation
+  /// dialog can name exactly what will be replaced. Returns null when [data]
+  /// is not a foreign payload this app supports.
+  static ForeignImportSummary? describeForeignPayload(
+    Map<String, dynamic> data,
+  ) {
+    if (!isSupportedForeignPayload(data)) return null;
+    final counts = <String, int>{};
+    for (final entry in _emotionalSobrietySectionMap.entries) {
+      final value = data[entry.key];
+      if (value is List) counts[entry.value] = value.length;
+    }
+    final ignored = _emotionalSobrietyIgnoredSections
+        .where((key) => data[key] != null)
+        .toList(growable: false);
+    final version = data['version'];
+    return ForeignImportSummary(
+      product: emotionalSobrietyProductId,
+      version: version is String ? version : null,
+      sectionCounts: counts,
+      ignoredSections: ignored,
+    );
+  }
+
+  /// Rewrite an Emotional Sobriety payload into this app's canonical shape.
+  ///
+  /// Only the five shared sections survive. Sections this app owns but the
+  /// other product does not (people, reflections, gratitude, notifications,
+  /// appSettings) are deliberately *absent* rather than empty, so a restore
+  /// leaves those boxes untouched instead of clearing data the other app never
+  /// had.
+  static Map<String, dynamic> translateEmotionalSobrietyPayload(
+    Map<String, dynamic> data,
+  ) {
+    final translated = <String, dynamic>{
+      // The restore path validates against this app's schema; the foreign
+      // version is reported separately by [describeForeignPayload].
+      'version': '8.0',
+    };
+    for (final entry in _emotionalSobrietySectionMap.entries) {
+      final value = data[entry.key];
+      if (value is List) translated[entry.value] = value;
+    }
+    final lastModified = data['lastModified'];
+    if (lastModified is String) translated['lastModified'] = lastModified;
+    return translated;
+  }
 
   // ---------------------------------------------------------------------------
   // Validation
@@ -237,7 +377,29 @@ class BackupRestoreService {
   static Future<RestoreResult> restoreFromPayload(
     Map<String, dynamic> data, {
     bool createSafetyBackup = true,
+    bool allowForeignProduct = false,
   }) async {
+    // Step 0: Foreign payloads are accepted only where the user explicitly
+    // chose the file. The automatic Drive path never sets the flag.
+    final foreignProduct = foreignProductOf(data);
+    if (foreignProduct != null) {
+      if (!allowForeignProduct) {
+        return RestoreResult(
+          success: false,
+          error:
+              'Backup belongs to another app ($foreignProduct); '
+              'import it explicitly from a JSON file',
+        );
+      }
+      if (foreignProduct != emotionalSobrietyProductId) {
+        return RestoreResult(
+          success: false,
+          error: 'Unsupported backup product: $foreignProduct',
+        );
+      }
+      data = translateEmotionalSobrietyPayload(data);
+    }
+
     // Step 1: Validate
     final validation = validate(data);
     if (!validation.isValid) {
@@ -301,6 +463,7 @@ class BackupRestoreService {
   static Future<RestoreResult> restoreFromJsonString(
     String content, {
     bool createSafetyBackup = true,
+    bool allowForeignProduct = false,
   }) async {
     final data = parseJson(content);
     if (data == null) {
@@ -309,7 +472,11 @@ class BackupRestoreService {
         error: 'Failed to parse JSON content',
       );
     }
-    return restoreFromPayload(data, createSafetyBackup: createSafetyBackup);
+    return restoreFromPayload(
+      data,
+      createSafetyBackup: createSafetyBackup,
+      allowForeignProduct: allowForeignProduct,
+    );
   }
 
   // ---------------------------------------------------------------------------
@@ -320,6 +487,17 @@ class BackupRestoreService {
   ///
   /// IMPORTANT: This clears boxes before writing. Validation and safety
   /// backup should be done BEFORE calling this method.
+  ///
+  /// Each section is **decoded before its box is cleared**. A record this app
+  /// cannot read is left out and counted, instead of throwing part-way through
+  /// a rewrite and leaving the box holding a fraction of the backup — with the
+  /// rest of the payload never applied. That mattered as soon as foreign files
+  /// became importable, but it protects this app's own backups too.
+  ///
+  /// A section absent from the payload leaves its box untouched. An Emotional
+  /// Sobriety file carries no people/reflections/gratitude/notifications, so
+  /// importing one adds its five datasets and keeps the rest of this app's
+  /// data.
   static Future<RestoreCounts> _applyPayload(Map<String, dynamic> data) async {
     int entriesCount = 0;
     int iAmCount = 0;
@@ -330,226 +508,189 @@ class BackupRestoreService {
     int ritualItemsCount = 0;
     int ritualEntriesCount = 0;
     int notificationsCount = 0;
+    int skippedRecords = 0;
     bool hasAppSettings = false;
 
     // ---------------------------------------------------------------------------
     // I Am Definitions (MUST be imported FIRST - entries reference them)
     // ---------------------------------------------------------------------------
-    if (data.containsKey('iAmDefinitions')) {
+    final iAmSection = _decodeSection<IAmDefinition>(
+      data['iAmDefinitions'],
+      'iAmDefinitions',
+      (json) => IAmDefinition(
+        id: json['id'] as String,
+        name: json['name'] as String,
+        reasonToExist: json['reasonToExist'] as String?,
+      ),
+    );
+    if (iAmSection != null) {
+      skippedRecords += iAmSection.skipped;
       final iAmBox = Hive.box<IAmDefinition>('i_am_definitions');
-      final iAmDefs = data['iAmDefinitions'] as List<dynamic>?;
-      if (iAmDefs != null) {
-        if (kDebugMode) {
-          print(
-            'BackupRestoreService: Importing ${iAmDefs.length} I Am definitions',
-          );
-        }
-        await iAmBox.clear();
-        for (final defJson in iAmDefs) {
-          final def = IAmDefinition(
-            id: defJson['id'] as String,
-            name: defJson['name'] as String,
-            reasonToExist: defJson['reasonToExist'] as String?,
-          );
-          await iAmBox.add(def);
-        }
-        iAmCount = iAmBox.length;
-        if (kDebugMode) {
-          print('BackupRestoreService: I Am box now has $iAmCount definitions');
-        }
+      await iAmBox.clear();
+      for (final def in iAmSection.items) {
+        await iAmBox.add(def);
       }
+      iAmCount = iAmBox.length;
     }
 
     // ---------------------------------------------------------------------------
     // Inventory Entries (4th Step)
     // ---------------------------------------------------------------------------
-    if (data.containsKey('entries')) {
+    final entriesSection = _decodeSection<InventoryEntry>(
+      data['entries'],
+      'entries',
+      InventoryEntry.fromJson,
+    );
+    if (entriesSection != null) {
+      skippedRecords += entriesSection.skipped;
       final entriesBox = Hive.box<InventoryEntry>('entries');
-      final entries = data['entries'] as List<dynamic>?;
-      if (entries != null) {
-        if (kDebugMode) {
-          print('BackupRestoreService: Importing ${entries.length} entries');
-        }
-        await entriesBox.clear();
-        for (final item in entries) {
-          if (item is Map<String, dynamic>) {
-            final entry = InventoryEntry.fromJson(item);
-            await entriesBox.add(entry);
-          }
-        }
-        entriesCount = entriesBox.length;
-        // Migrate order values for backwards compatibility
-        await InventoryService.migrateOrderValues();
-        if (kDebugMode) {
-          print(
-            'BackupRestoreService: Entries box now has $entriesCount entries',
-          );
-        }
+      await entriesBox.clear();
+      for (final entry in entriesSection.items) {
+        await entriesBox.add(entry);
       }
+      entriesCount = entriesBox.length;
+      // Migrate order values for backwards compatibility
+      await InventoryService.migrateOrderValues();
     }
 
     // ---------------------------------------------------------------------------
     // People (8th Step)
     // ---------------------------------------------------------------------------
-    if (data.containsKey('people')) {
+    final peopleSection = _decodeSection<Person>(
+      data['people'],
+      'people',
+      Person.fromJson,
+    );
+    if (peopleSection != null) {
+      skippedRecords += peopleSection.skipped;
       final peopleBox = Hive.box<Person>('people_box');
-      final peopleList = data['people'] as List<dynamic>?;
-      if (peopleList != null) {
-        if (kDebugMode) {
-          print('BackupRestoreService: Importing ${peopleList.length} people');
-        }
-        await peopleBox.clear();
-        for (final personJson in peopleList) {
-          final person = Person.fromJson(personJson as Map<String, dynamic>);
-          await peopleBox.put(person.internalId, person);
-        }
-        peopleCount = peopleBox.length;
+      await peopleBox.clear();
+      for (final person in peopleSection.items) {
+        await peopleBox.put(person.internalId, person);
       }
+      peopleCount = peopleBox.length;
     }
 
     // ---------------------------------------------------------------------------
     // Reflections (Evening Ritual)
     // ---------------------------------------------------------------------------
-    if (data.containsKey('reflections')) {
+    final reflectionsSection = _decodeSection<ReflectionEntry>(
+      data['reflections'],
+      'reflections',
+      ReflectionEntry.fromJson,
+    );
+    if (reflectionsSection != null) {
+      skippedRecords += reflectionsSection.skipped;
       final reflectionsBox = Hive.box<ReflectionEntry>('reflections_box');
-      final reflectionsList = data['reflections'] as List<dynamic>?;
-      if (reflectionsList != null) {
-        if (kDebugMode) {
-          print(
-            'BackupRestoreService: Importing ${reflectionsList.length} reflections',
-          );
-        }
-        await reflectionsBox.clear();
-        for (final reflectionJson in reflectionsList) {
-          final reflection = ReflectionEntry.fromJson(
-            reflectionJson as Map<String, dynamic>,
-          );
-          await reflectionsBox.put(reflection.internalId, reflection);
-        }
-        reflectionsCount = reflectionsBox.length;
+      await reflectionsBox.clear();
+      for (final reflection in reflectionsSection.items) {
+        await reflectionsBox.put(reflection.internalId, reflection);
       }
+      reflectionsCount = reflectionsBox.length;
     }
 
     // ---------------------------------------------------------------------------
     // Gratitude (supports legacy 'gratitudeEntries' key)
     // ---------------------------------------------------------------------------
-    if (data.containsKey('gratitude') || data.containsKey('gratitudeEntries')) {
+    final gratitudeSection = _decodeSection<GratitudeEntry>(
+      data['gratitude'] ?? data['gratitudeEntries'],
+      'gratitude',
+      GratitudeEntry.fromJson,
+    );
+    if (gratitudeSection != null) {
+      skippedRecords += gratitudeSection.skipped;
       final gratitudeBox = Hive.box<GratitudeEntry>('gratitude_box');
-      final gratitudeList =
-          (data['gratitude'] ?? data['gratitudeEntries']) as List<dynamic>?;
-      if (gratitudeList != null) {
-        if (kDebugMode) {
-          print(
-            'BackupRestoreService: Importing ${gratitudeList.length} gratitude entries',
-          );
-        }
-        await gratitudeBox.clear();
-        for (final gratitudeJson in gratitudeList) {
-          final gratitude = GratitudeEntry.fromJson(
-            gratitudeJson as Map<String, dynamic>,
-          );
-          await gratitudeBox.add(gratitude);
-        }
-        gratitudeCount = gratitudeBox.length;
+      await gratitudeBox.clear();
+      for (final gratitude in gratitudeSection.items) {
+        await gratitudeBox.add(gratitude);
       }
+      gratitudeCount = gratitudeBox.length;
     }
 
     // ---------------------------------------------------------------------------
-    // Agnosticism (supports legacy 'agnosticismPapers' key)
+    // Agnosticism (supports legacy 'agnosticismPapers' key; Emotional Sobriety's
+    // 'agnosticismPairs' is mapped onto 'agnosticism' before we get here)
     // ---------------------------------------------------------------------------
-    if (data.containsKey('agnosticism') ||
-        data.containsKey('agnosticismPapers')) {
+    final agnosticismSection = _decodeSection<BarrierPowerPair>(
+      data['agnosticism'] ?? data['agnosticismPapers'],
+      'agnosticism',
+      BarrierPowerPair.fromJson,
+    );
+    if (agnosticismSection != null) {
+      skippedRecords += agnosticismSection.skipped;
       final agnosticismBox = Hive.box<BarrierPowerPair>('agnosticism_pairs');
-      final pairsList =
-          (data['agnosticism'] ?? data['agnosticismPapers']) as List<dynamic>?;
-      if (pairsList != null) {
-        if (kDebugMode) {
-          print(
-            'BackupRestoreService: Importing ${pairsList.length} agnosticism pairs',
-          );
-        }
-        await agnosticismBox.clear();
-        for (final pairJson in pairsList) {
-          final pair = BarrierPowerPair.fromJson(
-            pairJson as Map<String, dynamic>,
-          );
-          await agnosticismBox.put(pair.id, pair);
-        }
-        agnosticismCount = agnosticismBox.length;
+      await agnosticismBox.clear();
+      for (final pair in _withEnforcedActivePairCap(agnosticismSection.items)) {
+        await agnosticismBox.put(pair.id, pair);
       }
+      agnosticismCount = agnosticismBox.length;
     }
 
     // ---------------------------------------------------------------------------
     // Morning Ritual Items (Definitions)
     // ---------------------------------------------------------------------------
-    if (data.containsKey('morningRitualItems')) {
+    final ritualItemsSection = _decodeSection<RitualItem>(
+      data['morningRitualItems'],
+      'morningRitualItems',
+      RitualItem.fromJson,
+    );
+    if (ritualItemsSection != null) {
+      skippedRecords += ritualItemsSection.skipped;
       final morningRitualItemsBox = Hive.box<RitualItem>(
         'morning_ritual_items',
       );
-      final itemsList = data['morningRitualItems'] as List<dynamic>?;
-      if (itemsList != null) {
-        if (kDebugMode) {
-          print(
-            'BackupRestoreService: Importing ${itemsList.length} morning ritual items',
-          );
-        }
-        await morningRitualItemsBox.clear();
-        for (final itemJson in itemsList) {
-          final item = RitualItem.fromJson(itemJson as Map<String, dynamic>);
-          await morningRitualItemsBox.put(item.id, item);
-        }
-        ritualItemsCount = morningRitualItemsBox.length;
+      await morningRitualItemsBox.clear();
+      for (final item in _withSingleRandomizedReading(
+        ritualItemsSection.items,
+      )) {
+        await morningRitualItemsBox.put(item.id, item);
       }
+      ritualItemsCount = morningRitualItemsBox.length;
+      // An imported set can arrive with gaps or duplicate sort orders; the
+      // shared contract needs them contiguous from zero before the next export.
+      await MorningRitualService.migrateSortOrders();
     }
 
     // ---------------------------------------------------------------------------
     // Morning Ritual Entries (Daily Completions)
     // ---------------------------------------------------------------------------
-    if (data.containsKey('morningRitualEntries')) {
+    final ritualEntriesSection = _decodeSection<MorningRitualEntry>(
+      data['morningRitualEntries'],
+      'morningRitualEntries',
+      MorningRitualEntry.fromJson,
+    );
+    if (ritualEntriesSection != null) {
+      skippedRecords += ritualEntriesSection.skipped;
       final morningRitualEntriesBox = Hive.box<MorningRitualEntry>(
         'morning_ritual_entries',
       );
-      final entriesList = data['morningRitualEntries'] as List<dynamic>?;
-      if (entriesList != null) {
-        if (kDebugMode) {
-          print(
-            'BackupRestoreService: Importing ${entriesList.length} morning ritual entries',
-          );
-        }
-        await morningRitualEntriesBox.clear();
-        for (final entryJson in entriesList) {
-          final entry = MorningRitualEntry.fromJson(
-            entryJson as Map<String, dynamic>,
-          );
-          await morningRitualEntriesBox.put(entry.id, entry);
-        }
-        ritualEntriesCount = morningRitualEntriesBox.length;
+      await morningRitualEntriesBox.clear();
+      for (final entry in ritualEntriesSection.items) {
+        await morningRitualEntriesBox.put(entry.id, entry);
       }
+      ritualEntriesCount = morningRitualEntriesBox.length;
     }
 
     // ---------------------------------------------------------------------------
     // Notifications
     // ---------------------------------------------------------------------------
-    if (data.containsKey('notifications')) {
+    final notificationsSection = _decodeSection<AppNotification>(
+      data['notifications'],
+      'notifications',
+      AppNotification.fromJson,
+    );
+    if (notificationsSection != null) {
+      skippedRecords += notificationsSection.skipped;
       final notificationsBox = Hive.box<AppNotification>(
         NotificationsService.notificationsBoxName,
       );
-      final notificationsList = data['notifications'] as List<dynamic>?;
-      if (notificationsList != null) {
-        if (kDebugMode) {
-          print(
-            'BackupRestoreService: Importing ${notificationsList.length} notifications',
-          );
-        }
-        await notificationsBox.clear();
-        for (final nJson in notificationsList) {
-          final n = AppNotification.fromJson(nJson as Map<String, dynamic>);
-          await notificationsBox.put(n.id, n);
-        }
-        notificationsCount = notificationsBox.length;
-        // Reschedule all notifications
-        await NotificationsService.rescheduleAll();
+      await notificationsBox.clear();
+      for (final n in notificationsSection.items) {
+        await notificationsBox.put(n.id, n);
       }
+      notificationsCount = notificationsBox.length;
+      // Reschedule all notifications
+      await NotificationsService.rescheduleAll();
     }
 
     // ---------------------------------------------------------------------------
@@ -575,6 +716,90 @@ class BackupRestoreService {
       morningRitualEntries: ritualEntriesCount,
       notifications: notificationsCount,
       hasAppSettings: hasAppSettings,
+      skippedRecords: skippedRecords,
     );
+  }
+
+  /// Decode one payload section up front. Returns null when the section is
+  /// absent or null (leave that box alone); an empty list is a real instruction
+  /// to clear the box.
+  static _DecodedSection<T>? _decodeSection<T>(
+    Object? raw,
+    String key,
+    T Function(Map<String, dynamic>) decode,
+  ) {
+    if (raw == null) return null;
+    if (raw is! List) return null;
+    final items = <T>[];
+    var skipped = 0;
+    for (final entry in raw) {
+      if (entry is! Map) {
+        skipped += 1;
+        continue;
+      }
+      try {
+        items.add(decode(Map<String, dynamic>.from(entry)));
+      } catch (e) {
+        skipped += 1;
+        if (kDebugMode) {
+          print('BackupRestoreService: Skipped an unreadable $key record: $e');
+        }
+      }
+    }
+    if (kDebugMode) {
+      print(
+        'BackupRestoreService: Importing ${items.length} $key records '
+        '($skipped skipped)',
+      );
+    }
+    return _DecodedSection<T>(items, skipped);
+  }
+
+  /// Keep this app's five-active-pair rule true for any imported set.
+  ///
+  /// Excess active pairs are **archived, never dropped** — they are the
+  /// person's work, and another app may allow a larger paper. Active positions
+  /// are then compacted to 0..n so the paper renders in a stable order.
+  static List<BarrierPowerPair> _withEnforcedActivePairCap(
+    List<BarrierPowerPair> pairs,
+  ) {
+    final active = pairs.where((pair) => !pair.isArchived).toList()
+      ..sort((a, b) => a.position.compareTo(b.position));
+    final keep = active.take(AgnosticismService.maxActivePairs).toSet();
+
+    var nextPosition = 0;
+    return pairs
+        .map((pair) {
+          if (pair.isArchived) return pair;
+          if (keep.contains(pair)) {
+            return pair.copyWith(position: nextPosition++);
+          }
+          return pair.copyWith(
+            isArchived: true,
+            archivedAt: pair.archivedAt ?? pair.createdAt,
+          );
+        })
+        .toList(growable: false);
+  }
+
+  /// Emotional Sobriety rejects a backup carrying two randomized readings, so
+  /// only the first survives as one. The extras keep every other field and
+  /// simply become ordinary prayer items.
+  static List<RitualItem> _withSingleRandomizedReading(List<RitualItem> items) {
+    var seenRandomized = false;
+    return items
+        .map((item) {
+          if (!MorningRandomizerContract.isRandomized(
+            item.randomizerSourceId,
+          )) {
+            return item;
+          }
+          if (!seenRandomized) {
+            seenRandomized = true;
+            return item;
+          }
+          return item.copyWith(clearRandomizerSourceId: true);
+        })
+        .toList(growable: false);
   }
 }

@@ -39,13 +39,30 @@ days saved as `MorningRitualEntry`. See
   (complete/skip/previous/start over) or leaves the page (`dispose`).
 - `soundId` is persisted/synced but `_playAlarm` currently ignores it
   (always system alarm) — see implementation_plan P2.1.
-- The nullable randomizer definition/history fields are passively preserved by
-  Hive, JSON restore, the canonical payload builder, local backup, and Drive.
-  Missing fields decode as null for released payloads. A present source ID must
-  be non-blank and is valid only for `prayer`; changing such a definition to
-  `timer` clears it before re-export. The current runner does not select or
-  display randomized content; implement that only through
-  implementation-plan P2.5 without changing `prayer=1`.
+- **Randomized readings ("Just for Today").** A prayer may name a reading
+  source in `randomizerSourceId`; options come from
+  `assets/content/morning_randomizer_v1.json` (**data, not Dart literals**),
+  whose ten option IDs and `en`/`da` text are generated from Emotional
+  Sobriety's Workshop catalog and are a cross-app contract. Regenerate that
+  file from theirs; never retype it. One option is drawn when the ritual
+  starts, held in the draft under `randomizerSelections`, and snapshotted into
+  the record. **Resume, previous and start over must not redraw** — only a
+  *missing* draw is made. A source ID must be non-blank and `prayer`-only;
+  changing such a definition to `timer` clears it. An unknown source ID is
+  preserved and falls back to `prayerText`.
+- **Two definition-set invariants the other app enforces on the whole file:**
+  at most **one** `randomizerSourceId` item, and `sortOrder` unique and
+  **contiguous from zero** across *all* definitions. A gap makes Emotional
+  Sobriety refuse the entire backup, not just Morning. Delete compacts,
+  reorder numbers inactive items after active ones, and
+  `migrateSortOrders()` repairs on-disk sets at startup and after restore —
+  keep all three.
+- History re-resolves a known option ID into the current language and
+  otherwise shows the stored snapshot. The snapshot wins: it is what the
+  person actually read and may have come from the other app.
+- `ritualItemsBox`/`entriesBox` resolve per call and are **not** cached in
+  statics — a cached handle goes stale after main.dart's
+  delete-and-recreate corruption recovery.
 - `flutter_ringtone_player` ships **android/ios only**, so on desktop the
   alarm falls through to a single `SystemSound.alert` (often silent on
   Linux) — see implementation_plan P2.4.

@@ -15,6 +15,7 @@ import 'eighth_step/models/person.dart';
 import 'evening_ritual/models/reflection_entry.dart';
 import 'morning_ritual/models/ritual_item.dart';
 import 'morning_ritual/models/morning_ritual_entry.dart';
+import 'morning_ritual/services/morning_ritual_service.dart';
 import 'gratitude/models/gratitude_entry.dart';
 import 'agnosticism/models/barrier_power_pair.dart';
 import 'shared/services/all_apps_drive_service.dart';
@@ -318,6 +319,14 @@ void main() async {
   await timed(
     'InventoryService.migrateOrderValues',
     () => InventoryService.migrateOrderValues(),
+  );
+
+  // Migration: repair Morning definitions whose sort orders have gaps or
+  // duplicates. The shared backup contract requires them contiguous from zero,
+  // and a set with a hole is refused wholesale by Emotional Sobriety.
+  await timed(
+    'MorningRitualService.migrateSortOrders',
+    () => MorningRitualService.migrateSortOrders(),
   );
 
   // Initialize I Am definitions with default value
