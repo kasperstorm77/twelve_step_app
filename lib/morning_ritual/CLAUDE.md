@@ -63,6 +63,17 @@ days saved as `MorningRitualEntry`. See
 - `ritualItemsBox`/`entriesBox` resolve per call and are **not** cached in
   statics — a cached handle goes stale after main.dart's
   delete-and-recreate corruption recovery.
+
+## Widget-testing these screens
+A `testWidgets` body runs in a **fake-async zone**, and every step of the
+runner writes to Hive. Those writes resolve on the real event loop, which the
+fake zone never advances — so a plain `await tester.tap(...)` leaves a write in
+flight forever and Hive's per-box lock then **deadlocks teardown** (the test
+hangs rather than fails). Open boxes in `setUp`, and drive every interaction
+and every seed write through `tester.runAsync`; see the `act` helper in
+[morning_ritual_runner_test.dart](../../test/morning_ritual_runner_test.dart).
+Danish also needs the `GlobalMaterialLocalizations` delegates or the framework
+throws on an unsupported locale.
 - `flutter_ringtone_player` ships **android/ios only**, so on desktop the
   alarm falls through to a single `SystemSound.alert` (often silent on
   Linux) — see implementation_plan P2.4.

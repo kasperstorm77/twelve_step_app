@@ -588,6 +588,9 @@ docs/
 test/
   morning_ritual_progress_test.dart   Draft round-trip / same-day-resume guard
   morning_randomizer_test.dart        Catalog, injected picker, draw stability
+  morning_ritual_runner_test.dart     The runner: draw / no-redraw / snapshot
+  morning_ritual_editor_and_import_dialog_test.dart
+                                      Both new dialogs, rendered in EN + DA
   emotional_sobriety_import_test.dart Foreign import + normalization
   shared_json_parity_test.dart        The cross-app wire contract
   fixtures/                           Payloads captured from the other app

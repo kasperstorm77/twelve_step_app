@@ -371,7 +371,30 @@ matched the Danish snapshot text against its own catalog. That closes the
 acceptance on both sides; the other repository tracks the same round trip as
 its P5.10.
 
-57 tests pass, analyzer clean.
+**Then the screens themselves got covered.** The first pass verified the new
+behaviour with unit tests and the other app's validator, but the runner, the
+editor toggle and the import dialog had none — so P2.5's own acceptance line
+("start, resume, previous, complete, skip") was only half met, and neither
+bilingual dialog had been seen rendered. Eighteen widget tests now drive the
+real screens: a draw appears instead of `prayerText`, *previous* / *start over*
+/ resume show the same reading, complete and skip snapshot exactly the text on
+screen, a static item snapshots nothing, an unknown source falls back, and a
+Danish ritual draws and records Danish. Both dialogs are rendered in English
+and Danish, which is what actually proves the layout holds.
+
+Getting there cost a real lesson, now recorded in the area's `CLAUDE.md`: a
+`testWidgets` body runs in a **fake-async zone**, and every step of this runner
+writes to Hive. Those writes resolve on the real event loop, which the fake
+zone never advances, so a plain `tester.tap` leaves a write in flight forever
+and Hive's per-box lock deadlocks teardown — the test *hangs* instead of
+failing, which is a slow way to learn. Boxes are opened in `setUp` and every
+interaction goes through `tester.runAsync`.
+
+The editor test also surfaced a small localization collision: Danish labels
+the prayer *type* and the prayer *text field* both "Bøn", so the test cannot
+tell them apart by label and counts fields instead. Registered as P3.4b.
+
+75 tests pass, analyzer clean.
 
 **Shipped as 2.3.0+107** to Google Play closed testing ("alpha") and
 TestFlight on 2026-08-06 — the first dual-store release from the Mac, which

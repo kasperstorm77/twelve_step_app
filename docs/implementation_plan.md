@@ -164,7 +164,9 @@ to `RitualItemType`.)*
 Partly covered now — `emotional_sobriety_import_test.dart` and
 `morning_ritual_randomizer_portability_test.dart` exercise
 `SyncPayloadBuilder.buildPayload` → `BackupRestoreService` for the five shared
-sections. Still missing:
+sections, and `morning_ritual_runner_test.dart` +
+`morning_ritual_editor_and_import_dialog_test.dart` drive the real screens.
+Still missing:
 - the same round trip for the boxes only this app has (people, reflections,
   gratitude, notifications, appSettings), plus the `gratitudeEntries` /
   `agnosticismPapers` legacy import aliases and the I-Am-before-entries
@@ -184,6 +186,16 @@ become a hand transcription.
 on one side makes the two apps disagree about what the same day meant.
 
 *(Found while implementing P2.5.)*
+
+### P3.4b Danish labels the prayer *type* and the prayer *text* both "Bøn"
+
+In the Morning Ritual item editor the type dropdown and the prayer-text field
+carry the same Danish word, so a Danish user sees "Bøn" twice with different
+meanings. English distinguishes them ("Prayer" / "Prayer Text"). Rename one —
+`morning_ritual_prayer_text` to e.g. "Bønnens tekst".
+
+*(Found while adding the editor widget test, which could not tell the two
+apart by label and had to count fields instead.)*
 
 ### P3.5 `reorderRitualItems` renumbers inactive items too
 Reordering now writes `sortOrder` across **all** definitions (active first,
