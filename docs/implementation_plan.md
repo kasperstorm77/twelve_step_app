@@ -27,36 +27,36 @@ ever committed, rotate the credential and scrub history.
 though desktop OAuth secrets are "app-identifying" rather than truly
 secret.
 
-### P1.2 Bring the store-publishing credentials onto the release Mac
+### P1.2 Store-publishing credentials on the release Mac — DONE
 
-**What you need on the Mac — short answer: copy the credential files,
-they're account/team-scoped, not per-app.** The release scripts +
-`deploy-release` agent are in place, but the first store release from the
-Mac needs these one-time setup steps. All credential files live git-ignored
-at the repo root; full detail in the [Store release runbook](#store-release-runbook-google-play--testflight).
+Closed on 2026-08-06 by shipping **2.3.0+107** to both stores from this Mac.
 
-- [ ] Copy the three credential files to the repo root on the Mac (all
-      git-ignored): `play-service-account.json` (Play API key),
-      `app_sp_pw` (Apple ID app-specific password), and
-      `AuthKey_<KEYID>.p8` + `asc_issuer` (App Store Connect API key +
-      Issuer ID). They are account/team-scoped, so copying is enough.
-- [ ] **Play Console → Users & permissions:** confirm that service account
-      has **"Release to testing tracks"** for this app (an account-level
-      invite already covers it).
-- [ ] **Play, brand-new app only:** upload the *first* AAB by hand in the
-      Console once — Play's API refuses the first bundle. The listing must
-      exist for `dk.stormstyrken.twelvestepsapp`.
-- [ ] **App Store Connect:** ensure an app record exists for bundle id
-      `dk.stormstyrken.twelvestepsapp`; in Xcode set Runner → Signing &
-      Capabilities → your Team (automatic signing mints the Distribution
-      cert).
-- [ ] **Locale check:** the upload scripts send `en-GB` + `da-DK` notes —
-      verify the Play listing has those languages, else change the locale
-      strings in `scripts/upload-aab-to-play.sh`.
+- [x] The four credential files are at the repo root and git-ignored:
+      `play-service-account.json`, `app_sp_pw`, `AuthKey_8M34VK4247.p8`,
+      `asc_issuer`. They are account/team-scoped, so copying them from the
+      other app's checkout was enough — no per-app console step was needed.
+- [x] The Play service account already had **Release to testing tracks** for
+      `dk.stormstyrken.twelvestepsapp`.
+- [x] Play accepted the bundle over the API, so the "upload the first AAB by
+      hand" caveat did not apply — the listing already existed.
+- [x] App Store Connect had the record and the signing identity; `altool`
+      uploaded and the API set the TestFlight notes with no manual paste.
+- [x] `en-GB` + `da-DK` both exist on the Play listing and in App Store
+      Connect; the scripts' locale strings are correct as written.
 
-**Why now:** these are the only blockers between the landed tooling and an
-actual TestFlight / Play closed-testing release; without them the scripts
-stop at a missing-credential pre-flight error.
+### P1.3 Raise the iOS deployment target to 15.0
+
+App Store Connect accepted **2.3.0+107** with warning 90068: the app declares
+`MinimumOSVersion 13.0`, and **from Spring 2027 Apple refuses any upload below
+15.0**. Bump the iOS deployment target (`ios/Podfile` `platform :ios` plus
+Runner's `IPHONEOS_DEPLOYMENT_TARGET`), re-run `pod install`, and confirm the
+archive still builds.
+
+**Why now:** it is only a warning today but becomes a hard upload rejection,
+and the fix touches CocoaPods — not something to discover on the day a release
+is urgent.
+
+*(Found while shipping the 2.3.0 test release.)*
 
 ---
 

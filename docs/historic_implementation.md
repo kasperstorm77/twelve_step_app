@@ -373,6 +373,14 @@ its P5.10.
 
 57 tests pass, analyzer clean.
 
+**Shipped as 2.3.0+107** to Google Play closed testing ("alpha") and
+TestFlight on 2026-08-06 — the first dual-store release from the Mac, which
+also closed the long-standing P1.2 credential blocker: the four files are
+account/team-scoped, so copying them from the other app's checkout was all
+that was needed. App Store Connect accepted the build with warning 90068
+(`MinimumOSVersion 13.0`; Apple requires 15.0 from Spring 2027), now tracked
+as P1.3.
+
 ---
 
 ## Data-format migration notes
