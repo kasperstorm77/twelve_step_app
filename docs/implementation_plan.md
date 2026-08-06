@@ -77,6 +77,20 @@ the same edit-commit that P1.3 blocks. Regenerate and upload once that
 permission lands; the commands are in
 [PLAY_STORE_DESCRIPTIONS.md](./play_store-retain/PLAY_STORE_DESCRIPTIONS.md).
 
+### P1.5 Raise the iOS deployment target to 15.0
+
+App Store Connect accepted **2.3.0+107** with warning 90068: the app declares
+`MinimumOSVersion 13.0`, and **from Spring 2027 Apple refuses any upload below
+15.0**. Bump the iOS deployment target (`ios/Podfile` `platform :ios` plus
+Runner's `IPHONEOS_DEPLOYMENT_TARGET`), re-run `pod install`, and confirm the
+archive still builds.
+
+**Why now:** it is only a warning today but becomes a hard upload rejection,
+and the fix touches CocoaPods — not something to discover on the day a release
+is urgent.
+
+*(Found while shipping the 2.3.0 test release.)*
+
 ### P1.6 Two user-visible strings are not localized
 
 Both surfaced by reading the Danish screenshots:
@@ -94,20 +108,6 @@ Both surfaced by reading the Danish screenshots:
 listing, and one of them is a plain violation of the localization rule.
 
 *(Found while capturing the Danish screenshot set.)*
-
-### P1.5 Raise the iOS deployment target to 15.0
-
-App Store Connect accepted **2.3.0+107** with warning 90068: the app declares
-`MinimumOSVersion 13.0`, and **from Spring 2027 Apple refuses any upload below
-15.0**. Bump the iOS deployment target (`ios/Podfile` `platform :ios` plus
-Runner's `IPHONEOS_DEPLOYMENT_TARGET`), re-run `pod install`, and confirm the
-archive still builds.
-
-**Why now:** it is only a warning today but becomes a hard upload rejection,
-and the fix touches CocoaPods — not something to discover on the day a release
-is urgent.
-
-*(Found while shipping the 2.3.0 test release.)*
 
 ---
 
