@@ -44,7 +44,42 @@ Closed on 2026-08-06 by shipping **2.3.0+107** to both stores from this Mac.
 - [x] `en-GB` + `da-DK` both exist on the Play listing and in App Store
       Connect; the scripts' locale strings are correct as written.
 
-### P1.3 Raise the iOS deployment target to 15.0
+### P1.3 Grant the Play service account "Manage store presence"
+
+The rewritten Play listing is written and verified but **cannot be published**:
+`PUT .../edits/{id}/listings/{lang}` succeeds, then `edits:validate` returns
+**403 "The caller does not have permission"**. The service account
+`play-publisher@life-happens.iam.gserviceaccount.com` can release to testing
+tracks but not edit store presence.
+
+Fix in **Play Console → Users & permissions →** that account **→ App
+permissions →** enable **"Manage store presence"**, then re-run the publish
+from
+[PLAY_STORE_DESCRIPTIONS.md](./play_store-retain/PLAY_STORE_DESCRIPTIONS.md).
+
+**Why now:** the live Play listing still names the fellowship seven times and
+still describes the app as a 4th-Step-only tool. Everything needed to replace
+it is written; this permission is the only thing in the way.
+
+*(Found while publishing the store-listing rewrite.)*
+
+### P1.4 Replace the store screenshots
+
+Both stores' screenshots misrepresent the app; the detail and the required
+sizes are in
+[PLAY_STORE_DESCRIPTIONS.md](./play_store-retain/PLAY_STORE_DESCRIPTIONS.md).
+Worst offenders: Play has **one** 500×1024 shot of a single tool, and the App
+Store's Morning Ritual shot is an **empty state** with a disabled button and a
+red error. The Agnosticism shot predates the connected-fear field, and real
+personal content is blacked out by hand instead of replaced with sample data.
+
+Capture from a build seeded with realistic sample data, one per tool, and add
+Reminders (which appears nowhere today).
+
+**Why now:** 2.3.0's App Store version cannot be submitted with a screenshot
+set that advertises an empty, apparently broken Morning Ritual.
+
+### P1.5 Raise the iOS deployment target to 15.0
 
 App Store Connect accepted **2.3.0+107** with warning 90068: the app declares
 `MinimumOSVersion 13.0`, and **from Spring 2027 Apple refuses any upload below

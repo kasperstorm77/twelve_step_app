@@ -3,8 +3,21 @@
 Canonical source for both stores' *listing* text. Release notes are a
 different thing and live in [`release.md`](../../release.md).
 
-**Status: drafted 2026-08-06, NOT yet published.** The live listings are
-audited below; publishing is the owner's call.
+**Status (2026-08-06).**
+- **App Store — applied.** All of this is staged on version **2.3.0**
+  (`PREPARE_FOR_SUBMISSION`): the Danish description rewritten, an **`en-GB`
+  localization added** (there was none), keywords, promotional text, the app
+  name and both subtitles. Nothing is submitted for review — that, attaching
+  build 107, and the screenshots are the remaining steps.
+- **Google Play — blocked on a permission, listing unchanged.** The text
+  writes into an edit fine (`PUT .../listings/{lang}` → 200) but
+  `edits:validate` returns **403 "The caller does not have permission"**, so
+  the edit cannot be committed. The service account
+  `play-publisher@life-happens.iam.gserviceaccount.com` can release to testing
+  tracks but cannot manage store presence. Grant it in **Play Console → Users
+  & permissions → that account → App permissions → "Manage store presence"**,
+  then re-run the publish. Nothing was committed; the live listing still shows
+  the old copy.
 
 > **Naming rule.** No listing text, screenshot, or in-app string may name the
 > fellowship or use its initials. A public store listing that names it implies
