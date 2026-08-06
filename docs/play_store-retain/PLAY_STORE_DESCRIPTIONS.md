@@ -10,8 +10,13 @@ different thing and live in [`release.md`](../../release.md).
   promotional text, the app name and both subtitles. **28 new screenshots**
   replaced the old sets — 7 per tool × (iPhone 6.7" + iPad 12.9") × (en-GB +
   da), all `assetDeliveryState: COMPLETE` with zero errors. Remaining:
-  attaching build 107 and submitting for review, both deliberately left to
-  the owner.
+  attaching a build and submitting for review, both deliberately left to the
+  owner — and **not build 107**, which predates the naming fix and still seeds
+  an "I Am" definition naming the fellowship (implementation plan P1.5).
+
+  The tool names in the copy are taken from `app_*_name` in
+  `localizations.dart`, and the screenshots are ordered to follow the bullet
+  list, so the text and the images on the store page describe the same app.
 - **Google Play — blocked on a permission, listing unchanged.** The text
   writes into an edit fine (`PUT .../listings/{lang}` → 200) but
   `edits:validate` returns **403 "The caller does not have permission"**, so
@@ -22,6 +27,14 @@ different thing and live in [`release.md`](../../release.md).
   then re-run the publish. Nothing was committed; the live listing still shows
   the old copy.
 
+> **Name the tools exactly as the app labels them.** The listing and the
+> screenshots sit side by side on the store page, so a bullet that says
+> "Surrender & Correction" next to a screenshot titled "Agnosticism" reads as
+> a different app. The labels are `app_*_name` in
+> [localizations.dart](../../lib/shared/localizations.dart); take them from
+> there, not from the architecture doc's descriptive phrasing. Screenshot
+> order follows the order of the bullet list.
+>
 > **Naming rule.** No listing text, screenshot, or in-app string may name the
 > fellowship or use its initials. A public store listing that names it implies
 > an affiliation and an endorsement this app does not have. The concepts —
@@ -108,9 +121,9 @@ THE TOOLS
 • Evening Ritual — the nightly 10th Step review across the usual questions,
   plus a self-versus-others focus slider.
 • Gratitude — a two-field daily gratitude journal.
-• Surrender & Correction — the barrier, the fear underneath it, and the
-  corrective truth, on a paper you flip between the two sides.
-• Reminders — daily or weekday notifications for any of it.
+• Agnosticism — surrender and correction: the barrier, the fear underneath
+  it, and the corrective truth, on a paper you flip between the two sides.
+• Notifications — daily or weekday reminders for any of it.
 
 FREE AND PRIVATE
 • Completely free. No ads, no subscriptions, no in-app purchases.
@@ -166,9 +179,9 @@ VÆRKTØJERNE
 • Aftenritual — den daglige 10. trins gennemgang med de sædvanlige spørgsmål
   og en skala for fokus på dig selv kontra andre.
 • Taknemmelighed — en daglig taknemmelighedsdagbog med to felter.
-• Overgivelse & Korrektion — barrieren, frygten under den og den korrigerende
-  sandhed på et papir, du vender mellem de to sider.
-• Påmindelser — daglige eller ugedagsbestemte notifikationer til det hele.
+• Agnosticisme — overgivelse og korrektion: barrieren, frygten under den og
+  den korrigerende sandhed på et papir, du vender mellem de to sider.
+• Notifikationer — daglige eller ugedagsbestemte påmindelser til det hele.
 
 GRATIS OG PRIVAT
 • Helt gratis. Ingen reklamer, abonnementer eller køb i appen.

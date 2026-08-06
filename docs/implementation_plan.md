@@ -77,6 +77,28 @@ the same edit-commit that P1.3 blocks. Regenerate and upload once that
 permission lands; the commands are in
 [PLAY_STORE_DESCRIPTIONS.md](./play_store-retain/PLAY_STORE_DESCRIPTIONS.md).
 
+### P1.5 Build 107 predates the naming fix — do not submit 2.3.0 with it
+
+The App Store version 2.3.0 carries a listing that explicitly disclaims any
+affiliation with a twelve step fellowship, but the only build attached to that
+version would be **107**, which was compiled before the naming fix landed:
+
+```
+$ git show e498c39:lib/fourth_step/services/i_am_service.dart | grep "name: 'Sober"
+        name: 'Sober member of AA',
+```
+
+So a fresh install of 107 seeds an "I Am" definition naming the fellowship, and
+its `MaterialApp` title does too. Ship a build from `main` at or after
+`5333038` before submitting — bump the version, rebuild, upload to both test
+tracks, then attach that build to the App Store version.
+
+**Why now:** it is the one remaining place where the shipped artefact and the
+store page disagree, and the disagreement is exactly the thing the naming rule
+exists to prevent.
+
+*(Found while checking that the screenshots matched the app.)*
+
 ### P1.5 Raise the iOS deployment target to 15.0
 
 App Store Connect accepted **2.3.0+107** with warning 90068: the app declares
