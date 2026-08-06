@@ -10,9 +10,9 @@ different thing and live in [`release.md`](../../release.md).
   promotional text, the app name and both subtitles. **28 new screenshots**
   replaced the old sets — 7 per tool × (iPhone 6.7" + iPad 12.9") × (en-GB +
   da), all `assetDeliveryState: COMPLETE` with zero errors. Remaining:
-  attaching a build and submitting for review, both deliberately left to the
-  owner — and **not build 107**, which predates the naming fix and still seeds
-  an "I Am" definition naming the fellowship (implementation plan P1.5).
+  **Build 108 is attached** and the version is 2.3.1 — a binary built after
+  the naming fix, so the artefact and the store page finally agree. Only
+  submitting for review is left, deliberately, to the owner.
 
   The tool names in the copy are taken from `app_*_name` in
   `localizations.dart`, and the screenshots are ordered to follow the bullet

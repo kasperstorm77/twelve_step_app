@@ -413,6 +413,13 @@ every future upload is distributed automatically without a beta review. The
 Play side was fine: the alpha track read back `2.3.0` / versionCode 107,
 status `completed`, with both locales' notes.
 
+**2.3.1+108** followed the same day, for one reason: 107 had been compiled
+before the naming fix, so the binary attached to a listing that disclaims
+affiliation still seeded an "I Am" definition naming the fellowship. Same
+feature set, built from `main` afterwards. It is on both test tracks, and the
+App Store version was renamed 2.3.0 → 2.3.1 so the metadata and the build
+match.
+
 ---
 
 ## Data-format migration notes
