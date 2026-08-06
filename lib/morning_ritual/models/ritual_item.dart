@@ -140,7 +140,7 @@ class RitualItem extends HiveObject {
     'soundEnabled': soundEnabled,
     'soundId': soundId,
     RitualItemJsonKeys.randomizerSourceId: randomizerSourceId,
-    'lastModified': lastModified.toIso8601String(),
+    'lastModified': lastModified.toUtc().toIso8601String(),
   };
 
   factory RitualItem.fromJson(Map<String, dynamic> json) {

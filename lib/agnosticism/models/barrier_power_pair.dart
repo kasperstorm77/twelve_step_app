@@ -35,6 +35,23 @@ class BarrierPowerPair extends HiveObject {
   @HiveField(6)
   int position;
 
+  /// Stored connecting fear; `null` on records written before this field
+  /// existed. Read it through [connectedFear], which never returns null — a
+  /// non-nullable field here would make the generated adapter throw on those
+  /// records, and the corruption fallback would then wipe real user data.
+  @HiveField(7)
+  String? storedConnectedFear;
+
+  /// The fear or reason connecting the barrier to the power.
+  ///
+  /// Added after the first release, so pairs written by earlier versions and
+  /// by the Emotional Sobriety application may carry an empty value. An empty
+  /// fear means "not recorded yet"; the pair stays valid and is never
+  /// discarded. The form asks for it whenever a pair is written or edited.
+  String get connectedFear => storedConnectedFear ?? '';
+
+  set connectedFear(String value) => storedConnectedFear = value;
+
   BarrierPowerPair({
     required this.id,
     required this.barrier,
@@ -43,7 +60,8 @@ class BarrierPowerPair extends HiveObject {
     required this.createdAt,
     this.archivedAt,
     this.position = 0,
-  });
+    String connectedFear = '',
+  }) : storedConnectedFear = connectedFear;
 
   /// Convert to JSON for sync
   Map<String, dynamic> toJson() {
@@ -52,9 +70,10 @@ class BarrierPowerPair extends HiveObject {
       'barrier': barrier,
       'power': power,
       'isArchived': isArchived,
-      'createdAt': createdAt.toIso8601String(),
-      'archivedAt': archivedAt?.toIso8601String(),
+      'createdAt': createdAt.toUtc().toIso8601String(),
+      'archivedAt': archivedAt?.toUtc().toIso8601String(),
       'position': position,
+      'connectedFear': connectedFear,
     };
   }
 
@@ -70,6 +89,7 @@ class BarrierPowerPair extends HiveObject {
           ? DateTime.parse(json['archivedAt'] as String)
           : null,
       position: json['position'] as int? ?? 0,
+      connectedFear: json['connectedFear'] as String? ?? '',
     );
   }
 
@@ -82,6 +102,7 @@ class BarrierPowerPair extends HiveObject {
     DateTime? createdAt,
     DateTime? archivedAt,
     int? position,
+    String? connectedFear,
   }) {
     return BarrierPowerPair(
       id: id ?? this.id,
@@ -91,6 +112,7 @@ class BarrierPowerPair extends HiveObject {
       createdAt: createdAt ?? this.createdAt,
       archivedAt: archivedAt ?? this.archivedAt,
       position: position ?? this.position,
+      connectedFear: connectedFear ?? this.connectedFear,
     );
   }
 }

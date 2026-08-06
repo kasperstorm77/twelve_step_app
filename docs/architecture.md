@@ -107,8 +107,13 @@ fields required) and a read-only history grouped by day. Entries are
 
 ### 1.6 Agnosticism — "Surrender & Correction" (`lib/agnosticism/`)
 The user records **Barrier/Power pairs**: a *Barrier* (something
-blocking them — front/red side) and a *Power* (the corrective truth —
-back/blue side). The core UI is a single flippable **"current paper"**
+blocking them — front/red side), the **connected fear** that keeps it
+unsurrendered (shown under the barrier on the front), and a *Power* (the
+corrective truth — back/blue side). The fear is `HiveField 7`, stored
+nullable and read through a non-null getter, so pairs written before it
+existed keep an empty value instead of failing to decode. Emotional
+Sobriety records the same three fields, and pairs move between the two
+apps through backups. The core UI is a single flippable **"current paper"**
 holding up to **5 active pairs**, with a real 3-D Y-axis flip (500ms)
 between the barriers side and the powers side, driven by a flip button
 and 40px horizontal swipes. Worked-through pairs are **archived**
@@ -247,6 +252,11 @@ Frozen top-level JSON keys:
   }
 }
 ```
+
+**Cross-app pairs:** the `agnosticism` section is shared with Emotional
+Sobriety, which imports it as part of its shared recovery scope. Both apps
+write `connectedFear`; an absent or empty value means "not recorded yet" and
+must be preserved, never dropped.
 
 **Legacy read-aliases (import only, never written):** restore accepts
 `gratitudeEntries` for `gratitude` and `agnosticismPapers` for

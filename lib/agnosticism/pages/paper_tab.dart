@@ -422,7 +422,22 @@ class _PaperTabState extends State<PaperTab>
           availableWidth,
           textStyle,
         );
-        final maxContentHeight = math.max(barrierHeight, powerHeight);
+        // The connecting fear sits under the barrier on the front face. Pairs
+        // written before the field existed carry an empty value and render
+        // exactly as before.
+        final hasFear = pair.connectedFear.trim().isNotEmpty;
+        final fearHeight = hasFear
+            ? _measureTextHeight(
+                    pair.connectedFear,
+                    availableWidth,
+                    textStyle,
+                  ) +
+                  8
+            : 0.0;
+        final maxContentHeight = math.max(
+          barrierHeight + fearHeight,
+          powerHeight,
+        );
         const verticalPadding = 24.0; // symmetric 12 top/bottom
 
         final backgroundColor = isFront
@@ -449,10 +464,24 @@ class _PaperTabState extends State<PaperTab>
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
                   Expanded(
-                    child: Text(
-                      isFront ? pair.barrier : pair.power,
-                      style: textStyle,
-                    ),
+                    child: isFront
+                        ? Column(
+                            crossAxisAlignment: CrossAxisAlignment.start,
+                            mainAxisSize: MainAxisSize.min,
+                            children: [
+                              Text(pair.barrier, style: textStyle),
+                              if (hasFear) ...[
+                                const SizedBox(height: 8),
+                                Text(
+                                  pair.connectedFear,
+                                  style: textStyle?.copyWith(
+                                    color: colorScheme.tertiary,
+                                  ),
+                                ),
+                              ],
+                            ],
+                          )
+                        : Text(pair.power, style: textStyle),
                   ),
                   IconButton(
                     icon: const Icon(Icons.edit),

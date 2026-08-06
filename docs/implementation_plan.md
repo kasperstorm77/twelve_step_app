@@ -142,6 +142,78 @@ Follow
 for the already-approved passive field foundation; write a separate executable
 plan for the runner behavior before implementation.
 
+### P2.6 Import an Emotional Sobriety backup (JSON and Drive)
+
+Compatibility is currently one-way. Emotional Sobriety imports this app's
+`8.0` payload and takes five sections from it — I-Am definitions, Fourth Step
+entries, agnosticism pairs, Morning definitions, and Morning history. This app
+imports only its own `8.0` payload, so a person moving the other way loses
+that work.
+
+Emotional Sobriety tracks the same gap from its side as P5.10, so close both
+against one real round trip rather than a fixture.
+
+Emotional Sobriety's file is a *different envelope*, not a newer version of
+this one: it carries `"product": "emotional-sobriety"` and `"version": "1.0"`,
+and its sections are `iAmDefinitions`, `entries`, `agnosticismPairs`,
+`morningRitualItems`, `morningRitualEntries`, plus `workshopProgress`,
+`morningRitualDraft`, and `emotionalSobrietySettings` that have no meaning
+here. Note the different agnosticism key: `agnosticismPairs`, not
+`agnosticism`.
+
+Accept it on the manual-import path only, mapping the five shared sections and
+ignoring the rest. Its Fourth Step entries carry `order` and `category` fields
+this app does not model, and its Morning items may carry
+`randomizerSourceId`; drop what cannot be represented rather than failing the
+whole import, and never let an unmapped section abort the transaction. Keep
+`isRemoteNewer()` unable to see the other app's file: automatic Drive discovery
+must stay restricted to this app's own backup, so importing the other product
+remains an explicit user choice (hard rule 8).
+
+**Acceptance:**
+
+- [ ] Manual JSON import accepts a product-tagged `emotional-sobriety` `1.0`
+      file and rejects it on the automatic Drive path.
+- [ ] The five shared sections import; Workshop progress, the Morning draft,
+      and Emotional settings are ignored without error.
+- [ ] Agnosticism pairs import from `agnosticismPairs` with `connectedFear`
+      preserved, and the five-active-pair cap is enforced on the result.
+- [ ] A round-trip fixture proves data written in Emotional Sobriety survives
+      import here and re-export back without losing the fields this app models.
+- [ ] The confirmation dialog names exactly which datasets will be replaced, in
+      English and Danish.
+- [ ] `flutter analyze` and the complete `flutter test` suite pass.
+
+### P2.7 Keep the shared JSON byte-compatible
+
+Cross-app transfer is the **JSON export/import path**, not Drive: `appdata` is
+per-application, so neither app can see the other's Drive file, and that is
+fine — the person moves one file.
+
+For that to work the five shared sections must serialize *identically* in both
+apps. They now do, and `test/shared_json_parity_test.dart` pins it: every
+instant carries a zone, the ritual `date` stays a local calendar day, and each
+shared record emits exactly the agreed key set. Emotional Sobriety rejects
+unknown keys and zone-less instants, so a field added on either side without
+the other is a broken import, not a warning.
+
+Treat the parity test as the contract. When a shared model changes here:
+
+- add the field in both apps in the same change, or don't add it;
+- keep instants UTC-zoned on write and tolerant on read;
+- never convert the ritual `date` to UTC — an early-morning ritual would move
+  to the previous day.
+
+**Acceptance:**
+
+- [ ] Any change to `BarrierPowerPair`, `RitualItem`, `MorningRitualEntry`,
+      `RitualItemRecord`, `InventoryEntry`, or `IAmDefinition` updates
+      `shared_json_parity_test.dart` and the matching Emotional Sobriety
+      decoder in the same change.
+- [ ] A payload exported here imports there, and the reverse once P2.6 lands,
+      proven by a fixture captured from the other app's real output rather than
+      hand-written.
+
 ---
 
 ## P3 — Engineering polish

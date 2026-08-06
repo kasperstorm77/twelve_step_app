@@ -145,8 +145,11 @@ class _ArchiveTabState extends State<ArchiveTab> {
     bool canRestore,
   ) {
     final colorScheme = Theme.of(context).colorScheme;
-    final archivedDate = pair.archivedAt != null
-        ? '${pair.archivedAt!.day}/${pair.archivedAt!.month}/${pair.archivedAt!.year}'
+    // Backups store instants in UTC; convert before showing a calendar date,
+    // or a pair archived shortly after local midnight shows the previous day.
+    final archivedLocal = pair.archivedAt?.toLocal();
+    final archivedDate = archivedLocal != null
+        ? '${archivedLocal.day}/${archivedLocal.month}/${archivedLocal.year}'
         : '';
 
     return Card(
@@ -174,6 +177,28 @@ class _ArchiveTabState extends State<ArchiveTab> {
               ),
             ),
             Text(pair.barrier, style: Theme.of(context).textTheme.bodyMedium),
+
+            // Connected fear, when the pair records one.
+            if (pair.connectedFear.trim().isNotEmpty)
+              Padding(
+                padding: const EdgeInsets.only(top: 4),
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Text(
+                      t(context, 'agnosticism_fear'),
+                      style: TextStyle(
+                        color: colorScheme.tertiary,
+                        fontWeight: FontWeight.w600,
+                      ),
+                    ),
+                    Text(
+                      pair.connectedFear,
+                      style: Theme.of(context).textTheme.bodyMedium,
+                    ),
+                  ],
+                ),
+              ),
 
             Padding(
               padding: const EdgeInsets.only(top: 4),

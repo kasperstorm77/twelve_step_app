@@ -237,6 +237,51 @@ errors.
 
 ---
 
+## Phase 19 — Connected fear on Barrier/Power pairs
+
+Adopted the three-field agnosticism shape that Emotional Sobriety uses, so
+pairs mean the same thing in both apps and travel intact through the shared
+`agnosticism` backup section. `BarrierPowerPair` gained the connecting fear at
+Hive field 7 and JSON key `connectedFear`; the form now asks for barrier, fear,
+and power, the paper shows the fear under the barrier on the front face, and
+the archive card shows it when present.
+
+The stored field is deliberately **nullable** (`storedConnectedFear`) behind a
+non-null `connectedFear` getter. A non-nullable field would make the generated
+adapter cast `fields[7] as String` and throw on every record written before
+this change — and `main.dart` turns a box read failure into delete-and-recreate,
+so the throw would have silently wiped real user data. Making the storage
+nullable keeps those records readable and their fear empty until the person
+edits the pair.
+
+An empty fear therefore means "not recorded yet" rather than invalid. Both
+apps preserve it and export it unchanged; neither drops a pair for lacking one.
+Six tests cover the released JSON shape, the round trip, an Emotional Sobriety
+payload, `copyWith`, and a stored record whose eighth field is absent.
+
+Aligning the field then exposed a larger defect: **the shared JSON was never
+importable at all.** Every instant here was written with a bare local
+`DateTime.now()` — `2026-08-06T11:38:38.113572`, no zone — while Emotional
+Sobriety requires a zoned ISO-8601 value. Agnosticism pairs, Morning
+definitions and Morning history were all rejected; only Fourth Step entries,
+which carry no instant, got through. The bug survived both apps' test suites
+because every cross-app fixture on both sides had been hand-written with
+`DateTime.utc(...)`, which no real device ever produces.
+
+`toJson()` now writes `toUtc().toIso8601String()` for `createdAt`,
+`archivedAt`, `lastModified`, `startedAt`, and `completedAt`. The ritual
+`date` deliberately stays a local calendar day: converting it would move an
+early-morning ritual to the previous date. Reading is unchanged —
+`DateTime.parse` accepts the zone-less values already on devices, and they are
+re-exported zoned. `test/shared_json_parity_test.dart` pins the zone rule, the
+local-date exception, and the exact key set of every shared record, and the
+Emotional Sobriety fixtures were replaced with payloads captured from this
+app's real output. The archive card also gained a `.toLocal()` before
+formatting its archived-on date: after a restore the stored instant is UTC,
+and a pair archived shortly after local midnight displayed the previous day.
+
+---
+
 ## Data-format migration notes
 - **v6.0 → v7.0.** Added `morningRitualItems` and `morningRitualEntries`;
   renamed the backup file from `aa4step_inventory_data.json` to

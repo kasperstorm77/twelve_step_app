@@ -172,9 +172,9 @@ class MorningRitualEntry extends HiveObject {
     'id': id,
     'date': date.toIso8601String().substring(0, 10),
     'items': items.map((i) => i.toJson()).toList(),
-    'startedAt': startedAt?.toIso8601String(),
-    'completedAt': completedAt?.toIso8601String(),
-    'lastModified': lastModified.toIso8601String(),
+    'startedAt': startedAt?.toUtc().toIso8601String(),
+    'completedAt': completedAt?.toUtc().toIso8601String(),
+    'lastModified': lastModified.toUtc().toIso8601String(),
   };
 
   factory MorningRitualEntry.fromJson(Map<String, dynamic> json) {

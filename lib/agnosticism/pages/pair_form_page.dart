@@ -17,6 +17,7 @@ class PairFormPage extends StatefulWidget {
 class _PairFormPageState extends State<PairFormPage> {
   final _formKey = GlobalKey<FormState>();
   final _barrierController = TextEditingController();
+  final _fearController = TextEditingController();
   final _powerController = TextEditingController();
   final _service = AgnosticismService();
 
@@ -27,6 +28,7 @@ class _PairFormPageState extends State<PairFormPage> {
     super.initState();
     if (isEditing) {
       _barrierController.text = widget.editingPair!.barrier;
+      _fearController.text = widget.editingPair!.connectedFear;
       _powerController.text = widget.editingPair!.power;
     }
   }
@@ -34,6 +36,7 @@ class _PairFormPageState extends State<PairFormPage> {
   @override
   void dispose() {
     _barrierController.dispose();
+    _fearController.dispose();
     _powerController.dispose();
     super.dispose();
   }
@@ -42,6 +45,7 @@ class _PairFormPageState extends State<PairFormPage> {
     if (!_formKey.currentState!.validate()) return;
 
     final barrier = _barrierController.text.trim();
+    final connectedFear = _fearController.text.trim();
     final power = _powerController.text.trim();
 
     if (isEditing) {
@@ -50,9 +54,15 @@ class _PairFormPageState extends State<PairFormPage> {
         widget.editingPair!.id,
         barrier,
         power,
+        connectedFear: connectedFear,
       );
     } else {
-      await _service.addPair(widget.box, barrier, power);
+      await _service.addPair(
+        widget.box,
+        barrier,
+        power,
+        connectedFear: connectedFear,
+      );
     }
 
     if (!mounted) return;
@@ -134,6 +144,38 @@ class _PairFormPageState extends State<PairFormPage> {
               validator: (value) {
                 if (value == null || value.trim().isEmpty) {
                   return t(context, 'agnosticism_barrier_required');
+                }
+                return null;
+              },
+            ),
+
+            const SizedBox(height: 24),
+
+            // Connected fear field
+            Text(
+              t(context, 'agnosticism_fear'),
+              style: TextStyle(
+                color: colorScheme.tertiary,
+                fontWeight: FontWeight.w600,
+              ),
+            ),
+            const SizedBox(height: 8),
+            TextFormField(
+              controller: _fearController,
+              decoration: InputDecoration(
+                hintText: t(context, 'agnosticism_fear_hint'),
+                border: const OutlineInputBorder(),
+                prefixIcon: Icon(
+                  Icons.warning_amber_outlined,
+                  color: colorScheme.tertiary,
+                ),
+              ),
+              minLines: 2,
+              maxLines: 5,
+              keyboardType: TextInputType.multiline,
+              validator: (value) {
+                if (value == null || value.trim().isEmpty) {
+                  return t(context, 'agnosticism_fear_required');
                 }
                 return null;
               },

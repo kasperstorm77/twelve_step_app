@@ -13,8 +13,14 @@ flippable "current paper" of up to 5 active pairs, with an archive. See
   implementation_plan P3.2).
 - **JSON key:** export writes `agnosticism`; restore must keep accepting
   the legacy alias **`agnosticismPapers`** (read-only). `fromJson`
-  tolerates missing `isArchived` (→ false) and `position` (→ 0);
-  `archivedAt` is nullable.
+  tolerates missing `isArchived` (→ false), `position` (→ 0) and
+  `connectedFear` (→ `''`); `archivedAt` is nullable.
+- **`connectedFear` is HiveField 7**, stored as `String?` in
+  `storedConnectedFear` and read through the non-null `connectedFear`
+  getter. Keep the stored field nullable: records written before the
+  field exist on real devices, and a non-nullable field makes the
+  generated adapter throw on them — which the corruption fallback would
+  turn into silent data loss.
 
 ## Rules
 - **`maxActivePairs = 5`** is enforced across add and restore. Active
@@ -28,6 +34,16 @@ flippable "current paper" of up to 5 active pairs, with an archive. See
   with scroll-offset carry and a `_forceShowBack` cross-tab handoff. If
   you edit `paper_tab` / `archive_tab`, manually run the flip plus the
   Archive→Paper(back) swipe before reporting done.
+
+## Cross-app compatibility
+
+Emotional Sobriety reads and writes the same three fields, so pairs travel
+between the two apps through Drive and JSON backups. It always writes
+`connectedFear`; this app writes it too and preserves an empty value on
+records that predate the field. The form requires all three fields when a
+pair is written or edited, so an imported pair without a fear gains one the
+next time it is touched. Never drop an unknown or empty fear on import — that
+is the other app's data.
 
 Old `PaperStatus`/`AgnosticismPaper` data is intentionally not migrated;
 a corrupt old box is wiped and recreated on open.

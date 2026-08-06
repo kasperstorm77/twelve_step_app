@@ -40,8 +40,9 @@ class AgnosticismService {
   Future<BarrierPowerPair?> addPair(
     Box<BarrierPowerPair> box,
     String barrier,
-    String power,
-  ) async {
+    String power, {
+    String connectedFear = '',
+  }) async {
     if (!canAddPair(box)) {
       return null; // Max pairs reached
     }
@@ -56,6 +57,7 @@ class AgnosticismService {
       isArchived: false,
       createdAt: DateTime.now(),
       position: nextPosition,
+      connectedFear: connectedFear,
     );
 
     await box.put(pair.id, pair);
@@ -68,13 +70,15 @@ class AgnosticismService {
     Box<BarrierPowerPair> box,
     String id,
     String barrier,
-    String power,
-  ) async {
+    String power, {
+    String? connectedFear,
+  }) async {
     final pair = box.get(id);
     if (pair == null) return;
 
     pair.barrier = barrier;
     pair.power = power;
+    if (connectedFear != null) pair.connectedFear = connectedFear;
     await pair.save();
     _triggerSync();
   }
