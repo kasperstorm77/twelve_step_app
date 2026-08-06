@@ -25,7 +25,7 @@ final Map<String, Map<String, String>> localizedValues = {
     'no_matching_entries': 'No matching entries',
     'order': 'Order',
     'my_take': 'My take',
-    'shortcomings': 'Shortcommings',
+    'shortcomings': 'Shortcomings',
     'affect_my': 'Affects my',
     'i_am': 'I Am',
     'i_am_definitions': 'I Am - Definitions',

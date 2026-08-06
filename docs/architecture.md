@@ -1,10 +1,16 @@
 # Architecture
 
-Twelve Steps App (Flutter; internal `MaterialApp` title "AA 4Step
-Inventory", desktop window title "Twelve Steps app" / da "Tolv Trins
-app") is a **suite of six recovery-practice tools plus a reminders
-module**, sharing one offline-first storage layer and one optional
-cloud backup.
+Twelve Steps App (Flutter; internal `MaterialApp` title "12 Steps App",
+desktop window title "Twelve Steps app" / da "Tolv Trins app") is a
+**suite of six recovery-practice tools plus a reminders module**,
+sharing one offline-first storage layer and one optional cloud backup.
+
+**Naming rule.** No user-visible string, store listing, or screenshot
+names the fellowship or uses its initials — a public listing that does
+implies an affiliation and endorsement this app does not have. The
+concepts (step work, sponsor, moral inventory, amends, sobriety) carry
+the meaning without it. Listing copy lives in
+[docs/play_store-retain/PLAY_STORE_DESCRIPTIONS.md](./play_store-retain/PLAY_STORE_DESCRIPTIONS.md).
 
 The defining property of the system: **there is no backend.** Every
 tool stores its data locally in Hive on the device. The only cloud

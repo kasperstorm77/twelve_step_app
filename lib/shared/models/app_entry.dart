@@ -105,7 +105,7 @@ class AvailableApps {
       return AppEntry(
         id: fourthStepInventory,
         name: '4th Step Inventory',
-        description: 'AA 4th Step Resentment Inventory',
+        description: '4th Step resentment inventory',
         isActive: true,
       );
     }

@@ -220,7 +220,7 @@ class _AppWidgetState extends State<AppWidget> with WidgetsBindingObserver {
   @override
   Widget build(BuildContext context) {
     return MaterialApp.router(
-      title: 'AA 4Step Inventory',
+      title: '12 Steps App',
       debugShowCheckedModeBanner: false,
       locale: _localeProvider.locale,
       supportedLocales: const [Locale('en'), Locale('da')],

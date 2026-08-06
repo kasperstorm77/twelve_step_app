@@ -19,7 +19,7 @@ class IAmService {
     if (box.isEmpty) {
       final defaultIAm = IAmDefinition(
         id: _uuid.v4(),
-        name: 'Sober member of AA',
+        name: 'Sober member in recovery',
         reasonToExist: null,
       );
       // Add directly to box without triggering Drive sync
