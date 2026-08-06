@@ -4,11 +4,14 @@ Canonical source for both stores' *listing* text. Release notes are a
 different thing and live in [`release.md`](../../release.md).
 
 **Status (2026-08-06).**
-- **App Store — applied.** All of this is staged on version **2.3.0**
-  (`PREPARE_FOR_SUBMISSION`): the Danish description rewritten, an **`en-GB`
-  localization added** (there was none), keywords, promotional text, the app
-  name and both subtitles. Nothing is submitted for review — that, attaching
-  build 107, and the screenshots are the remaining steps.
+- **App Store — applied, text and screenshots.** All of this is staged on
+  version **2.3.0** (`PREPARE_FOR_SUBMISSION`): the Danish description
+  rewritten, an **`en-GB` localization added** (there was none), keywords,
+  promotional text, the app name and both subtitles. **28 new screenshots**
+  replaced the old sets — 7 per tool × (iPhone 6.7" + iPad 12.9") × (en-GB +
+  da), all `assetDeliveryState: COMPLETE` with zero errors. Remaining:
+  attaching build 107 and submitting for review, both deliberately left to
+  the owner.
 - **Google Play — blocked on a permission, listing unchanged.** The text
   writes into an edit fine (`PUT .../listings/{lang}` → 200) but
   `edits:validate` returns **403 "The caller does not have permission"**, so
@@ -243,18 +246,37 @@ that version reaches the store.)*
 
 ---
 
-## Screenshots — what needs recapturing
+## Screenshots
 
-Every shot should come from a build with **realistic sample data**, never
-personal content with bars drawn over it.
+**Reproducible, not hand-made.** Two scripts in [`tool/`](../../tool) generate
+the sample data, so a reshoot never means digging up personal content and
+drawing bars over it:
 
-| Store / size | Have | Needs |
+```bash
+dart run tool/seed_demo_data.dart /tmp/demo_hive      # English sample data
+dart run tool/seed_demo_data.dart /tmp/demo_hive_da da   # Danish sample data
+# then, per tool: copy the .hive files into the simulator's app container,
+# point tool/set_demo_settings.dart at it, relaunch, and screenshot.
+```
+
+`set_demo_settings.dart` writes `selected_app_id` so the app opens straight
+onto a given tool without UI automation, and for Morning Ritual it also seeds
+an in-progress draft — which is why that shot now shows the runner mid-ritual
+with a real Just for Today reading instead of the old empty state.
+
+Two wrinkles worth knowing next time:
+- The notification permission alert covers the first launch after install.
+  `simctl privacy` has no `notifications` service; sending Return via
+  System Events answers it once, after which it stays answered.
+- The API has **no 6.9" display type** — `APP_IPHONE_67` (1290×2796) is the
+  newest. Captures from a 6.9" simulator (1320×2868) are resampled to 1290
+  wide and cropped to 2796.
+
+| Store / size | Before | Now |
 |---|---|---|
-| Play phone | 1 (4th Step, 500×1024) | 6–8 at ≥1080px wide, one per tool |
-| Play 7" / 10" | 1 each | refresh or drop |
-| App Store 6.5" | 7 | reshoot Morning Ritual (currently an empty state with a red error) and Agnosticism (predates connected fear); add Reminders |
-| App Store iPad 12.9" | 1 (4th Step) | 3–4 covering the same tools |
+| App Store iPhone 6.7" | 7, incl. an empty-state Morning Ritual | **7 per language**, en-GB + da, real data |
+| App Store iPad 12.9" | 1 (4th Step only) | **7 per language**, en-GB + da |
+| Play phone | 1 (4th Step, 500×1024) | still 1 — blocked on the same permission as the text |
 
-Fix before reshooting: the 4th Step field label reads **"Shortcommings"** in
-English (`localizations.dart`), and it is legible in the current Play
-screenshot.
+The captures are not committed (they are large and reproducible); regenerate
+with the commands above when the Play permission lands.
