@@ -14,8 +14,11 @@ import 'sync_payload_builder.dart';
 // All Apps Drive Service - Platform-Aware Implementation
 // --------------------------------------------------------------------------
 
-/// Google Drive service that syncs all 5 apps
-/// Uses platform-specific drive services (mobile or Windows)
+/// Google Drive service that syncs the whole suite — the six tools plus
+/// notifications — as one JSON file in the user's `drive.appdata` folder.
+/// The payload is always built by `SyncPayloadBuilder`, which re-reads every
+/// box; the box passed to `scheduleUploadFromBox` is only a trigger handle.
+/// Uses platform-specific drive services (mobile or Windows).
 class AllAppsDriveService {
   static AllAppsDriveService? _instance;
   static AllAppsDriveService get instance {

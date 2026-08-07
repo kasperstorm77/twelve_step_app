@@ -33,200 +33,205 @@ class _SettingsTabState extends State<SettingsTab> {
         AppSettingsService.getFourthStepCompactViewEnabled();
 
     return Scaffold(
-      body: ValueListenableBuilder(
-        valueListenable: iAmBox.listenable(),
-        builder: (context, Box<IAmDefinition> box, _) {
-          final definitions = box.values.toList();
+      // Android 15 forces edge-to-edge; the body insets past the
+      // gesture/navigation bar.
+      body: SafeArea(
+        top: false,
+        child: ValueListenableBuilder(
+          valueListenable: iAmBox.listenable(),
+          builder: (context, Box<IAmDefinition> box, _) {
+            final definitions = box.values.toList();
 
-          return Column(
-            children: [
-              Padding(
-                padding: const EdgeInsets.symmetric(
-                  horizontal: 16.0,
-                  vertical: 8.0,
-                ),
-                child: SizedBox(
-                  width: double.infinity,
-                  child: OutlinedButton.icon(
-                    onPressed: () => _exportCsv(context),
-                    icon: const Icon(Icons.download, size: 18),
-                    label: Text(t(context, 'export_csv')),
+            return Column(
+              children: [
+                Padding(
+                  padding: const EdgeInsets.symmetric(
+                    horizontal: 16.0,
+                    vertical: 8.0,
+                  ),
+                  child: SizedBox(
+                    width: double.infinity,
+                    child: OutlinedButton.icon(
+                      onPressed: () => _exportCsv(context),
+                      icon: const Icon(Icons.download, size: 18),
+                      label: Text(t(context, 'export_csv')),
+                    ),
                   ),
                 ),
-              ),
-              Padding(
-                padding: const EdgeInsets.symmetric(
-                  horizontal: 16.0,
-                  vertical: 8.0,
-                ),
-                child: Card(
-                  margin: EdgeInsets.zero,
-                  child: Padding(
-                    padding: const EdgeInsets.all(12),
-                    child: Row(
-                      children: [
-                        Expanded(
-                          child: Column(
-                            crossAxisAlignment: CrossAxisAlignment.start,
-                            children: [
-                              Text(
-                                t(context, 'fourth_step_compact_view'),
-                                style: theme.textTheme.bodyMedium?.copyWith(
-                                  fontWeight: FontWeight.w600,
-                                ),
-                              ),
-                              const SizedBox(height: 2),
-                              Text(
-                                t(context, 'fourth_step_compact_view_desc'),
-                                style: theme.textTheme.bodySmall?.copyWith(
-                                  color: theme.colorScheme.onSurface.withValues(
-                                    alpha: 0.6,
+                Padding(
+                  padding: const EdgeInsets.symmetric(
+                    horizontal: 16.0,
+                    vertical: 8.0,
+                  ),
+                  child: Card(
+                    margin: EdgeInsets.zero,
+                    child: Padding(
+                      padding: const EdgeInsets.all(12),
+                      child: Row(
+                        children: [
+                          Expanded(
+                            child: Column(
+                              crossAxisAlignment: CrossAxisAlignment.start,
+                              children: [
+                                Text(
+                                  t(context, 'fourth_step_compact_view'),
+                                  style: theme.textTheme.bodyMedium?.copyWith(
+                                    fontWeight: FontWeight.w600,
                                   ),
                                 ),
-                              ),
-                            ],
+                                const SizedBox(height: 2),
+                                Text(
+                                  t(context, 'fourth_step_compact_view_desc'),
+                                  style: theme.textTheme.bodySmall?.copyWith(
+                                    color: theme.colorScheme.onSurface
+                                        .withValues(alpha: 0.6),
+                                  ),
+                                ),
+                              ],
+                            ),
                           ),
-                        ),
-                        Switch(
-                          value: compactViewEnabled,
-                          onChanged: (value) async {
-                            await AppSettingsService.setFourthStepCompactViewEnabled(
-                              value,
+                          Switch(
+                            value: compactViewEnabled,
+                            onChanged: (value) async {
+                              await AppSettingsService.setFourthStepCompactViewEnabled(
+                                value,
+                              );
+                              AllAppsDriveService.instance
+                                  .scheduleUploadFromBox(widget.box);
+                              if (mounted) setState(() {});
+                            },
+                          ),
+                        ],
+                      ),
+                    ),
+                  ),
+                ),
+                Padding(
+                  padding: const EdgeInsets.symmetric(
+                    horizontal: 16.0,
+                    vertical: 8.0,
+                  ),
+                  child: SizedBox(
+                    width: double.infinity,
+                    child: ElevatedButton.icon(
+                      onPressed: () => _showAddEditDialog(context, box),
+                      icon: const Icon(Icons.add),
+                      label: Text(t(context, 'add_i_am')),
+                    ),
+                  ),
+                ),
+                Padding(
+                  padding: const EdgeInsets.fromLTRB(16.0, 16.0, 16.0, 8.0),
+                  child: Align(
+                    alignment: Alignment.centerLeft,
+                    child: Text(
+                      t(context, 'i_am_definitions'),
+                      style: Theme.of(context).textTheme.titleMedium?.copyWith(
+                        fontWeight: FontWeight.bold,
+                      ),
+                    ),
+                  ),
+                ),
+                const Divider(),
+                Expanded(
+                  child: definitions.isEmpty
+                      ? Center(
+                          child: Text(
+                            t(context, 'no_entries'),
+                            style: Theme.of(context).textTheme.bodyLarge,
+                          ),
+                        )
+                      : ListView.builder(
+                          padding: const EdgeInsets.symmetric(horizontal: 16),
+                          itemCount: definitions.length,
+                          itemBuilder: (context, index) {
+                            final definition = definitions[index];
+                            final theme = Theme.of(context);
+                            return Card(
+                              margin: const EdgeInsets.symmetric(vertical: 6),
+                              child: Padding(
+                                padding: const EdgeInsets.all(12),
+                                child: Row(
+                                  children: [
+                                    Expanded(
+                                      child: Column(
+                                        crossAxisAlignment:
+                                            CrossAxisAlignment.start,
+                                        children: [
+                                          Text(
+                                            t(context, 'i_am_name'),
+                                            style: TextStyle(
+                                              color: theme.colorScheme.primary,
+                                              fontWeight: FontWeight.w600,
+                                            ),
+                                          ),
+                                          Text(
+                                            definition.name,
+                                            style: theme.textTheme.bodyMedium,
+                                          ),
+                                          if (definition.reasonToExist !=
+                                                  null &&
+                                              definition
+                                                  .reasonToExist!
+                                                  .isNotEmpty)
+                                            Padding(
+                                              padding: const EdgeInsets.only(
+                                                top: 4,
+                                              ),
+                                              child: Column(
+                                                crossAxisAlignment:
+                                                    CrossAxisAlignment.start,
+                                                children: [
+                                                  Text(
+                                                    t(
+                                                      context,
+                                                      'reason_to_exist_optional',
+                                                    ),
+                                                    style: TextStyle(
+                                                      color: theme
+                                                          .colorScheme
+                                                          .primary,
+                                                      fontWeight:
+                                                          FontWeight.w600,
+                                                    ),
+                                                  ),
+                                                  Text(
+                                                    definition.reasonToExist!,
+                                                    style: theme
+                                                        .textTheme
+                                                        .bodyMedium,
+                                                  ),
+                                                ],
+                                              ),
+                                            ),
+                                        ],
+                                      ),
+                                    ),
+                                    IconButton(
+                                      icon: const Icon(Icons.edit),
+                                      onPressed: () => _showAddEditDialog(
+                                        context,
+                                        box,
+                                        index: index,
+                                        definition: definition,
+                                      ),
+                                    ),
+                                    IconButton(
+                                      icon: const Icon(Icons.delete),
+                                      onPressed: () =>
+                                          _confirmDelete(context, box, index),
+                                    ),
+                                  ],
+                                ),
+                              ),
                             );
-                            AllAppsDriveService.instance.scheduleUploadFromBox(
-                              widget.box,
-                            );
-                            if (mounted) setState(() {});
                           },
                         ),
-                      ],
-                    ),
-                  ),
                 ),
-              ),
-              Padding(
-                padding: const EdgeInsets.symmetric(
-                  horizontal: 16.0,
-                  vertical: 8.0,
-                ),
-                child: SizedBox(
-                  width: double.infinity,
-                  child: ElevatedButton.icon(
-                    onPressed: () => _showAddEditDialog(context, box),
-                    icon: const Icon(Icons.add),
-                    label: Text(t(context, 'add_i_am')),
-                  ),
-                ),
-              ),
-              Padding(
-                padding: const EdgeInsets.fromLTRB(16.0, 16.0, 16.0, 8.0),
-                child: Align(
-                  alignment: Alignment.centerLeft,
-                  child: Text(
-                    t(context, 'i_am_definitions'),
-                    style: Theme.of(context).textTheme.titleMedium?.copyWith(
-                      fontWeight: FontWeight.bold,
-                    ),
-                  ),
-                ),
-              ),
-              const Divider(),
-              Expanded(
-                child: definitions.isEmpty
-                    ? Center(
-                        child: Text(
-                          t(context, 'no_entries'),
-                          style: Theme.of(context).textTheme.bodyLarge,
-                        ),
-                      )
-                    : ListView.builder(
-                        padding: const EdgeInsets.symmetric(horizontal: 16),
-                        itemCount: definitions.length,
-                        itemBuilder: (context, index) {
-                          final definition = definitions[index];
-                          final theme = Theme.of(context);
-                          return Card(
-                            margin: const EdgeInsets.symmetric(vertical: 6),
-                            child: Padding(
-                              padding: const EdgeInsets.all(12),
-                              child: Row(
-                                children: [
-                                  Expanded(
-                                    child: Column(
-                                      crossAxisAlignment:
-                                          CrossAxisAlignment.start,
-                                      children: [
-                                        Text(
-                                          t(context, 'i_am_name'),
-                                          style: TextStyle(
-                                            color: theme.colorScheme.primary,
-                                            fontWeight: FontWeight.w600,
-                                          ),
-                                        ),
-                                        Text(
-                                          definition.name,
-                                          style: theme.textTheme.bodyMedium,
-                                        ),
-                                        if (definition.reasonToExist != null &&
-                                            definition
-                                                .reasonToExist!
-                                                .isNotEmpty)
-                                          Padding(
-                                            padding: const EdgeInsets.only(
-                                              top: 4,
-                                            ),
-                                            child: Column(
-                                              crossAxisAlignment:
-                                                  CrossAxisAlignment.start,
-                                              children: [
-                                                Text(
-                                                  t(
-                                                    context,
-                                                    'reason_to_exist_optional',
-                                                  ),
-                                                  style: TextStyle(
-                                                    color: theme
-                                                        .colorScheme
-                                                        .primary,
-                                                    fontWeight: FontWeight.w600,
-                                                  ),
-                                                ),
-                                                Text(
-                                                  definition.reasonToExist!,
-                                                  style: theme
-                                                      .textTheme
-                                                      .bodyMedium,
-                                                ),
-                                              ],
-                                            ),
-                                          ),
-                                      ],
-                                    ),
-                                  ),
-                                  IconButton(
-                                    icon: const Icon(Icons.edit),
-                                    onPressed: () => _showAddEditDialog(
-                                      context,
-                                      box,
-                                      index: index,
-                                      definition: definition,
-                                    ),
-                                  ),
-                                  IconButton(
-                                    icon: const Icon(Icons.delete),
-                                    onPressed: () =>
-                                        _confirmDelete(context, box, index),
-                                  ),
-                                ],
-                              ),
-                            ),
-                          );
-                        },
-                      ),
-              ),
-            ],
-          );
-        },
+              ],
+            );
+          },
+        ),
       ),
     );
   }

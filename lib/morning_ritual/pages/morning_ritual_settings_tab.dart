@@ -4,6 +4,7 @@ import '../models/ritual_item.dart';
 import '../services/morning_randomizer_source.dart';
 import '../services/morning_ritual_service.dart';
 import '../../shared/localizations.dart';
+import '../../shared/utils/platform_helper.dart';
 
 class MorningRitualSettingsTab extends StatefulWidget {
   const MorningRitualSettingsTab({super.key});
@@ -286,6 +287,20 @@ class MorningRitualSettingsTabState extends State<MorningRitualSettingsTab> {
                         });
                       },
                     ),
+                    // flutter_ringtone_player is android/ios only, so the
+                    // choice below has no effect on desktop — say so rather
+                    // than let the timer end in silence (plan P3.1).
+                    if (soundEnabled && PlatformHelper.isDesktop)
+                      Padding(
+                        padding: const EdgeInsets.only(top: 4.0),
+                        child: Text(
+                          t(context, 'morning_ritual_alarm_sound_desktop_note'),
+                          style: Theme.of(context).textTheme.bodySmall
+                              ?.copyWith(
+                                color: Theme.of(context).colorScheme.error,
+                              ),
+                        ),
+                      ),
                     if (soundEnabled) ...[
                       const SizedBox(height: 8),
                       DropdownButtonFormField<String>(

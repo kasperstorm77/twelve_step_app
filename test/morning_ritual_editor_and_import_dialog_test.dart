@@ -257,7 +257,10 @@ void main() {
       // And what is dropped, so nothing is a surprise.
       expect(find.text('• Workshop progress'), findsOneWidget);
       expect(find.text('• Emotional Sobriety settings'), findsOneWidget);
-      expect(find.textContaining('Everything else on this device'), findsOneWidget);
+      expect(
+        find.textContaining('Everything else on this device'),
+        findsOneWidget,
+      );
     });
 
     testWidgets('Danish is fully translated and fits', (tester) async {

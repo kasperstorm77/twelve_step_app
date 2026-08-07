@@ -1,9 +1,9 @@
 import 'package:flutter/material.dart';
 import 'package:hive_flutter/hive_flutter.dart';
-import 'package:intl/intl.dart';
 import '../models/gratitude_entry.dart';
 import '../services/gratitude_service.dart';
 import '../../shared/localizations.dart';
+import '../../shared/utils/date_formats.dart';
 
 class GratitudeTodayTab extends StatefulWidget {
   const GratitudeTodayTab({super.key});
@@ -174,7 +174,7 @@ class _GratitudeTodayTabState extends State<GratitudeTodayTab> {
                     crossAxisAlignment: CrossAxisAlignment.start,
                     children: [
                       Text(
-                        DateFormat.yMMMMd().format(today),
+                        formatLongDate(context, today),
                         style: TextStyle(
                           color: Theme.of(context).colorScheme.primary,
                           fontWeight: FontWeight.w600,
@@ -360,7 +360,7 @@ class _GratitudeTodayTabState extends State<GratitudeTodayTab> {
                                     ],
                                     const SizedBox(height: 4),
                                     Text(
-                                      DateFormat.jm().format(entry.createdAt),
+                                      formatTimeOfDay(context, entry.createdAt),
                                       style: Theme.of(context)
                                           .textTheme
                                           .bodySmall

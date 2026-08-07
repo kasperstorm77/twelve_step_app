@@ -20,6 +20,19 @@ class AppSettingsService {
   static const String _fourthStepCompactViewEnabledKey =
       'fourth_step_compact_view_enabled';
 
+  /// The auto-load window a user with nothing saved sees.
+  ///
+  /// This used to be 06:00 here and 05:00 in the catch-block fallback, in
+  /// `importFromSync` and in the General Settings UI, so the same user could be
+  /// shown two different "defaults" depending on which path read them first
+  /// (historic Phase 21). Every default now comes from these two constants — don't
+  /// inline an hour anywhere else.
+  static const TimeOfDay defaultMorningStartTime = TimeOfDay(
+    hour: 5,
+    minute: 0,
+  );
+  static const TimeOfDay defaultMorningEndTime = TimeOfDay(hour: 9, minute: 0);
+
   static bool getFourthStepCompactViewEnabled() {
     try {
       final settingsBox = Hive.box(_settingsBoxName);
@@ -60,13 +73,29 @@ class AppSettingsService {
           settingsBox.get(_morningRitualEnabledKey, defaultValue: false)
               as bool;
       final startHour =
-          settingsBox.get(_morningStartHourKey, defaultValue: 6) as int;
+          settingsBox.get(
+                _morningStartHourKey,
+                defaultValue: defaultMorningStartTime.hour,
+              )
+              as int;
       final startMinute =
-          settingsBox.get(_morningStartMinuteKey, defaultValue: 0) as int;
+          settingsBox.get(
+                _morningStartMinuteKey,
+                defaultValue: defaultMorningStartTime.minute,
+              )
+              as int;
       final endHour =
-          settingsBox.get(_morningEndHourKey, defaultValue: 9) as int;
+          settingsBox.get(
+                _morningEndHourKey,
+                defaultValue: defaultMorningEndTime.hour,
+              )
+              as int;
       final endMinute =
-          settingsBox.get(_morningEndMinuteKey, defaultValue: 0) as int;
+          settingsBox.get(
+                _morningEndMinuteKey,
+                defaultValue: defaultMorningEndTime.minute,
+              )
+              as int;
 
       return {
         'enabled': enabled,
@@ -79,8 +108,8 @@ class AppSettingsService {
       }
       return {
         'enabled': false,
-        'startTime': const TimeOfDay(hour: 5, minute: 0),
-        'endTime': const TimeOfDay(hour: 9, minute: 0),
+        'startTime': defaultMorningStartTime,
+        'endTime': defaultMorningEndTime,
       };
     }
   }
@@ -224,8 +253,8 @@ class AppSettingsService {
       final compactViewEnabled =
           data['fourthStepCompactViewEnabled'] as bool? ?? false;
 
-      TimeOfDay startTime = const TimeOfDay(hour: 5, minute: 0);
-      TimeOfDay endTime = const TimeOfDay(hour: 9, minute: 0);
+      TimeOfDay startTime = defaultMorningStartTime;
+      TimeOfDay endTime = defaultMorningEndTime;
 
       // Parse start time (format: "HH:MM:SS")
       final startTimeStr = data['morningRitualStartTime'] as String?;
@@ -233,8 +262,8 @@ class AppSettingsService {
         final parts = startTimeStr.split(':');
         if (parts.length >= 2) {
           startTime = TimeOfDay(
-            hour: int.tryParse(parts[0]) ?? 5,
-            minute: int.tryParse(parts[1]) ?? 0,
+            hour: int.tryParse(parts[0]) ?? defaultMorningStartTime.hour,
+            minute: int.tryParse(parts[1]) ?? defaultMorningStartTime.minute,
           );
         }
       }
@@ -245,8 +274,8 @@ class AppSettingsService {
         final parts = endTimeStr.split(':');
         if (parts.length >= 2) {
           endTime = TimeOfDay(
-            hour: int.tryParse(parts[0]) ?? 9,
-            minute: int.tryParse(parts[1]) ?? 0,
+            hour: int.tryParse(parts[0]) ?? defaultMorningEndTime.hour,
+            minute: int.tryParse(parts[1]) ?? defaultMorningEndTime.minute,
           );
         }
       }

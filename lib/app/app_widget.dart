@@ -15,6 +15,7 @@ import '../shared/services/all_apps_drive_service_impl.dart';
 import '../shared/services/backup_restore_service.dart';
 import '../shared/models/app_entry.dart';
 import '../shared/localizations.dart';
+import '../shared/utils/system_ui.dart';
 
 class AppWidget extends StatefulWidget {
   const AppWidget({super.key});
@@ -232,6 +233,9 @@ class _AppWidgetState extends State<AppWidget> with WidgetsBindingObserver {
       theme: ThemeData(
         textTheme: GoogleFonts.poppinsTextTheme(Theme.of(context).textTheme),
         primarySwatch: Colors.blue,
+        appBarTheme: const AppBarTheme(
+          systemOverlayStyle: appSystemOverlayStyle,
+        ),
       ),
       routerConfig: Modular.routerConfig,
     );

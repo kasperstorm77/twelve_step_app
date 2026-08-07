@@ -689,8 +689,21 @@ class BackupRestoreService {
         await notificationsBox.put(n.id, n);
       }
       notificationsCount = notificationsBox.length;
-      // Reschedule all notifications
-      await NotificationsService.rescheduleAll();
+      // Re-register the imported reminders with the OS. This is a side effect,
+      // not part of storing the data: it can fail for reasons that have nothing
+      // to do with the backup (notification permission revoked, no timezone
+      // database, a platform with no plugin implementation). Unguarded, that
+      // threw out of the middle of _applyPayload and the whole restore reported
+      // failure — with every box up to here already rewritten and `appSettings`
+      // never applied. The records are safe on disk either way; the worst case
+      // is a reminder that re-registers on next launch.
+      try {
+        await NotificationsService.rescheduleAll();
+      } catch (e) {
+        if (kDebugMode) {
+          print('BackupRestoreService: rescheduleAll failed after import - $e');
+        }
+      }
     }
 
     // ---------------------------------------------------------------------------

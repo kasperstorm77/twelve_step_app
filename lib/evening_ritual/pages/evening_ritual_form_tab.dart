@@ -1,9 +1,9 @@
 import 'package:flutter/material.dart';
 import 'package:hive_flutter/hive_flutter.dart';
-import 'package:intl/intl.dart';
 import '../models/reflection_entry.dart';
 import '../services/reflection_service.dart';
 import '../../shared/localizations.dart';
+import '../../shared/utils/date_formats.dart';
 
 class EveningRitualFormTab extends StatefulWidget {
   final DateTime selectedDate;
@@ -188,7 +188,7 @@ class _EveningRitualFormTabState extends State<EveningRitualFormTab> {
               mainAxisAlignment: MainAxisAlignment.center,
               children: [
                 Text(
-                  DateFormat.yMMMMd().format(widget.selectedDate),
+                  formatLongDate(context, widget.selectedDate),
                   style: Theme.of(context).textTheme.titleMedium?.copyWith(
                     color: Theme.of(context).colorScheme.onPrimaryContainer,
                     fontWeight: FontWeight.bold,

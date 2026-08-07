@@ -38,6 +38,10 @@ class AppHelpService {
               title: t(context, 'help_8th_step_fields_title'),
               content: t(context, 'help_8th_step_fields'),
             ),
+            HelpSection(
+              title: t(context, 'help_8th_step_using_title'),
+              content: t(context, 'help_8th_step_using'),
+            ),
           ],
         );
 
@@ -113,6 +117,25 @@ class AppHelpService {
             HelpSection(
               title: t(context, 'help_morning_ritual_practice_title'),
               content: t(context, 'help_morning_ritual_practice'),
+            ),
+          ],
+        );
+
+      case AvailableApps.notifications:
+        return AppHelpContent(
+          title: t(context, 'help_notifications_title'),
+          sections: [
+            HelpSection(
+              title: t(context, 'help_notifications_purpose_title'),
+              content: t(context, 'help_notifications_purpose'),
+            ),
+            HelpSection(
+              title: t(context, 'help_notifications_setup_title'),
+              content: t(context, 'help_notifications_setup'),
+            ),
+            HelpSection(
+              title: t(context, 'help_notifications_timing_title'),
+              content: t(context, 'help_notifications_timing'),
             ),
           ],
         );

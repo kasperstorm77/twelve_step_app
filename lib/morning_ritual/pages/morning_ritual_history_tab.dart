@@ -1,9 +1,9 @@
 import 'package:flutter/material.dart';
 import 'package:hive_flutter/hive_flutter.dart';
-import 'package:intl/intl.dart';
 import '../models/morning_ritual_entry.dart';
 import '../services/morning_ritual_service.dart';
 import '../../shared/localizations.dart';
+import '../../shared/utils/date_formats.dart';
 
 class MorningRitualHistoryTab extends StatelessWidget {
   final Function(DateTime)? onDateSelected;
@@ -101,7 +101,7 @@ class MorningRitualHistoryTab extends StatelessWidget {
                     child: Column(
                       children: [
                         Text(
-                          DateFormat.MMM().format(date),
+                          formatMonthAbbrev(context, date),
                           style: Theme.of(context).textTheme.bodySmall
                               ?.copyWith(
                                 color: Theme.of(
@@ -111,7 +111,7 @@ class MorningRitualHistoryTab extends StatelessWidget {
                               ),
                         ),
                         Text(
-                          DateFormat.d().format(date),
+                          formatDayOfMonth(context, date),
                           style: Theme.of(context).textTheme.titleLarge
                               ?.copyWith(
                                 color: Theme.of(
@@ -121,7 +121,7 @@ class MorningRitualHistoryTab extends StatelessWidget {
                               ),
                         ),
                         Text(
-                          DateFormat.y().format(date),
+                          formatYear(context, date),
                           style: Theme.of(context).textTheme.bodySmall
                               ?.copyWith(
                                 color: Theme.of(
@@ -142,7 +142,7 @@ class MorningRitualHistoryTab extends StatelessWidget {
                         Row(
                           children: [
                             Text(
-                              DateFormat.EEEE().format(date),
+                              formatWeekdayFull(context, date),
                               style: Theme.of(context).textTheme.titleMedium
                                   ?.copyWith(fontWeight: FontWeight.bold),
                             ),
@@ -285,7 +285,7 @@ class MorningRitualHistoryTab extends StatelessWidget {
           t(
             context,
             'morning_ritual_delete_entry_confirm',
-          ).replaceAll('{date}', DateFormat.yMMMMd().format(entry.date)),
+          ).replaceAll('{date}', formatLongDate(context, entry.date)),
         ),
         actions: [
           TextButton(

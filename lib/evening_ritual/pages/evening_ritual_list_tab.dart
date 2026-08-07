@@ -1,9 +1,9 @@
 import 'package:flutter/material.dart';
 import 'package:hive_flutter/hive_flutter.dart';
-import 'package:intl/intl.dart';
 import '../models/reflection_entry.dart';
 import '../services/reflection_service.dart';
 import '../../shared/localizations.dart';
+import '../../shared/utils/date_formats.dart';
 
 class EveningRitualListTab extends StatefulWidget {
   final Function(DateTime) onDateSelected;
@@ -142,7 +142,7 @@ class _EveningRitualListTabState extends State<EveningRitualListTab> {
                     child: Column(
                       children: [
                         Text(
-                          DateFormat.MMM().format(date),
+                          formatMonthAbbrev(context, date),
                           style: Theme.of(context).textTheme.labelSmall
                               ?.copyWith(
                                 color: Theme.of(
@@ -152,7 +152,7 @@ class _EveningRitualListTabState extends State<EveningRitualListTab> {
                               ),
                         ),
                         Text(
-                          DateFormat.d().format(date),
+                          formatDayOfMonth(context, date),
                           style: Theme.of(context).textTheme.titleMedium
                               ?.copyWith(
                                 color: Theme.of(
@@ -174,7 +174,7 @@ class _EveningRitualListTabState extends State<EveningRitualListTab> {
                         Row(
                           children: [
                             Text(
-                              DateFormat.EEEE().format(date),
+                              formatWeekdayFull(context, date),
                               style: Theme.of(context).textTheme.titleSmall
                                   ?.copyWith(fontWeight: FontWeight.bold),
                             ),
@@ -383,7 +383,7 @@ class _EveningRitualListTabState extends State<EveningRitualListTab> {
         ),
         content: Text(
           t(context, 'confirm_delete_day')
-              .replaceAll('{date}', DateFormat.yMMMMd().format(date))
+              .replaceAll('{date}', formatLongDate(context, date))
               .replaceAll('{count}', '${entries.length}'),
         ),
         actions: [

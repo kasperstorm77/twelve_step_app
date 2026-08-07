@@ -25,7 +25,7 @@ Maybe) on a drag-and-drop board. See
   downward drags adjust the target index by −1.
 - Bump `lastModified` on every update/toggle (`PersonService` does this).
 
-`EighthStepSettingsTab`'s list UI is legacy and **not routed** —
-`EighthStepHome` imports it only to reuse `PersonEditDialog`. Don't wire
-the list view back in without intent (see implementation_plan P3.1).
+The legacy, unrouted `EighthStepSettingsTab` list UI is **deleted**;
+`PersonEditDialog` now lives in its own `pages/person_edit_dialog.dart`.
+Don't reintroduce a second list view — the board is the screen.
 </content>

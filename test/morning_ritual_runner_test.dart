@@ -126,6 +126,42 @@ void main() {
   Future<void> tapText(WidgetTester tester, String label) =>
       act(tester, () => tester.tap(find.text(label)));
 
+  /// Tap [finder] once it exists.
+  ///
+  /// `act`'s fixed 150ms was enough on an idle machine but not when the whole
+  /// suite runs in parallel: a dialog that had not been built yet made the tap
+  /// throw "Bad state: No element" perhaps one run in four. Wait for the widget
+  /// instead of for a duration.
+  /// Tap [trigger] until [confirm] exists, then tap [confirm].
+  ///
+  /// The confirm-dialog steps were the one flaky corner of this suite: `act`'s
+  /// fixed 150ms was enough on an idle machine, but with every test file
+  /// running in parallel the dialog sometimes had not been pushed yet and the
+  /// follow-up tap threw. Re-issuing the trigger is exactly what a user would
+  /// do and is harmless once the dialog is up, since the check runs first.
+  ///
+  /// Pass *unqualified* finders — a `.last` finder throws "Bad state: No
+  /// element" out of `evaluate()` itself, so it cannot answer "is it there
+  /// yet?".
+  Future<void> tapToConfirm(
+    WidgetTester tester, {
+    required Finder trigger,
+    required Finder confirm,
+  }) async {
+    for (var attempt = 0; attempt < 20; attempt++) {
+      if (confirm.evaluate().isNotEmpty) {
+        await act(tester, () => tester.tap(confirm.last));
+        return;
+      }
+      if (trigger.evaluate().isNotEmpty) {
+        await act(tester, () => tester.tap(trigger.last));
+      } else {
+        await act(tester, () async {});
+      }
+    }
+    fail('Timed out waiting for $confirm');
+  }
+
   Future<void> pumpRunner(WidgetTester tester, {String locale = 'en'}) async {
     await tester.pumpWidget(
       MaterialApp(
@@ -198,10 +234,12 @@ void main() {
     await tapText(tester, 'Start Ritual');
     final first = shownReading();
 
-    await tapText(tester, 'Start Over');
-    await act(
+    // The page's Start Over is an OutlinedButton; the confirmation dialog's is
+    // an ElevatedButton with the same label.
+    await tapToConfirm(
       tester,
-      () => tester.tap(find.widgetWithText(ElevatedButton, 'Start Over').last),
+      trigger: find.widgetWithText(OutlinedButton, 'Start Over'),
+      confirm: find.widgetWithText(ElevatedButton, 'Start Over'),
     );
 
     expect(

@@ -37,8 +37,11 @@ days saved as `MorningRitualEntry`. See
   never force-stop it after a fixed delay (that truncated the sound). It
   is silenced by `_stopAlarmSound()` when the user advances
   (complete/skip/previous/start over) or leaves the page (`dispose`).
-- `soundId` is persisted/synced but `_playAlarm` currently ignores it
-  (always system alarm) — see implementation_plan P2.1.
+- **`soundId` selects the sound**, resolved by `services/alarm_sound.dart`
+  (default / notification / alarm / ringtone). Only the alarm choice passes
+  `asAlarm: true` — routing the quiet options through the alarm stream would
+  play them at full alarm volume. An unknown id falls back to the alarm, never
+  to silence.
 - **Randomized readings ("Just for Today").** A prayer may name a reading
   source in `randomizerSourceId`; options come from
   `assets/content/morning_randomizer_v1.json` (**data, not Dart literals**),
@@ -74,7 +77,9 @@ and every seed write through `tester.runAsync`; see the `act` helper in
 [morning_ritual_runner_test.dart](../../test/morning_ritual_runner_test.dart).
 Danish also needs the `GlobalMaterialLocalizations` delegates or the framework
 throws on an unsupported locale.
-- `flutter_ringtone_player` ships **android/ios only**, so on desktop the
-  alarm falls through to a single `SystemSound.alert` (often silent on
-  Linux) — see implementation_plan P2.4.
+- `flutter_ringtone_player` ships **android/ios only**. `_playAlarm` checks
+  `PlatformHelper.isDesktop` and plays `SystemSound.alert` there rather than
+  letting the plugin throw `MissingPluginException`, and the item editor shows
+  a note saying the choice applies on phones and tablets. A real desktop
+  player is implementation_plan P3.1.
 </content>

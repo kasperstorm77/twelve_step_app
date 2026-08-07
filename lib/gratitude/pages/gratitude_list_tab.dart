@@ -1,9 +1,9 @@
 import 'package:flutter/material.dart';
 import 'package:hive_flutter/hive_flutter.dart';
-import 'package:intl/intl.dart';
 import '../models/gratitude_entry.dart';
 import '../services/gratitude_service.dart';
 import '../../shared/localizations.dart';
+import '../../shared/utils/date_formats.dart';
 
 class GratitudeListTab extends StatelessWidget {
   final Function(DateTime) onDateSelected;
@@ -149,7 +149,7 @@ class GratitudeListTab extends StatelessWidget {
                   child: Column(
                     children: [
                       Text(
-                        DateFormat.MMM().format(date),
+                        formatMonthAbbrev(context, date),
                         style: TextStyle(
                           fontSize: 12,
                           fontWeight: FontWeight.bold,
@@ -161,7 +161,7 @@ class GratitudeListTab extends StatelessWidget {
                         ),
                       ),
                       Text(
-                        DateFormat.d().format(date),
+                        formatDayOfMonth(context, date),
                         style: TextStyle(
                           fontSize: 20,
                           fontWeight: FontWeight.bold,
@@ -173,7 +173,7 @@ class GratitudeListTab extends StatelessWidget {
                         ),
                       ),
                       Text(
-                        DateFormat.E().format(date),
+                        formatWeekdayAbbrev(context, date),
                         style: TextStyle(
                           fontSize: 10,
                           color: isToday
@@ -192,7 +192,7 @@ class GratitudeListTab extends StatelessWidget {
                     crossAxisAlignment: CrossAxisAlignment.start,
                     children: [
                       Text(
-                        DateFormat.yMMMMd().format(date),
+                        formatLongDate(context, date),
                         style: Theme.of(context).textTheme.titleMedium
                             ?.copyWith(fontWeight: FontWeight.bold),
                       ),
@@ -243,7 +243,7 @@ class GratitudeListTab extends StatelessWidget {
                           ],
                           const SizedBox(height: 2),
                           Text(
-                            DateFormat.jm().format(entry.createdAt),
+                            formatTimeOfDay(context, entry.createdAt),
                             style: Theme.of(context).textTheme.bodySmall
                                 ?.copyWith(
                                   color: Theme.of(context).colorScheme.onSurface

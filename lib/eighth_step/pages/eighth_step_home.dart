@@ -9,7 +9,7 @@ import '../../shared/services/app_help_service.dart';
 import '../../shared/models/app_entry.dart';
 import '../../shared/pages/data_management_page.dart';
 import '../../shared/services/locale_provider.dart';
-import 'eighth_step_settings_tab.dart' as settings;
+import 'person_edit_dialog.dart';
 
 class EighthStepHome extends StatefulWidget {
   const EighthStepHome({super.key});
@@ -30,7 +30,7 @@ class _EighthStepHomeState extends State<EighthStepHome> {
 
     showDialog(
       context: context,
-      builder: (context) => settings.PersonEditDialog(
+      builder: (context) => PersonEditDialog(
         person: person,
         onSave: (name, amends, column, amendsDone) {
           final updatedPerson = person.copyWith(
@@ -189,7 +189,12 @@ class _EighthStepHomeState extends State<EighthStepHome> {
           ),
         ],
       ),
-      body: EighthStepMainTab(onViewPerson: _showEditPersonDialog),
+      // Android 15 forces edge-to-edge, so the body must inset itself past
+      // the gesture/navigation bar. The AppBar already handles the top.
+      body: SafeArea(
+        top: false,
+        child: EighthStepMainTab(onViewPerson: _showEditPersonDialog),
+      ),
       floatingActionButton: FloatingActionButton(
         onPressed: () => _showAddPersonDialog(context),
         child: const Icon(Icons.add),
@@ -200,7 +205,7 @@ class _EighthStepHomeState extends State<EighthStepHome> {
   void _showAddPersonDialog(BuildContext context) {
     showDialog(
       context: context,
-      builder: (context) => settings.PersonEditDialog(
+      builder: (context) => PersonEditDialog(
         onSave: (name, amends, column, amendsDone) {
           final newPerson = Person.create(
             name: name,

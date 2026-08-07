@@ -70,8 +70,16 @@ The three canonical docs (open the one that fits, then come back):
     user text. Danish runs longer — check both lay out.
 11. Every screen's AppBar keeps the four actions: app switcher, help,
     settings (Data Management), EN/DA language popup. Every routed tool
-    should have an `AppHelpService` case — notifications still lacks one
-    (see [implementation_plan.md](docs/implementation_plan.md) P2.2).
+    has an `AppHelpService` case — keep it that way when adding one.
+12. **Dates are localized separately from `t()`.** Use
+    [`shared/utils/date_formats.dart`](lib/shared/utils/date_formats.dart);
+    a bare `DateFormat.yMMMMd()` renders English inside the Danish UI.
+13. **Never give the system bars a colour.**
+    `ThemeData.appBarTheme.systemOverlayStyle` stays
+    [`appSystemOverlayStyle`](lib/shared/utils/system_ui.dart) with all three
+    colours null — each non-null one calls an API Android 15 deprecated and
+    Google Play flags. `targetSdk` 36 forces edge-to-edge, so every
+    `Scaffold` body needs `SafeArea(top: false, ...)`.
 
 ---
 
@@ -93,7 +101,14 @@ The three canonical docs (open the one that fits, then come back):
 - Before reporting a change done: `flutter analyze` is clean and
   `flutter test` passes. Keep `main.dart`'s open-box set in sync with
   `SyncPayloadBuilder`.
-- Keep chat replies short; detail belongs in the docs above.
+- **Answer short, clear, concise — and end with one recommended next
+  step.** A reply is the finding plus what to do about it, not a survey.
+  Lead with the answer; drop the preamble. Prefer a few lines or a tight
+  list over prose; no exhaustive option lists, no restating what the user
+  just said. Close with a single recommendation ("Next: …") rather than
+  several choices — if a real decision is needed, ask one question. All
+  supporting detail belongs in the three docs above, linked, not pasted
+  into chat.
 
 ---
 

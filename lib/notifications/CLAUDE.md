@@ -28,6 +28,7 @@ weekdays, registered with the OS via `flutter_local_notifications`. See
   re-register with the OS — `BackupRestoreService` does this; keep it.
 - `generateNotificationId()` must stay collision-free against the box.
 
-`AppHelpService` has no `notifications` case yet (falls back to
-`help_not_available`) — see implementation_plan P2.2.
+`AppHelpService` has a `notifications` case (purpose / creating a reminder /
+about the timing, EN + DA). Keep the timing section honest: alarms are
+inexact by design, so it must not promise to-the-minute delivery.
 </content>

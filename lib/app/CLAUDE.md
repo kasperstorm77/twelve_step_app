@@ -30,4 +30,11 @@ The bootstrap itself lives in [lib/main.dart](../main.dart). See
   Don't "fix" the async-gap re-fetches.
 - `AppHomePage` wraps `AppRouter` in a `ValueListenableBuilder` on
   `DataRefreshService.revision` so a restore rebuilds the whole tree.
+- **`ThemeData.appBarTheme.systemOverlayStyle` must stay
+  [`appSystemOverlayStyle`](../shared/utils/system_ui.dart)**, whose three bar
+  colours are null. Flutter calls Android's deprecated `setStatusBarColor` /
+  `setNavigationBarColor` / `setNavigationBarDividerColor` for each non-null
+  colour, and Material's AppBar default supplies one if the theme doesn't.
+  `targetSdk` 36 means edge-to-edge is forced, so a new `Scaffold` body needs
+  `SafeArea(top: false, ...)`.
 </content>

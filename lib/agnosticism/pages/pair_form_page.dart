@@ -117,128 +117,133 @@ class _PairFormPageState extends State<PairFormPage> {
               : t(context, 'agnosticism_add_pair'),
         ),
       ),
-      body: Form(
-        key: _formKey,
-        child: ListView(
-          padding: const EdgeInsets.fromLTRB(12, 12, 12, 16),
-          children: [
-            // Barrier field
-            Text(
-              t(context, 'agnosticism_barrier'),
-              style: TextStyle(
-                color: colorScheme.error,
-                fontWeight: FontWeight.w600,
-              ),
-            ),
-            const SizedBox(height: 8),
-            TextFormField(
-              controller: _barrierController,
-              decoration: InputDecoration(
-                hintText: t(context, 'agnosticism_barrier_hint'),
-                border: const OutlineInputBorder(),
-                prefixIcon: Icon(Icons.block, color: colorScheme.error),
-              ),
-              minLines: 2,
-              maxLines: 5,
-              keyboardType: TextInputType.multiline,
-              validator: (value) {
-                if (value == null || value.trim().isEmpty) {
-                  return t(context, 'agnosticism_barrier_required');
-                }
-                return null;
-              },
-            ),
-
-            const SizedBox(height: 24),
-
-            // Connected fear field
-            Text(
-              t(context, 'agnosticism_fear'),
-              style: TextStyle(
-                color: colorScheme.tertiary,
-                fontWeight: FontWeight.w600,
-              ),
-            ),
-            const SizedBox(height: 8),
-            TextFormField(
-              controller: _fearController,
-              decoration: InputDecoration(
-                hintText: t(context, 'agnosticism_fear_hint'),
-                border: const OutlineInputBorder(),
-                prefixIcon: Icon(
-                  Icons.warning_amber_outlined,
-                  color: colorScheme.tertiary,
+      // Android 15 forces edge-to-edge; the body insets past the
+      // gesture/navigation bar, the AppBar handles the top.
+      body: SafeArea(
+        top: false,
+        child: Form(
+          key: _formKey,
+          child: ListView(
+            padding: const EdgeInsets.fromLTRB(12, 12, 12, 16),
+            children: [
+              // Barrier field
+              Text(
+                t(context, 'agnosticism_barrier'),
+                style: TextStyle(
+                  color: colorScheme.error,
+                  fontWeight: FontWeight.w600,
                 ),
               ),
-              minLines: 2,
-              maxLines: 5,
-              keyboardType: TextInputType.multiline,
-              validator: (value) {
-                if (value == null || value.trim().isEmpty) {
-                  return t(context, 'agnosticism_fear_required');
-                }
-                return null;
-              },
-            ),
-
-            const SizedBox(height: 24),
-
-            // Power field
-            Text(
-              t(context, 'agnosticism_power'),
-              style: TextStyle(
-                color: colorScheme.primary,
-                fontWeight: FontWeight.w600,
+              const SizedBox(height: 8),
+              TextFormField(
+                controller: _barrierController,
+                decoration: InputDecoration(
+                  hintText: t(context, 'agnosticism_barrier_hint'),
+                  border: const OutlineInputBorder(),
+                  prefixIcon: Icon(Icons.block, color: colorScheme.error),
+                ),
+                minLines: 2,
+                maxLines: 5,
+                keyboardType: TextInputType.multiline,
+                validator: (value) {
+                  if (value == null || value.trim().isEmpty) {
+                    return t(context, 'agnosticism_barrier_required');
+                  }
+                  return null;
+                },
               ),
-            ),
-            const SizedBox(height: 8),
-            TextFormField(
-              controller: _powerController,
-              decoration: InputDecoration(
-                hintText: t(context, 'agnosticism_power_hint'),
-                border: const OutlineInputBorder(),
-                prefixIcon: Icon(Icons.bolt, color: colorScheme.primary),
-              ),
-              minLines: 2,
-              maxLines: 5,
-              keyboardType: TextInputType.multiline,
-              validator: (value) {
-                if (value == null || value.trim().isEmpty) {
-                  return t(context, 'agnosticism_power_required');
-                }
-                return null;
-              },
-            ),
 
-            const SizedBox(height: 32),
+              const SizedBox(height: 24),
 
-            // Save button
-            FilledButton.icon(
-              onPressed: _savePair,
-              icon: Icon(isEditing ? Icons.save : Icons.add),
-              label: Text(
-                isEditing
-                    ? t(context, 'agnosticism_update')
-                    : t(context, 'agnosticism_add'),
+              // Connected fear field
+              Text(
+                t(context, 'agnosticism_fear'),
+                style: TextStyle(
+                  color: colorScheme.tertiary,
+                  fontWeight: FontWeight.w600,
+                ),
               ),
-              style: FilledButton.styleFrom(
-                padding: const EdgeInsets.symmetric(vertical: 16),
+              const SizedBox(height: 8),
+              TextFormField(
+                controller: _fearController,
+                decoration: InputDecoration(
+                  hintText: t(context, 'agnosticism_fear_hint'),
+                  border: const OutlineInputBorder(),
+                  prefixIcon: Icon(
+                    Icons.warning_amber_outlined,
+                    color: colorScheme.tertiary,
+                  ),
+                ),
+                minLines: 2,
+                maxLines: 5,
+                keyboardType: TextInputType.multiline,
+                validator: (value) {
+                  if (value == null || value.trim().isEmpty) {
+                    return t(context, 'agnosticism_fear_required');
+                  }
+                  return null;
+                },
               ),
-            ),
 
-            // Archive button (only when editing)
-            if (isEditing) ...[
-              const SizedBox(height: 16),
-              OutlinedButton.icon(
-                onPressed: _archivePair,
-                icon: const Icon(Icons.archive),
-                label: Text(t(context, 'agnosticism_archive')),
-                style: OutlinedButton.styleFrom(
+              const SizedBox(height: 24),
+
+              // Power field
+              Text(
+                t(context, 'agnosticism_power'),
+                style: TextStyle(
+                  color: colorScheme.primary,
+                  fontWeight: FontWeight.w600,
+                ),
+              ),
+              const SizedBox(height: 8),
+              TextFormField(
+                controller: _powerController,
+                decoration: InputDecoration(
+                  hintText: t(context, 'agnosticism_power_hint'),
+                  border: const OutlineInputBorder(),
+                  prefixIcon: Icon(Icons.bolt, color: colorScheme.primary),
+                ),
+                minLines: 2,
+                maxLines: 5,
+                keyboardType: TextInputType.multiline,
+                validator: (value) {
+                  if (value == null || value.trim().isEmpty) {
+                    return t(context, 'agnosticism_power_required');
+                  }
+                  return null;
+                },
+              ),
+
+              const SizedBox(height: 32),
+
+              // Save button
+              FilledButton.icon(
+                onPressed: _savePair,
+                icon: Icon(isEditing ? Icons.save : Icons.add),
+                label: Text(
+                  isEditing
+                      ? t(context, 'agnosticism_update')
+                      : t(context, 'agnosticism_add'),
+                ),
+                style: FilledButton.styleFrom(
                   padding: const EdgeInsets.symmetric(vertical: 16),
                 ),
               ),
+
+              // Archive button (only when editing)
+              if (isEditing) ...[
+                const SizedBox(height: 16),
+                OutlinedButton.icon(
+                  onPressed: _archivePair,
+                  icon: const Icon(Icons.archive),
+                  label: Text(t(context, 'agnosticism_archive')),
+                  style: OutlinedButton.styleFrom(
+                    padding: const EdgeInsets.symmetric(vertical: 16),
+                  ),
+                ),
+              ],
             ],
-          ],
+          ),
         ),
       ),
     );

@@ -241,6 +241,8 @@ final Map<String, Map<String, String>> localizedValues = {
     'morning_ritual_alarm_sound_notification': 'Notification',
     'morning_ritual_alarm_sound_alarm': 'Alarm',
     'morning_ritual_alarm_sound_ringtone': 'Ringtone',
+    'morning_ritual_alarm_sound_desktop_note':
+        'On desktop the timer ends with a short system alert instead — this choice applies on phones and tablets.',
     // 8th Step Amends
     'eighth_step_title': '8th Step list',
     'eighth_step_main_tab': 'Main',
@@ -387,7 +389,10 @@ final Map<String, Map<String, String>> localizedValues = {
         'Step 8 asks us to make "a list of all persons we had harmed, and became willing to make amends to them all." This prepares us for Step 9. Willingness, not action yet - we\'re building readiness to clean up our side of the street.',
     'help_8th_step_fields_title': 'Understanding the Columns',
     'help_8th_step_fields':
-        '• Name - The person harmed\n• Column (optional) - Reference to 4th Step column (if resentment existed)\n• Amends Needed - What harm did I cause? What do I need to make right?\n• Amends Done - Track when you\'ve completed the 9th Step amend',
+        'The three columns are your willingness, not the type of harm:\n• Yes - I am willing to make this amend\n• Maybe - I am not there yet, but I am not saying no\n• No - I am unwilling today\n\nEach card also holds:\n• Name - The person harmed\n• Amends Needed - What harm did I cause? What do I need to make right?\n• Amends Done - Tick this once you have made the 9th Step amend',
+    'help_8th_step_using_title': 'Working the List',
+    'help_8th_step_using':
+        'Add a person with the + button, then drag their card between columns as your willingness changes - that movement is the work of Step 8. Drag within a column to order it. Nothing is ever deleted by moving it, so a "No" today can become a "Yes" later.',
     // Help Content - Evening Ritual
     'help_evening_ritual_title': 'Evening Ritual - Purpose & Guidance',
     'help_evening_ritual_purpose_title': 'Why Review Each Day?',
@@ -512,6 +517,10 @@ final Map<String, Map<String, String>> localizedValues = {
     'save_settings': 'Save Settings',
     'settings_saved': 'Settings saved',
     'unsaved_changes': 'You have unsaved changes',
+
+    // Calendar format toggle (table_calendar)
+    'calendar_week': 'Week',
+    'calendar_month': 'Month',
     // Notifications
     'notifications_title': 'Notifications',
     'notifications_add': 'Add notification',
@@ -536,6 +545,18 @@ final Map<String, Map<String, String>> localizedValues = {
     'notifications_delete_title': 'Delete notification?',
     'notifications_delete_message':
         'This will remove the reminder permanently. Continue?',
+
+    // Help Content - Notifications
+    'help_notifications_title': 'Reminders - Purpose & Guidance',
+    'help_notifications_purpose_title': 'Why Set Reminders?',
+    'help_notifications_purpose':
+        'A daily practice keeps working because it happens at a set time, not because you remember it. Use reminders for the things this app helps you do - the morning ritual, the evening review, a gratitude entry, a call to your sponsor - so the practice does not depend on willpower alone.',
+    'help_notifications_setup_title': 'Creating a Reminder',
+    'help_notifications_setup':
+        'Tap + and give the reminder a title, and a body if you want more than a nudge. Choose Daily, or Weekly and pick the weekdays. Set the time, then turn Vibrate and Sound on or off for that reminder. The switch on each card turns a reminder off without deleting it.',
+    'help_notifications_timing_title': 'About the Timing',
+    'help_notifications_timing':
+        'Reminders are approximate on purpose. This is not an alarm clock, so the system is allowed to shift a reminder by a few minutes to save battery - it may arrive a little after the time you set. Your phone must also allow notifications from the app; if nothing arrives, check that permission first. Reminders live on this device and re-register themselves after a restore.',
     'weekday_mon': 'Mon',
     'weekday_tue': 'Tue',
     'weekday_wed': 'Wed',
@@ -572,6 +593,18 @@ final Map<String, Map<String, String>> localizedValues = {
     'notifications_delete_title': 'Slet notifikation?',
     'notifications_delete_message':
         'Dette fjerner påmindelsen permanent. Fortsæt?',
+
+    // Help Content - Notifikationer (Danish)
+    'help_notifications_title': 'Påmindelser - Formål & Vejledning',
+    'help_notifications_purpose_title': 'Hvorfor sætte påmindelser?',
+    'help_notifications_purpose':
+        'En daglig praksis holder, fordi den sker på et fast tidspunkt - ikke fordi du husker den. Brug påmindelser til det, denne app hjælper dig med: morgenritualet, aftenens gennemgang, en taknemmelighed, et opkald til din sponsor - så praksissen ikke kun afhænger af viljestyrke.',
+    'help_notifications_setup_title': 'Opret en påmindelse',
+    'help_notifications_setup':
+        'Tryk på + og giv påmindelsen en titel, og en besked hvis du vil have mere end et lille skub. Vælg Dagligt, eller Ugentligt og vælg ugedagene. Sæt tidspunktet, og slå Vibration og Lyd til eller fra for netop den påmindelse. Kontakten på hvert kort slår en påmindelse fra uden at slette den.',
+    'help_notifications_timing_title': 'Om tidspunktet',
+    'help_notifications_timing':
+        'Påmindelser er bevidst omtrentlige. Dette er ikke et vækkeur, så systemet må flytte en påmindelse et par minutter for at spare batteri - den kan komme lidt efter det tidspunkt, du satte. Din telefon skal også tillade notifikationer fra appen; kommer der intet, så tjek den tilladelse først. Påmindelser bor på denne enhed og registrerer sig selv igen efter en gendannelse.',
     'weekday_mon': 'Man',
     'weekday_tue': 'Tir',
     'weekday_wed': 'Ons',
@@ -817,6 +850,8 @@ final Map<String, Map<String, String>> localizedValues = {
     'morning_ritual_alarm_sound_notification': 'Notifikation',
     'morning_ritual_alarm_sound_alarm': 'Alarm',
     'morning_ritual_alarm_sound_ringtone': 'Ringetone',
+    'morning_ritual_alarm_sound_desktop_note':
+        'På computer slutter timeren med en kort systemlyd i stedet — dette valg gælder på telefon og tablet.',
     // 8th Step Amends
     'eighth_step_title': '8. Trins liste',
     'eighth_step_main_tab': 'Liste',
@@ -966,7 +1001,10 @@ final Map<String, Map<String, String>> localizedValues = {
         'Trin 8 beder os om at lave "en liste over alle personer vi har gjort fortræd, og blive villige til at gøre det godt igen. Med listen, forbereder os til trin 9. - vi bygger parathed og villighed til at rydde op og tage ansvar for vores del.',
     'help_8th_step_fields_title': 'Forståelse af Kolonnerne',
     'help_8th_step_fields':
-        '• Navn - Den person vi har gjort fortræd\n• Kolonne (valgfrit)\n• Hvordan tager jeg ansvar? - Hvilken skade forvoldte jeg? Hvordan tager jeg ansvar for det?\n• Ansvar taget - Spor hvornår du har taget ansvar',
+        'De tre kolonner viser din villighed, ikke hvilken slags skade det var:\n• Ja - Jeg er villig til at tage ansvar her\n• Måske - Jeg er ikke klar endnu, men jeg siger ikke nej\n• Nej - Jeg er ikke villig i dag\n\nHvert kort indeholder også:\n• Navn - Den person vi har gjort fortræd\n• Hvordan tager jeg ansvar? - Hvilken skade forvoldte jeg? Hvordan tager jeg ansvar for det?\n• Ansvar taget - Sæt flueben når du har taget ansvar i trin 9',
+    'help_8th_step_using_title': 'Sådan arbejder du med listen',
+    'help_8th_step_using':
+        'Tilføj en person med +-knappen, og træk derefter kortet mellem kolonnerne efterhånden som din villighed ændrer sig - den bevægelse er selve arbejdet i trin 8. Træk inden for en kolonne for at ændre rækkefølgen. Intet slettes ved at blive flyttet, så et "Nej" i dag kan blive et "Ja" senere.',
     // Help Content - Evening Ritual (Danish)
     'help_evening_ritual_title': 'Aftenritual - Formål & Vejledning',
     'help_evening_ritual_purpose_title': 'Hvorfor Gennemgå Hver Dag?',
@@ -1021,7 +1059,9 @@ final Map<String, Map<String, String>> localizedValues = {
     'morning_ritual_duration': 'Varighed',
     'morning_ritual_minutes': 'Minutter',
     'morning_ritual_seconds': 'Sekunder',
-    'morning_ritual_prayer_text': 'Bøn',
+    // Distinct from 'morning_ritual_type_prayer' ("Bøn") on purpose — the type
+    // dropdown and this text field sit in the same dialog (historic Phase 21).
+    'morning_ritual_prayer_text': 'Bønnens tekst',
     'morning_ritual_prayer_text_hint':
         'Indtast teksten på bønnen, der skal vises',
     'morning_ritual_just_for_today': 'Kun for i dag',
@@ -1092,6 +1132,10 @@ final Map<String, Map<String, String>> localizedValues = {
     'save_settings': 'Gem indstillinger',
     'settings_saved': 'Indstillinger gemt',
     'unsaved_changes': 'Du har ikke-gemte ændringer',
+
+    // Calendar format toggle (table_calendar)
+    'calendar_week': 'Uge',
+    'calendar_month': 'Måned',
   },
 };
 

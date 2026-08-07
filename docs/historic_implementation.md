@@ -420,6 +420,110 @@ feature set, built from `main` afterwards. It is on both test tracks, and the
 App Store version was renamed 2.3.0 → 2.3.1 so the metadata and the build
 match.
 
+
+---
+
+## Phase 21 — Clearing the backlog, and Android 15 edge-to-edge
+
+One pass over everything on the roadmap that wasn't waiting on a store console,
+plus the deprecation Google Play raised against release 106 (2.2.13).
+
+### The Play warning was ours to fix, but not where it pointed
+
+Play flagged `Window.setStatusBarColor`, `setNavigationBarColor` and
+`setNavigationBarDividerColor`, all "starting in"
+`io.flutter.plugin.platform.PlatformPlugin.setSystemChromeSystemUIOverlayStyle`
+— engine code, not ours. Nothing in `lib/` calls `SystemChrome` at all, which
+made it look like a Flutter problem to wait out.
+
+It wasn't. The engine only invokes each of those three setters when the
+**Dart-side style supplies that colour**. With no
+`AppBarTheme.systemOverlayStyle` set, every `AppBar` fell back to
+`AppBar._systemOverlayStyleForBrightness`, which fills in a `statusBarColor` —
+so Material was handing the engine a colour on every screen. Setting one
+`AppBarTheme.systemOverlayStyle` whose three colours are all **null**
+([`shared/utils/system_ui.dart`](../lib/shared/utils/system_ui.dart)) removes
+every deprecated call while keeping the icon-brightness half of the style,
+which travels through `WindowInsetsControllerCompat` and is not deprecated.
+`test/edge_to_edge_test.dart` pins both directions, including a negative
+control that fails if Flutter's default ever stops filling the colour in.
+
+Since `targetSdk` is already 36, Android 15 **forces** edge-to-edge regardless,
+so the second half was making the app actually live with it: five screens
+(8th Step, notifications, Data Management, the pair form, the 4th-step settings
+tab) had no `SafeArea` and would draw under the gesture bar. All five now inset
+their body, matching the five that already did.
+
+### What else landed
+
+- **Dates and calendars follow the language popup.** Every `DateFormat` in the
+  app was constructed without a locale, so `Intl.defaultLocale` (en_US) won:
+  "August 6, 2026" and "Wednesday" inside Danish screens. All 17 call sites now
+  go through [`shared/utils/date_formats.dart`](../lib/shared/utils/date_formats.dart),
+  `main.dart` calls `initializeDateFormatting()`, and both `TableCalendar`s get
+  a `locale`. The plan named only `yMMMMd`; month, weekday, day and time were
+  equally English. The `CalendarFormat` toggle's hardcoded `'Week'`/`'Month'`
+  became `calendar_week` / `calendar_month`.
+- **`RitualItem.soundId` finally selects a sound.** The editor had offered four
+  choices and synced the value for a long time while `_playAlarm` always played
+  the system alarm. The mapping lives in
+  [`morning_ritual/services/alarm_sound.dart`](../lib/morning_ritual/services/alarm_sound.dart)
+  so it is unit-testable; only the alarm choice takes `asAlarm: true`, or the
+  quiet option would still ring at alarm volume. An unknown id — which a future
+  version of the other app could introduce — falls back to the alarm rather
+  than to silence.
+- **One default morning window.** 06:00 in `getMorningRitualSettings()`, 05:00
+  in its own catch-block, in `importFromSync` and in the settings UI. Now two
+  constants on `AppSettingsService`; 05:00–09:00 won, being three of the four.
+- **Notifications got help content**, so the button no longer falls through to
+  `help_not_available`, and the 8th-step help was wrong rather than merely
+  short: it described the columns as a reference to a 4th-Step column when they
+  are Yes / No / Maybe *willingness*. Rewritten in both languages, with a third
+  section on working the board.
+- **Both dead paths are gone.** `EnhancedGoogleDriveService` had no remaining
+  references at all. `EighthStepSettingsTab`'s unrouted list UI is deleted and
+  `PersonEditDialog` — the only part `EighthStepHome` actually used — moved to
+  its own file.
+- **The Just for Today catalog is generated, not typed.**
+  `tool/regenerate_morning_randomizer.dart` rebuilds it from Emotional
+  Sobriety's `workshop_exercises_v1.json`, and it reproduces the checked-in
+  asset byte for byte from that app's real file. A test regenerates from a
+  fixture captured out of the same file and fails on any drift, so a hand-edit
+  can no longer slip through with a user seeing different words in each app.
+- **Danish stopped calling two different things "Bøn"** — the prayer *type* and
+  the prayer *text* field, in the same dialog. The text field is now
+  "Bønnens tekst".
+
+### Two things the new tests found
+
+**A restore could report failure after it had already succeeded.**
+`_applyPayload` called `NotificationsService.rescheduleAll()` unguarded, in the
+middle of the section sequence. That re-registers reminders with the OS, and it
+can fail for reasons that have nothing to do with the backup — permission
+revoked, no timezone database, a platform with no plugin implementation. When
+it threw, it threw out of `_applyPayload`, so the whole restore returned
+`success: false` — with every box up to and including notifications already
+rewritten, and `appSettings` never applied. It is now wrapped: the records are
+on disk either way, and the worst case is a reminder that re-registers on the
+next launch.
+
+**The suite had a one-in-four flake, hidden until there were enough files to
+expose it.** `morning_ritual_runner_test`'s "start over" step tapped the
+confirmation dialog's button assuming it had been built, relying on `act`'s
+fixed 150ms. Adding six test files raised the parallel load enough that the
+dialog sometimes wasn't there yet. The step now taps the trigger until the
+confirm button exists. Two things worth remembering: a `.last` finder throws
+`Bad state: No element` out of `evaluate()` itself, so it cannot be used to ask
+"is it there yet?", and a flake that only appears under full-suite concurrency
+will not reproduce when you run the file on its own.
+
+**Coverage went 75 → 105 tests**: the boxes only this app has now round-trip
+through `SyncPayloadBuilder` → `BackupRestoreService`, the two legacy import
+aliases and the I-Am-before-entries ordering are pinned, `blockUploads()` and
+the deprecated `checkAndSyncIfNeeded()` are guarded, `reorderRitualItems` is
+exercised against a real mixed active/inactive set, and both locales are
+checked for key parity.
+
 ---
 
 ## Data-format migration notes

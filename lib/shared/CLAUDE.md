@@ -52,9 +52,18 @@ backup, restore, app switching, settings, localization, help. See
 - `AppEntry` (typeId 2) has a registered adapter but is **never** boxed;
   the selected app is a plain `String` under `selected_app_id`.
 - Only `en` + `da` are populated in
-  [localizations.dart](localizations.dart); `t()` falls back en → key.
-- `EnhancedGoogleDriveService` is **dead** relative to the active flow
-  (single-file upsert, no-op conflict check). Don't build on it.
+  [localizations.dart](localizations.dart); `t()` falls back en → key. The
+  two maps must define the **same key set** —
+  `test/localized_dates_test.dart` fails on any key present in one only.
+- **Dates don't go through `t()`.** Use
+  [utils/date_formats.dart](utils/date_formats.dart), which passes the active
+  locale to `intl`; a bare `DateFormat.yMMMMd()` renders English inside the
+  Danish UI.
+- `EnhancedGoogleDriveService` was deleted — it had no references at all.
+  The live flow is `AllAppsDriveService` → the Mobile/Windows services with
+  dated multi-file backups. Don't reintroduce a single-file upsert path.
 - `desktop_oauth_config.dart` holds an OAuth client **secret** — treat
-  as sensitive; only the `.template` is tracked (implementation_plan P1.2).
+  as sensitive. It is git-ignored and only the `.template` is tracked;
+  neither the live client id nor the secret has ever been committed
+  (verified against full history).
 </content>

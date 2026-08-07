@@ -4,6 +4,7 @@ import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_modular/flutter_modular.dart';
 import 'package:hive_flutter/hive_flutter.dart';
+import 'package:intl/date_symbol_data_local.dart';
 import 'package:window_manager/window_manager.dart';
 
 // Import existing files for initiy alization
@@ -73,6 +74,11 @@ void main() async {
       }),
     );
   }
+
+  // Loads the `intl` date symbols for every locale. Without it, the
+  // locale-aware helpers in shared/utils/date_formats.dart throw
+  // LocaleDataException the first time a Danish screen formats a date.
+  await timed('initializeDateFormatting', () => initializeDateFormatting());
 
   await timed('Hive.initFlutter', () => Hive.initFlutter());
 

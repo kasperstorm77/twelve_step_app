@@ -210,10 +210,11 @@ class _EveningRitualHomeState extends State<EveningRitualHome>
                       focusedDay: _focusedDay,
                       selectedDayPredicate: (day) =>
                           isSameDay(_selectedDay, day),
+                      locale: Localizations.localeOf(context).languageCode,
                       calendarFormat: CalendarFormat.week,
-                      availableCalendarFormats: const {
-                        CalendarFormat.week: 'Week',
-                        CalendarFormat.month: 'Month',
+                      availableCalendarFormats: {
+                        CalendarFormat.week: t(context, 'calendar_week'),
+                        CalendarFormat.month: t(context, 'calendar_month'),
                       },
                       eventLoader: (day) {
                         return ReflectionService.hasReflectionsForDate(day)

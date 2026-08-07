@@ -23,11 +23,14 @@ class DataManagementPage extends StatelessWidget {
             ],
           ),
         ),
-        body: TabBarView(
-          children: [
-            DataManagementTab(box: Hive.box<InventoryEntry>('entries')),
-            const GeneralSettingsTab(),
-          ],
+        body: SafeArea(
+          top: false,
+          child: TabBarView(
+            children: [
+              DataManagementTab(box: Hive.box<InventoryEntry>('entries')),
+              const GeneralSettingsTab(),
+            ],
+          ),
         ),
       ),
     );
@@ -43,8 +46,9 @@ class GeneralSettingsTab extends StatefulWidget {
 
 class _GeneralSettingsTabState extends State<GeneralSettingsTab> {
   bool _loadMorningRitualEnabled = false;
-  TimeOfDay _morningStartTime = const TimeOfDay(hour: 5, minute: 0);
-  TimeOfDay _morningEndTime = const TimeOfDay(hour: 9, minute: 0);
+  // Same defaults the service uses — see AppSettingsService.
+  TimeOfDay _morningStartTime = AppSettingsService.defaultMorningStartTime;
+  TimeOfDay _morningEndTime = AppSettingsService.defaultMorningEndTime;
   bool _hasUnsavedChanges = false;
 
   @override

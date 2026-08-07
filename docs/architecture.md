@@ -69,9 +69,13 @@ A daily morning-practice runner. The user defines an ordered list of
 prayer that rings an alarm at the end) and *prayer* items (text to
 read, e.g. 3rd Step, 7th Step, St. Francis). The **Today** tab runs
 the ritual step-by-step: a 1-second countdown, wake-lock held only
-while a timer actively runs, an alarm sound (`FlutterRingtonePlayer`,
-`asAlarm`, 2s) plus a 3× vibration, all gated by each item's
-sound/vibrate flags. It records each item completed/skipped and saves
+while a timer actively runs, an alarm sound plus a 3× vibration, all gated
+by each item's sound/vibrate flags. The sound is the one named by
+`RitualItem.soundId` (default / notification / alarm / ringtone), resolved
+by [`alarm_sound.dart`](../lib/morning_ritual/services/alarm_sound.dart);
+only the alarm choice takes `FlutterRingtonePlayer`'s `asAlarm` stream. That
+plugin is android/ios only, so desktop falls back to a single
+`SystemSound.alert` and the item editor says so. It records each item completed/skipped and saves
 a **MorningRitualEntry** for the day. History and a week/month
 calendar review past days. An in-progress draft (device-local, in the
 `settings` box, **not synced**) survives navigate-away and same-day
@@ -163,6 +167,21 @@ help**, **EN/DA localization**, the Drive/local backup engine, and the
 bootstrap in `main.dart` (Hive init, adapter registration, box open
 with corruption recovery, migrations, silent sign-in, conflict check,
 auto-load decision).
+
+**System bars: set no colours.** `ThemeData.appBarTheme.systemOverlayStyle`
+is
+[`appSystemOverlayStyle`](../lib/shared/utils/system_ui.dart), whose
+`statusBarColor`, `systemNavigationBarColor` and
+`systemNavigationBarDividerColor` are all **null** on purpose. Flutter's
+platform plugin calls Android's deprecated `setStatusBarColor` /
+`setNavigationBarColor` / `setNavigationBarDividerColor` once for each
+colour that is non-null, and Google Play flags the app for it; with no
+`AppBarTheme.systemOverlayStyle` at all, Material's AppBar default fills
+`statusBarColor` in by itself. Icon brightness stays specified — that half
+goes through `WindowInsetsControllerCompat` and is not deprecated. Since
+`targetSdk` is 36, Android 15 forces edge-to-edge, so **every `Scaffold`
+body needs `SafeArea(top: false, ...)`** (the AppBar covers the top) or it
+draws under the gesture bar.
 
 ---
 
@@ -376,7 +395,11 @@ definitions import before entries** (entries reference them by id), and
 after import it runs `InventoryService.migrateOrderValues()`,
 `MorningRitualService.migrateSortOrders()` and
 `NotificationsService.rescheduleAll()`, updates `lastModified`, and
-fires `DataRefreshService.notifyDataRestored()` to rebuild the UI. A
+fires `DataRefreshService.notifyDataRestored()` to rebuild the UI.
+`rescheduleAll()` is **wrapped and non-fatal** — re-registering with the OS
+can fail for reasons unrelated to the backup, and unguarded it aborted
+`_applyPayload` mid-sequence and reported a failed restore after the boxes
+had already been rewritten. A
 restore is a **full replace** of the sections the payload carries, so
 local-only records in those sections are wiped; a section the payload
 does not carry leaves its box untouched.
@@ -485,6 +508,16 @@ popup. Key prefixes follow the area: `agnosticism_*`, `gratitude_*`,
 `eighth_step_*`, `category_*` / `*_field1` (4th step), `notifications_*`
 / `weekday_*`, `app_*` (tool names/descriptions), `help_*`. Danish text
 runs longer than English — verify both lay out without clipping.
+
+**Dates are localized too, and not by `t()`.** `intl`'s `DateFormat`
+formats in `Intl.defaultLocale` (en_US) unless given a locale, which
+rendered "August 6, 2026" and "Wednesday" inside Danish screens. Every
+user-visible date goes through
+[shared/utils/date_formats.dart](../lib/shared/utils/date_formats.dart),
+which reads the active locale from the widget tree; `main.dart` calls
+`initializeDateFormatting()` at startup, and a widget test that renders a
+Danish screen must do the same. `TableCalendar` takes its own `locale`
+argument — pass it, or its header and weekday row stay English.
 
 ---
 
@@ -599,11 +632,23 @@ test/
                                       Both new dialogs, rendered in EN + DA
   emotional_sobriety_import_test.dart Foreign import + normalization
   shared_json_parity_test.dart        The cross-app wire contract
+  backup_round_trip_test.dart         This app's own boxes + legacy aliases
+  no_auto_overwrite_test.dart         Hard rule 8: block, never auto-restore
+  morning_ritual_reorder_test.dart    sortOrder across active + inactive
+  morning_randomizer_catalog_generation_test.dart
+                                      The catalog is generated, not typed
+  localized_dates_test.dart           Dates/calendar follow EN/DA; key parity
+  edge_to_edge_test.dart              No deprecated system-bar colours
+  morning_ritual_alarm_sound_test.dart soundId → platform sound
+  support/hive_test_harness.dart      Opens main.dart's box set
   fixtures/                           Payloads captured from the other app
 ```
 
 assets/content/ holds the bilingual randomizer catalog; it is a data file,
-not code, and its option IDs are a cross-app contract (§1.3).
+not code, and its option IDs are a cross-app contract (§1.3). It is
+**generated** from Emotional Sobriety's Workshop catalog by
+`dart run tool/regenerate_morning_randomizer.dart` — never hand-edited; see
+[assets/content/README.md](../assets/content/README.md).
 
 `SyncPayloadBuilder` reads **every** box with `Hive.box<T>(...)`
 (non-open-safe). If `main.dart` ever stops opening one of these boxes,

@@ -6,6 +6,28 @@ its `<en-GB>` and `<da-DK>` bodies verbatim into Google Play / TestFlight. Keep
 each locale ≤ 500 characters (Play's limit). The version on the `X.Y.Z - DATE:`
 line must match `pubspec.yaml`.
 
+2.3.3 - 2026-08-07:
+<en-GB>
+- Danish is properly Danish now: dates, month names and weekdays follow the
+  language you pick, and the calendar's Week/Month button is translated.
+- The alarm sound you choose for a morning timer is now the one that plays.
+- Reminders finally have a help page, and the 8th Step help explains the
+  Yes / No / Maybe columns correctly.
+- Updated for Android 15's edge-to-edge screens, so nothing sits under the
+  navigation bar.
+- Fixed: a restore could report failure after it had already worked.
+</en-GB>
+<da-DK>
+- Dansk er nu rigtigt dansk: datoer, månedsnavne og ugedage følger det sprog,
+  du vælger, og kalenderens Uge/Måned-knap er oversat.
+- Den alarmlyd, du vælger til en morgentimer, er nu også den, der spiller.
+- Påmindelser har endelig en hjælpeside, og hjælpen til 8. trin forklarer
+  Ja / Nej / Måske-kolonnerne korrekt.
+- Tilpasset Android 15's kant-til-kant-skærme, så intet ligger under
+  navigationslinjen.
+- Rettet: en gendannelse kunne melde fejl, selvom den var lykkedes.
+</da-DK>
+
 2.3.2 - 2026-08-07:
 <en-GB>
 - Now requires iOS 15 or later, matching Apple's current minimum.

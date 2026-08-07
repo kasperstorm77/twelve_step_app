@@ -310,144 +310,151 @@ class _NotificationsHomeState extends State<NotificationsHome> {
         tooltip: t(context, 'notifications_add'),
         child: const Icon(Icons.add),
       ),
-      body: FutureBuilder(
-        future: NotificationsService.openBox(),
-        builder: (context, snapshot) {
-          if (snapshot.connectionState != ConnectionState.done) {
-            return const Center(child: CircularProgressIndicator());
-          }
+      // Android 15 forces edge-to-edge; the body insets past the
+      // gesture/navigation bar, the AppBar handles the top.
+      body: SafeArea(
+        top: false,
+        child: FutureBuilder(
+          future: NotificationsService.openBox(),
+          builder: (context, snapshot) {
+            if (snapshot.connectionState != ConnectionState.done) {
+              return const Center(child: CircularProgressIndicator());
+            }
 
-          return ValueListenableBuilder(
-            valueListenable: NotificationsService.box.listenable(),
-            builder: (context, Box<AppNotification> box, _) {
-              final items = box.values.toList()
-                ..sort((a, b) => b.lastModified.compareTo(a.lastModified));
+            return ValueListenableBuilder(
+              valueListenable: NotificationsService.box.listenable(),
+              builder: (context, Box<AppNotification> box, _) {
+                final items = box.values.toList()
+                  ..sort((a, b) => b.lastModified.compareTo(a.lastModified));
 
-              if (items.isEmpty) {
-                return Center(
-                  child: Padding(
-                    padding: const EdgeInsets.all(32),
-                    child: Column(
-                      mainAxisSize: MainAxisSize.min,
-                      children: [
-                        Icon(
-                          Icons.notifications_none,
-                          size: 64,
-                          color: theme.colorScheme.onSurfaceVariant.withValues(
-                            alpha: 0.5,
+                if (items.isEmpty) {
+                  return Center(
+                    child: Padding(
+                      padding: const EdgeInsets.all(32),
+                      child: Column(
+                        mainAxisSize: MainAxisSize.min,
+                        children: [
+                          Icon(
+                            Icons.notifications_none,
+                            size: 64,
+                            color: theme.colorScheme.onSurfaceVariant
+                                .withValues(alpha: 0.5),
                           ),
-                        ),
-                        const SizedBox(height: 16),
-                        Text(
-                          t(context, 'notifications_empty_body'),
-                          style: theme.textTheme.bodyLarge?.copyWith(
-                            color: theme.colorScheme.onSurfaceVariant,
+                          const SizedBox(height: 16),
+                          Text(
+                            t(context, 'notifications_empty_body'),
+                            style: theme.textTheme.bodyLarge?.copyWith(
+                              color: theme.colorScheme.onSurfaceVariant,
+                            ),
+                            textAlign: TextAlign.center,
                           ),
-                          textAlign: TextAlign.center,
-                        ),
-                      ],
-                    ),
-                  ),
-                );
-              }
-
-              return ListView.builder(
-                padding: const EdgeInsets.symmetric(
-                  horizontal: 12,
-                  vertical: 8,
-                ),
-                itemCount: items.length,
-                itemBuilder: (context, index) {
-                  final n = items[index];
-                  final selectedDays = (n.weekdays.toList()..sort())
-                      .map((d) => _weekdayLabel(context, d))
-                      .join(', ');
-                  final hour = n.timeMinutes ~/ 60;
-                  final minute = n.timeMinutes % 60;
-                  final timeStr =
-                      '${hour.toString().padLeft(2, '0')}:${minute.toString().padLeft(2, '0')}';
-                  final scheduleLabel =
-                      n.scheduleType == NotificationScheduleType.daily
-                      ? t(context, 'notifications_schedule_daily')
-                      : t(context, 'notifications_schedule_weekly');
-
-                  return Card(
-                    margin: const EdgeInsets.symmetric(vertical: 6),
-                    child: InkWell(
-                      onTap: () => _editNotification(n),
-                      borderRadius: BorderRadius.circular(12),
-                      child: Padding(
-                        padding: const EdgeInsets.all(12),
-                        child: Row(
-                          crossAxisAlignment: CrossAxisAlignment.start,
-                          children: [
-                            Expanded(
-                              child: Column(
-                                crossAxisAlignment: CrossAxisAlignment.start,
-                                children: [
-                                  // Title
-                                  Text(
-                                    n.title,
-                                    style: TextStyle(
-                                      color: theme.colorScheme.primary,
-                                      fontWeight: FontWeight.w600,
-                                    ),
-                                  ),
-                                  // Body
-                                  if (n.body.trim().isNotEmpty) ...[
-                                    const SizedBox(height: 4),
-                                    Text(
-                                      n.body,
-                                      style: theme.textTheme.bodyMedium,
-                                      maxLines: 2,
-                                      overflow: TextOverflow.ellipsis,
-                                    ),
-                                  ],
-                                  const SizedBox(height: 8),
-                                  // Schedule: Daily/Weekly · Weekdays · Time
-                                  Text(
-                                    n.scheduleType ==
-                                            NotificationScheduleType.weekly
-                                        ? '$scheduleLabel · $selectedDays · $timeStr'
-                                        : '$scheduleLabel · $timeStr',
-                                    style: theme.textTheme.bodyMedium?.copyWith(
-                                      color: theme.colorScheme.onSurfaceVariant,
-                                    ),
-                                  ),
-                                ],
-                              ),
-                            ),
-                            Column(
-                              children: [
-                                Switch(
-                                  value: n.enabled,
-                                  onChanged: (value) async {
-                                    await NotificationsService.upsert(
-                                      n.copyWith(enabled: value),
-                                    );
-                                  },
-                                ),
-                                IconButton(
-                                  onPressed: () => _deleteNotification(n),
-                                  icon: Icon(
-                                    Icons.delete_outline,
-                                    size: 20,
-                                    color: theme.colorScheme.error,
-                                  ),
-                                  tooltip: t(context, 'delete'),
-                                ),
-                              ],
-                            ),
-                          ],
-                        ),
+                        ],
                       ),
                     ),
                   );
-                },
-              );
-            },
-          );
-        },
+                }
+
+                return ListView.builder(
+                  padding: const EdgeInsets.symmetric(
+                    horizontal: 12,
+                    vertical: 8,
+                  ),
+                  itemCount: items.length,
+                  itemBuilder: (context, index) {
+                    final n = items[index];
+                    final selectedDays = (n.weekdays.toList()..sort())
+                        .map((d) => _weekdayLabel(context, d))
+                        .join(', ');
+                    final hour = n.timeMinutes ~/ 60;
+                    final minute = n.timeMinutes % 60;
+                    final timeStr =
+                        '${hour.toString().padLeft(2, '0')}:${minute.toString().padLeft(2, '0')}';
+                    final scheduleLabel =
+                        n.scheduleType == NotificationScheduleType.daily
+                        ? t(context, 'notifications_schedule_daily')
+                        : t(context, 'notifications_schedule_weekly');
+
+                    return Card(
+                      margin: const EdgeInsets.symmetric(vertical: 6),
+                      child: InkWell(
+                        onTap: () => _editNotification(n),
+                        borderRadius: BorderRadius.circular(12),
+                        child: Padding(
+                          padding: const EdgeInsets.all(12),
+                          child: Row(
+                            crossAxisAlignment: CrossAxisAlignment.start,
+                            children: [
+                              Expanded(
+                                child: Column(
+                                  crossAxisAlignment: CrossAxisAlignment.start,
+                                  children: [
+                                    // Title
+                                    Text(
+                                      n.title,
+                                      style: TextStyle(
+                                        color: theme.colorScheme.primary,
+                                        fontWeight: FontWeight.w600,
+                                      ),
+                                    ),
+                                    // Body
+                                    if (n.body.trim().isNotEmpty) ...[
+                                      const SizedBox(height: 4),
+                                      Text(
+                                        n.body,
+                                        style: theme.textTheme.bodyMedium,
+                                        maxLines: 2,
+                                        overflow: TextOverflow.ellipsis,
+                                      ),
+                                    ],
+                                    const SizedBox(height: 8),
+                                    // Schedule: Daily/Weekly · Weekdays · Time
+                                    Text(
+                                      n.scheduleType ==
+                                              NotificationScheduleType.weekly
+                                          ? '$scheduleLabel · $selectedDays · $timeStr'
+                                          : '$scheduleLabel · $timeStr',
+                                      style: theme.textTheme.bodyMedium
+                                          ?.copyWith(
+                                            color: theme
+                                                .colorScheme
+                                                .onSurfaceVariant,
+                                          ),
+                                    ),
+                                  ],
+                                ),
+                              ),
+                              Column(
+                                children: [
+                                  Switch(
+                                    value: n.enabled,
+                                    onChanged: (value) async {
+                                      await NotificationsService.upsert(
+                                        n.copyWith(enabled: value),
+                                      );
+                                    },
+                                  ),
+                                  IconButton(
+                                    onPressed: () => _deleteNotification(n),
+                                    icon: Icon(
+                                      Icons.delete_outline,
+                                      size: 20,
+                                      color: theme.colorScheme.error,
+                                    ),
+                                    tooltip: t(context, 'delete'),
+                                  ),
+                                ],
+                              ),
+                            ],
+                          ),
+                        ),
+                      ),
+                    );
+                  },
+                );
+              },
+            );
+          },
+        ),
       ),
     );
   }

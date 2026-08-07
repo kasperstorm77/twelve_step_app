@@ -7,9 +7,11 @@ import 'package:vibration/vibration.dart';
 import 'package:wakelock_plus/wakelock_plus.dart';
 import '../models/ritual_item.dart';
 import '../models/morning_ritual_entry.dart';
+import '../services/alarm_sound.dart';
 import '../services/morning_randomizer_source.dart';
 import '../services/morning_ritual_service.dart';
 import '../../shared/localizations.dart';
+import '../../shared/utils/platform_helper.dart';
 
 class MorningRitualTodayTab extends StatefulWidget {
   final DateTime selectedDate;
@@ -374,24 +376,34 @@ class _MorningRitualTodayTabState extends State<MorningRitualTodayTab> {
     final soundEnabled = item?.soundEnabled ?? true;
 
     if (soundEnabled) {
-      try {
-        // Use flutter_ringtone_player to play the system alarm sound
-        // This works reliably on both Android and iOS.
-        // `looping: false` lets the alarm tone play once to its natural end —
-        // we deliberately do NOT force-stop it after a fixed delay, which used
-        // to truncate the sound. It is silenced by `_stopAlarmSound()` when the
-        // user advances to the next item or leaves the page (see dispose).
-        await FlutterRingtonePlayer().play(
-          android: AndroidSounds.alarm,
-          ios: IosSounds.alarm,
-          looping: false,
-          volume: 1.0,
-          asAlarm: true, // Uses alarm audio stream for proper volume control
-        );
-      } catch (e) {
-        // Fallback to system sound if ringtone player fails
-        debugPrint('FlutterRingtonePlayer failed: $e');
+      // flutter_ringtone_player declares android + ios only, so on desktop the
+      // call below would just throw MissingPluginException. Go straight to the
+      // system alert there; the settings dialog says so up front (plan P3.1).
+      if (PlatformHelper.isDesktop) {
         SystemSound.play(SystemSoundType.alert);
+      } else {
+        final sound = alarmSoundFor(item?.soundId);
+        try {
+          // Use flutter_ringtone_player to play the chosen system sound.
+          // This works reliably on both Android and iOS.
+          // `looping: false` lets the alarm tone play once to its natural end —
+          // we deliberately do NOT force-stop it after a fixed delay, which used
+          // to truncate the sound. It is silenced by `_stopAlarmSound()` when the
+          // user advances to the next item or leaves the page (see dispose).
+          await FlutterRingtonePlayer().play(
+            android: sound.android,
+            ios: sound.ios,
+            looping: false,
+            volume: 1.0,
+            // Only the alarm choice takes the alarm audio stream; a
+            // notification or ringtone should follow its own stream volume.
+            asAlarm: sound.asAlarm,
+          );
+        } catch (e) {
+          // Fallback to system sound if ringtone player fails
+          debugPrint('FlutterRingtonePlayer failed: $e');
+          SystemSound.play(SystemSoundType.alert);
+        }
       }
     }
 
