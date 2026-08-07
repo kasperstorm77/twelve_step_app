@@ -770,6 +770,31 @@ read back as served) and TestFlight on 2026-08-07, so the pending App Store
 submission now carries both the corrected name and the rewritten help.
 
 
+### Danish store page, English release notes
+
+Checking App Store Connect before submitting found the version's **What's New**
+was never written by anything: the `da` locale carried the **English** notes and
+`en-GB` carried **none at all**, under two correctly localized descriptions. The
+TestFlight script writes `betaBuildLocalizations` ("What to Test"); nobody wrote
+`appStoreVersionLocalizations.whatsNew`, which is what the public reads. It
+drifted silently because no upload output ever mentions it.
+
+`scripts/set-appstore-release-notes.sh` now writes it from `release.md`'s top
+block — the same source Play and TestFlight already use — refuses to run when
+that block does not match `pubspec.yaml`, and reads every locale back to verify.
+`scripts/appstore-status.sh` prints the whole picture read-only, including the
+**build attached to the pending version**, which is not visible anywhere else:
+that version was sitting on build 108 while TestFlight had 112.
+
+### "Just for Today" is the name, in both languages
+
+It was being translated to "Kun for i dag" in the Danish UI, help, release notes
+and store copy. It is the reading's name, not a phrase — it stays English in
+Danish, like the app's own name. Corrected in the four in-app strings, the
+pending release notes and the store copy; the catalog asset keeps the upstream
+`da` title because it is generated and unused by this app's UI. Already-shipped
+release notes are left as they shipped.
+
 ---
 
 ## Data-format migration notes

@@ -19,7 +19,7 @@ line must match `pubspec.yaml`.
 <da-DK>
 - Hjælpen i appen beskriver nu, hvad hvert værktøj faktisk gør: de fire
   kategorier og hvordan feltnavnene følger dem, frygten bag en barriere og
-  hvordan papiret vendes, "Kun for i dag"-læsningen, alarmlyden per element, og
+  hvordan papiret vendes, "Just for Today"-læsningen, alarmlyden per element, og
   hvilke indtastninger der kan rettes.
 - Påmindelser har for første gang en hjælpeside, og hjælpen til 8. trin
   forklarer nu Ja / Nej / Måske-kolonnerne korrekt.

@@ -185,7 +185,9 @@ void main() {
     ) async {
       await openEditor(tester, locale: 'da');
 
-      expect(find.text('Kun for i dag'), findsOneWidget);
+      // The reading keeps its English name in Danish — it is the feature's
+      // name, not a phrase to translate.
+      expect(find.text('Just for Today'), findsOneWidget);
       expect(
         find.textContaining('Trækker én af de ti'),
         findsOneWidget,

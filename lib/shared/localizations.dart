@@ -1064,12 +1064,14 @@ final Map<String, Map<String, String>> localizedValues = {
     'morning_ritual_prayer_text': 'Bønnens tekst',
     'morning_ritual_prayer_text_hint':
         'Indtast teksten på bønnen, der skal vises',
-    'morning_ritual_just_for_today': 'Kun for i dag',
+    // The reading is called "Just for Today" in both languages — it is the
+    // feature's name, not a phrase to translate.
+    'morning_ritual_just_for_today': 'Just for Today',
     'morning_ritual_just_for_today_help':
-        'Trækker én af de ti Kun for i dag-læsninger, når dagens ritual '
+        'Trækker én af de ti Just for Today-læsninger, når dagens ritual '
         'begynder, i stedet for en fast tekst.',
     'morning_ritual_just_for_today_single':
-        'Kun ét Kun for i dag-element understøttes.',
+        'Kun ét Just for Today-element understøttes.',
     'morning_ritual_name_required': 'Navn er påkrævet',
     'morning_ritual_ready': 'Klar til at Begynde',
     'morning_ritual_items_count': '%count% elementer i dit ritual',
@@ -1116,7 +1118,7 @@ final Map<String, Map<String, String>> localizedValues = {
         'En morgenpraksis, du selv bygger og derefter kører trin for trin, så den sker på samme måde hver dag uden at du skal huske rækkefølgen.',
     'help_morning_ritual_items_title': 'Tidtagere og læsninger',
     'help_morning_ritual_items':
-        'Byg dit ritual af to slags elementer:\n• Tidtager - tæller ned til meditation eller stille bøn og ringer til sidst. Du vælger lyden, og om den skal vibrere.\n• Bøn - tekst du læser. Indsæt det, du bruger.\n\nEt bøn-element kan i stedet trække en "Kun for i dag"-læsning, som vælger én ud af ti hver morgen. Træk elementerne i den rækkefølge, du vil have dem.',
+        'Byg dit ritual af to slags elementer:\n• Tidtager - tæller ned til meditation eller stille bøn og ringer til sidst. Du vælger lyden, og om den skal vibrere.\n• Bøn - tekst du læser. Indsæt det, du bruger.\n\nEt bøn-element kan i stedet trække en "Just for Today"-læsning, som vælger én ud af ti hver morgen. Træk elementerne i den rækkefølge, du vil have dem.',
     'help_morning_ritual_practice_title': 'Daglig Praksis',
     'help_morning_ritual_practice':
         'Start fra fanen I dag og gå elementerne igennem, og fuldfør eller spring hvert enkelt over; du kan også gå tilbage. Kalenderen markerer de dage, du gennemførte, og Historik viser hvad du gjorde og den læsning, du fik.',

@@ -280,7 +280,7 @@ and you can now import your work from the Emotional Sobriety app.
 ```
 ### Promotional text (da) — 141
 ```
-Nyt: en Kun for i dag-læsning, der trækker én af ti intentioner hver morgen,
+Nyt: en Just for Today-læsning, der trækker én af ti intentioner hver morgen,
 og du kan nu importere dit arbejde fra Emotional Sobriety-appen.
 ```
 

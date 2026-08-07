@@ -96,6 +96,14 @@ for (const v of versions.data ?? []) {
       `  ${la.locale}: ${shots} screenshot(s), keywords=${JSON.stringify(la.keywords ?? '')}` +
         (missing.length ? `  ← missing: ${missing.join(', ')}` : ''),
     )
+    if (process.env.ASC_SHOW_TEXT === '1') {
+      for (const field of ['promotionalText', 'description', 'whatsNew', 'supportUrl', 'marketingUrl']) {
+        const val = la[field]
+        if (val == null || val === '') continue
+        console.log(`    ── ${la.locale}.${field} ──`)
+        for (const line of String(val).split('\n')) console.log(`       ${line}`)
+      }
+    }
   }
 }
 
