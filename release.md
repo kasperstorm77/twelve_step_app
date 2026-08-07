@@ -6,6 +6,23 @@ its `<en-GB>` and `<da-DK>` bodies verbatim into Google Play / TestFlight. Keep
 each locale ≤ 500 characters (Play's limit). The version on the `X.Y.Z - DATE:`
 line must match `pubspec.yaml`.
 
+2.3.4 - 2026-08-07:
+<en-GB>
+- Fixed: syncing could stop with a sign-in error and never recover on its own,
+  so work done on your phone never reached your backup. The app now renews the
+  sign-in itself and keeps syncing.
+- Fixed: something saved just before you close the app could fail to upload. It
+  is now sent as you leave, and anything still missing is uploaded the next time
+  you open the app.
+</en-GB>
+<da-DK>
+- Rettet: synkronisering kunne stoppe med en login-fejl og aldrig komme sig selv,
+  så det du lavede på telefonen aldrig nåede din sikkerhedskopi. Appen fornyer
+  nu login selv og synkroniserer videre.
+- Rettet: noget gemt lige før du lukker appen kunne mislykkes i at blive sendt.
+  Det sendes nu når du forlader appen, og resten sendes næste gang du åbner den.
+</da-DK>
+
 2.3.3 - 2026-08-07:
 <en-GB>
 - Danish is properly Danish now: dates, month names and weekdays follow the
