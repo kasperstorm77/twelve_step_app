@@ -1,5 +1,4 @@
 //main.dart - Flutter Modular Integration
-import 'dart:ui' as ui;
 import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_modular/flutter_modular.dart';
@@ -21,6 +20,7 @@ import 'gratitude/models/gratitude_entry.dart';
 import 'agnosticism/models/barrier_power_pair.dart';
 import 'shared/services/all_apps_drive_service.dart';
 import 'fourth_step/services/i_am_service.dart';
+import 'shared/app_identity.dart';
 import 'shared/utils/platform_helper.dart';
 import 'shared/services/app_settings_service.dart';
 import 'shared/services/app_switcher_service.dart';
@@ -54,17 +54,17 @@ void main() async {
       () => windowManager.ensureInitialized(),
     );
 
-    // Get localized window title based on system locale
-    final locale = ui.PlatformDispatcher.instance.locale;
-    final windowTitle = locale.languageCode == 'da'
-        ? 'Tolv Trins app'
-        : 'Twelve Steps app';
-
+    // The window title is the app's NAME, so it is not translated and not
+    // reworded — it must read exactly what the launcher, CFBundleDisplayName
+    // and MaterialApp.title read (CLAUDE.md hard rule 11). This used to pick
+    // between "Twelve Steps app" and "Tolv Trins app" off the *system* locale,
+    // which produced a third and fourth name for the app and could show an
+    // English title above a Danish UI.
     final windowOptions = WindowOptions(
       size: const Size(800, 800),
       minimumSize: const Size(400, 400),
       center: true,
-      title: windowTitle,
+      title: appDisplayName,
     );
     await timed(
       'windowManager.waitUntilReadyToShow',

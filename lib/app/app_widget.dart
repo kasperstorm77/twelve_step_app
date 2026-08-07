@@ -15,6 +15,7 @@ import '../shared/services/all_apps_drive_service_impl.dart';
 import '../shared/services/backup_restore_service.dart';
 import '../shared/models/app_entry.dart';
 import '../shared/localizations.dart';
+import '../shared/app_identity.dart';
 import '../shared/utils/system_ui.dart';
 
 class AppWidget extends StatefulWidget {
@@ -229,7 +230,7 @@ class _AppWidgetState extends State<AppWidget> with WidgetsBindingObserver {
   @override
   Widget build(BuildContext context) {
     return MaterialApp.router(
-      title: '12 Steps App',
+      title: appDisplayName,
       debugShowCheckedModeBanner: false,
       locale: _localeProvider.locale,
       supportedLocales: const [Locale('en'), Locale('da')],

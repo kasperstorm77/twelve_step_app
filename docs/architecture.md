@@ -1,9 +1,16 @@
 # Architecture
 
-Twelve Steps App (Flutter; internal `MaterialApp` title "12 Steps App",
-desktop window title "Twelve Steps app" / da "Tolv Trins app") is a
+12 Steps App (Flutter) is a
 **suite of six recovery-practice tools plus a reminders module**,
 sharing one offline-first storage layer and one optional cloud backup.
+
+**The app has one name: `12 Steps App`.** Untranslated, no marketing
+suffix, everywhere — `android:label`, `CFBundleDisplayName`, the desktop
+window title, `MaterialApp.title`, and both store listing titles. It is a
+constant, [`appDisplayName`](../lib/shared/app_identity.dart), not a
+localization key; `test/naming_rule_test.dart` checks every copy of it in
+the repo. The app has carried four names at once — see
+[historic_implementation.md](./historic_implementation.md) Phase 23.
 
 **Naming rule.** No user-visible string, store listing, or screenshot
 names the fellowship or uses its initials — a public listing that does

@@ -1,6 +1,7 @@
 import 'dart:io';
 
 import 'package:flutter_test/flutter_test.dart';
+import 'package:twelvestepsapp/shared/app_identity.dart';
 import 'package:twelvestepsapp/shared/localizations.dart';
 
 /// The fellowship is never named — not in the app, not in the store, not in
@@ -100,6 +101,69 @@ void main() {
         reason: 'the guard must reject: $offender',
       );
     }
+  });
+
+  group('the app has exactly one name', () {
+    // It has carried four at once: "12 Steps App" on the launcher,
+    // "Twelve Steps app"/"Tolv Trins app" on the desktop window (off the
+    // *system* locale, so a Danish UI could show an English title),
+    // "12 Steps App - Recovery" staged on the App Store and
+    // "12 Trins App - Værktøjer" briefly on Play.
+    test('android:label matches', () {
+      final manifest = File(
+        'android/app/src/main/AndroidManifest.xml',
+      ).readAsStringSync();
+      expect(manifest, contains('android:label="$appDisplayName"'));
+    });
+
+    test('CFBundleDisplayName matches', () {
+      final plist = File('ios/Runner/Info.plist').readAsStringSync();
+      final match = RegExp(
+        r'<key>CFBundleDisplayName</key>\s*<string>([^<]*)</string>',
+      ).firstMatch(plist);
+      expect(match?.group(1), appDisplayName);
+    });
+
+    test('the store listing titles match', () {
+      final doc = File(
+        'docs/play_store-retain/PLAY_STORE_DESCRIPTIONS.md',
+      ).readAsStringSync();
+      // Every "### Title (…)" / "### Name" block's fenced value.
+      final titles = RegExp(
+        r'###\s+(?:Title\s*\([^)]*\)|Name)[^\n]*\n+```\n([^\n]*)\n```',
+      ).allMatches(doc).map((m) => m.group(1)!.trim()).toList();
+      expect(titles, isNotEmpty, reason: 'no listing titles found to check');
+      for (final title in titles) {
+        expect(
+          title,
+          appDisplayName,
+          reason: 'a store listing title must be the app name, untranslated',
+        );
+      }
+    });
+
+    test('no Dart file hardcodes a rival name', () {
+      // app_identity.dart documents the old names in prose; everything else
+      // must go through the constant.
+      final offenders = <String>[];
+      for (final file
+          in Directory('lib')
+              .listSync(recursive: true)
+              .whereType<File>()
+              .where((f) => f.path.endsWith('.dart'))) {
+        if (file.path.endsWith('app_identity.dart')) continue;
+        final text = file.readAsStringSync();
+        for (final rival in const [
+          "'Twelve Steps app'",
+          "'Tolv Trins app'",
+          "'12 Steps App - Recovery'",
+          "'12 Trins App",
+        ]) {
+          if (text.contains(rival)) offenders.add('${file.path}: $rival');
+        }
+      }
+      expect(offenders, isEmpty);
+    });
   });
 
   test('ordinary recovery language still passes', () {

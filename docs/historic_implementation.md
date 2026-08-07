@@ -754,7 +754,15 @@ verify. Apple freezes a live version's name, so the public record still says
 the tool rather than silently ignored.
 
 `scripts/fix-appstore-name.sh` does the check and the fix, and reports rather
-than guesses when a live appInfo blocks the write. The rule now sits in
+than guesses when a live appInfo blocks the write.
+
+**And a fourth name, found by looking at the running app.** The macOS window
+title was built from the *system* locale — "Twelve Steps app" or "Tolv Trins
+app" — so a Danish UI could sit under an English title, and neither matched the
+launcher. All Dart references now come from `appDisplayName`, and the guard test
+checks `android:label`, `CFBundleDisplayName`, every store listing title in the
+doc, and that no Dart file hardcodes a rival. Desktop is not distributed, so
+this one never reached a store. The rule now sits in
 `CLAUDE.md` beside localization: the app's name is not a translatable string.
 
 **Shipped as 2.3.5+112** to Google Play closed testing ("alpha", versionCode 112,
