@@ -558,6 +558,38 @@ Open outranks production, so that group is pinned to a build eight versions old
 and, 98 being lower than 106, cannot move. Same defect, one tier down;
 registered as plan P2.1 because halting a public track is the owner's call.
 
+### Proving the cross-app transfer, instead of assuming it
+
+`BackupRestoreService` changed this phase, so "is Emotional Sobriety still
+compatible?" needed an answer with evidence behind it. Both repositories pinned
+the contract with **fixtures** — and their side's Twelve Steps fixture is a
+hand-written Dart literal, which is precisely the shape of the mistake the last
+cross-app defect exploited: every fixture on both sides was hand-authored with
+values no device produces, so both suites stayed green while real transfers
+broke.
+
+`scripts/verify-cross-app-recovery.sh` closes that. It runs this side's import
+suites, then builds a **live** payload from the real `SyncPayloadBuilder` —
+seeded with the awkward cases (Danish text, a pair with an empty connected fear
+and one with, an archived pair, a Just for Today draw, contiguous sort orders)
+— and feeds it through Emotional Sobriety's **own `BackupValidator`** inside
+their checkout, via a throwaway probe test that is always cleaned up. Then it
+runs their parity suites. Both directions or nothing: `--peer none` diagnoses
+and still exits non-zero, so no run can clear a release having proven one side.
+It is now CLAUDE.md hard rule 9, a step in the `deploy-release` gate, and
+architecture.md §7.1.
+
+Verified against 2.3.3: their validator accepts this app's live export with all
+five shared datasets intact, the empty connected fear preserved as empty rather
+than invented or rejected, the archived pair still archived, and the Danish text
+intact through UTF-8.
+
+Three of the probe's own assertions were wrong before the contract ever was —
+`toString()` on their models returns `Instance of 'InventoryEntry'`, and a
+`contains('æ')` check missed text that actually read "Ædru i dag" and "Stille
+bøn". Worth remembering when a cross-app check goes red: confirm the assertion
+before believing the contract broke.
+
 **Coverage went 75 → 105 tests**: the boxes only this app has now round-trip
 through `SyncPayloadBuilder` → `BackupRestoreService`, the two legacy import
 aliases and the I-Am-before-entries ordering are pinned, `blockUploads()` and

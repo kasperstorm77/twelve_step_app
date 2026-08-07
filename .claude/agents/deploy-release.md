@@ -59,9 +59,20 @@ Derive the bullets from `git log <prev-version-commit>..HEAD` — the user-facin
 ### 4 · Gate, commit + push to `main`
 Run the gate — **never** `--no-verify`:
 ```bash
-flutter analyze        # must be clean
-flutter test           # must pass
+flutter analyze                              # must be clean
+flutter test                                 # must pass
+bash scripts/verify-cross-app-recovery.sh    # must exit 0 — cross-app transfer
 ```
+The third command is the **cross-app recovery gate** (CLAUDE.md hard rule 9).
+The two apps move a person's recovery data through one shared JSON file, so a
+one-sided change to a shared key, an instant's zone or a validation rule is a
+broken import — for someone who has already lost their work. It builds a *live*
+payload from `SyncPayloadBuilder` and feeds it through Emotional Sobriety's own
+`BackupValidator` in the sibling checkout, then runs their parity suites.
+It needs that checkout at `../emotional_sobriety` (or `--peer PATH` /
+`$EMOTIONAL_SOBRIETY_REPO`). **If it cannot find the peer it FAILS — do not
+work around that with `--peer none`, which never clears a release. STOP and
+report instead.**
 (If a Hive model under `lib/**/models/**` changed, run `dart run build_runner build --delete-conflicting-outputs` BEFORE the gate.) Then stage **only** the release's files (the code change + the `pubspec.yaml` bump + `release.md` + the doc edits) and:
 ```bash
 git commit -F - <<'EOF'
@@ -103,6 +114,8 @@ This builds the **App Store–exported** (distribution-signed) IPA via `flutter 
 
 - **Order is non-negotiable: Phase A (push to `main`) before Phase B (deploy).** Never ship an artifact built from an un-pushed tree.
 - **Never** `--no-verify`, never upload a **debug** AAB/IPA, never force-push.
+- **Never upload to a track other than closed `alpha`.** `upload-aab-to-play.sh` hard-pins it and has no `--track` flag; after committing it re-reads the tracks and fails if a higher-priority track (`internal`) would shadow the release. Open testing and production are not destinations.
+- **Never skip the cross-app recovery gate**, and never ship on a one-direction result. If `verify-cross-app-recovery.sh` fails, the shared JSON contract is broken: STOP, report, and fix it before anything reaches a store.
 - Each store upload needs a **strictly higher** `+BUILD` than the last (versionCode for Play, CFBundleVersion for App Store). A 409/duplicate = bump `+BUILD` in pubspec.yaml + rebuild.
 - Builds are long — run with a generous timeout (background is fine); verify the artifact exists + is fresh *before* uploading.
 - The store uploads are **outward-facing and hard to reverse** (they reach testers). If a precondition is missing (a signer, a key) or a build/verify/gate step fails, **STOP and report** the command output — never push a half-done release or fabricate success.

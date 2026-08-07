@@ -56,25 +56,37 @@ The three canonical docs (open the one that fits, then come back):
    `blockUploads()`; the user explicitly *Fetches*. Keep
    `checkAndSyncIfNeeded()` returning false.
 
+### Cross-app recovery
+9. **Never ship a store build without proving the Emotional Sobriety
+   transfer still works, in BOTH directions.** Run
+   `bash scripts/verify-cross-app-recovery.sh` — it must exit 0 — before
+   `upload-aab-to-play.sh` or `upload-ipa-to-testflight.sh`. It runs this
+   app's import suites, builds a **live** payload from `SyncPayloadBuilder`,
+   and feeds it through that app's **own `BackupValidator`** in the sibling
+   checkout. Fixtures alone are not enough: the last cross-app defect
+   survived both test suites because every fixture on both sides was
+   hand-authored with values no device produces. There is no flag that
+   clears a release on one direction.
+
 ### Backend constraints
-9. No Firebase, no server, no full Drive scope. Sync is one JSON file in
+10. No Firebase, no server, no full Drive scope. Sync is one JSON file in
    the user's own `drive.appdata`. Don't add `firebase_*`, a broader
    Drive scope, the web platform, `MANAGE_EXTERNAL_STORAGE`, or any
    billed dependency — each reverses a shipped decision
    ([historic_implementation.md](docs/historic_implementation.md)).
 
 ### UI & localization
-10. Localize every user-visible string in both `en` and `da` via
+11. Localize every user-visible string in both `en` and `da` via
     `t(context, 'key')` in
     [localizations.dart](lib/shared/localizations.dart). No hardcoded
     user text. Danish runs longer — check both lay out.
-11. Every screen's AppBar keeps the four actions: app switcher, help,
+12. Every screen's AppBar keeps the four actions: app switcher, help,
     settings (Data Management), EN/DA language popup. Every routed tool
     has an `AppHelpService` case — keep it that way when adding one.
-12. **Dates are localized separately from `t()`.** Use
+13. **Dates are localized separately from `t()`.** Use
     [`shared/utils/date_formats.dart`](lib/shared/utils/date_formats.dart);
     a bare `DateFormat.yMMMMd()` renders English inside the Danish UI.
-13. **Never give the system bars a colour.**
+14. **Never give the system bars a colour.**
     `ThemeData.appBarTheme.systemOverlayStyle` stays
     [`appSystemOverlayStyle`](lib/shared/utils/system_ui.dart) with all three
     colours null — each non-null one calls an API Android 15 deprecated and
@@ -98,6 +110,9 @@ The three canonical docs (open the one that fits, then come back):
   before `flutter analyze`/`flutter test` — a stale `*.g.dart` fails the
   build. Full local setup (codegen, gitignored credential files, platform
   config) lives in [docs/LOCAL_SETUP.md](docs/LOCAL_SETUP.md).
+- **Before any store upload:** `bash scripts/verify-cross-app-recovery.sh`
+  exits 0 (hard rule 9). It needs the sibling checkout — pass `--peer PATH`
+  or set `$EMOTIONAL_SOBRIETY_REPO` if it isn't at `../emotional_sobriety`.
 - Before reporting a change done: `flutter analyze` is clean and
   `flutter test` passes. Keep `main.dart`'s open-box set in sync with
   `SyncPayloadBuilder`.
@@ -122,6 +137,7 @@ The three canonical docs (open the one that fits, then come back):
 | New string | add `en` + `da` in [`localizations.dart`](lib/shared/localizations.dart) |
 | Drive / auth change | [`all_apps_drive_service_impl.dart`](lib/shared/services/all_apps_drive_service_impl.dart) + `lib/shared/services/google_drive/` |
 | Ship a release | `deploy-release` agent + `scripts/{build-aab,upload-aab-to-play,upload-ipa-to-testflight}.sh`; notes in `release.md`; setup in [implementation_plan.md](docs/implementation_plan.md) Store release runbook |
+| Prove the cross-app transfer | `bash scripts/verify-cross-app-recovery.sh` — **mandatory before every store upload** (hard rule 9) |
 
 When the docs and the code disagree, the code wins — fix the doc in the
 same PR.

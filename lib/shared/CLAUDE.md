@@ -19,6 +19,13 @@ backup, restore, app switching, settings, localization, help. See
   Unreadable records are skipped and counted in
   `RestoreCounts.skippedRecords`, never fatal.
 
+## Before a store release
+**Run `bash scripts/verify-cross-app-recovery.sh` — it must exit 0** (root
+CLAUDE.md hard rule 9). Fixtures on both sides are not enough; it builds a live
+payload from `SyncPayloadBuilder` and runs it through Emotional Sobriety's own
+`BackupValidator`. Any change in this folder to export, restore, or a shared
+model is exactly what it exists to catch.
+
 ## Importing another product's backup
 - This app **never writes a `product` key**; a payload that has one is
   foreign. `emotional-sobriety` `1.0` is the only supported foreign

@@ -179,7 +179,19 @@ stores: Flutter maps `X.Y.Z`→versionName/CFBundleShortVersionString and
 must strictly increase each upload (patch release: `2.2.13+106` →
 `2.2.14+107`). No `build.gradle.kts` / `Info.plist` edits needed.
 
+**Gate before either upload — not optional.**
+`bash scripts/verify-cross-app-recovery.sh` must exit 0. The two apps move
+recovery data through one JSON file, and a one-sided change to a shared key,
+an instant's zone or a validation rule is a broken import for a real person's
+work. The script runs this app's import suites, builds a **live** export from
+`SyncPayloadBuilder`, feeds it through Emotional Sobriety's own
+`BackupValidator` in the sibling checkout, and runs their parity suites. It
+needs that checkout at `../emotional_sobriety` (or `--peer PATH` /
+`$EMOTIONAL_SOBRIETY_REPO`). `--peer none` diagnoses but always fails — there
+is deliberately no way to clear a release having proven one direction.
+
 **The scripts:**
+- `scripts/verify-cross-app-recovery.sh` — the cross-app gate above. Run first.
 - `scripts/build-aab.sh` — `flutter build appbundle --release`; verifies
   the signer is the release key (not the debug fallback).
 - `scripts/upload-aab-to-play.sh [--dry-run|--yes]` — drives the Google

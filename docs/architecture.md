@@ -594,6 +594,14 @@ tooling now enforces, both learned the hard way:
   re-reads the tracks and fails if `internal` holds an active release; `draft`
   and `halted` releases serve nobody and are ignored. `--audit-tracks` runs the
   same read-only, `--self-test` pins the query against fixtures.
+- **No store upload without proving the cross-app transfer.**
+  `scripts/verify-cross-app-recovery.sh` must exit 0 first: it runs this app's
+  import suites, builds a **live** payload from `SyncPayloadBuilder`, and feeds
+  it through Emotional Sobriety's **own `BackupValidator`** in the sibling
+  checkout (a throwaway probe test, always cleaned up), then runs their parity
+  suites. Both directions or nothing — `--peer none` reports and then fails.
+  Fixtures alone are insufficient: the last cross-app defect survived both
+  suites because every fixture on both sides was hand-authored.
 - **iOS: a build in App Store Connect reaches nobody without a beta group.**
   An internal group with `hasAccessToAllBuilds` exists, so uploads distribute
   automatically; adding an *external* tester would need a Beta App Review.
