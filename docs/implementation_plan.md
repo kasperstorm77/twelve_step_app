@@ -189,6 +189,39 @@ them with hand-written payloads — the last cross-app defect survived both test
 suites precisely because every fixture on both sides was hand-authored with
 values no device produces.
 
+### P2.8 Fail a Play publish that a higher-priority track outranks
+
+Emotional Sobriety hit this and lost hours to it three times before the cause
+was found, and this app publishes to `alpha` through the same kind of script,
+so it has the same exposure.
+
+Play serves a tester the **highest-priority track they belong to**: internal →
+closed → open → production. A release left active on a higher-priority track
+therefore pins those testers to it, and a newly published closed build never
+reaches them. When the stale build's versionCode is *lower* than the new one,
+Play can neither update nor downgrade, so the Store simply offers nothing — it
+looks exactly like a broken package, and the publish output stays green because
+every check verifies what was uploaded rather than what the store hands out.
+
+Emotional Sobriety's `scripts/upload-aab-to-play.sh` now reads every
+higher-priority track after committing and fails with the offending track and
+versionCode; draft releases are ignored so an empty draft track does not trip
+it. Port the same gate here, and audit this app's tracks once by hand — the
+defect there was a five-version-old release sitting on `internal` that nobody
+had looked at since it was published.
+
+**Acceptance:**
+
+- [ ] Read this app's `internal`, `alpha`, `beta` and `production` tracks and
+      record which hold an active (non-draft) release.
+- [ ] Remove or halt any release on a track that outranks the one this app
+      publishes to.
+- [ ] Add the precedence check to `scripts/upload-aab-to-play.sh` after the
+      post-commit read-back, failing with the track name and versionCode.
+- [ ] Exercise the check's query against the live tracks before trusting it,
+      and confirm it ignores draft-only tracks.
+- [ ] Note the rule in `architecture.md` beside the release tooling.
+
 ---
 
 ## P3 — Engineering polish
