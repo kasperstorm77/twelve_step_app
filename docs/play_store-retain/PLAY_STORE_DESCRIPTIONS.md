@@ -17,10 +17,18 @@ different thing and live in [`release.md`](../../release.md).
   The tool names in the copy are taken from `app_*_name` in
   `localizations.dart`, and the screenshots are ordered to follow the bullet
   list, so the text and the images on the store page describe the same app.
-- **Google Play — blocked on a permission, listing unchanged.** The text
-  writes into an edit fine (`PUT .../listings/{lang}` → 200) but
-  `edits:validate` returns **403 "The caller does not have permission"**, so
-  the edit cannot be committed. The service account
+- **Google Play — TEXT IS LIVE (2026-08-07).** "Manage store presence" was
+  granted, and `bash scripts/publish-play-listing.sh` published the title,
+  short description and full description for **en-GB and da-DK**. The script
+  reads this document (it does not retype the copy), enforces Play's limits,
+  and reads the listing back after committing to confirm the store holds
+  exactly what was sent — both languages matched. The **screenshots are still
+  the old single 500×1024 shot**; that is now plan P1.1.
+
+  *Historic note — what the block was.* The text wrote into an edit fine
+  (`PUT .../listings/{lang}` → 200) but `edits:validate` returned
+  **403 "The caller does not have permission"**, so the edit could not be
+  committed — the write looks fine right up until the commit. The service account
   `play-publisher@life-happens.iam.gserviceaccount.com` can release to testing
   tracks but cannot manage store presence. Grant it in **Play Console → Users
   & permissions → that account → App permissions → "Manage store presence"**,
