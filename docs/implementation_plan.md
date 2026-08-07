@@ -53,41 +53,7 @@ permission lands; the commands are in
 
 ## P2 — Publishing safety
 
-### P2.1 Open testing serves an older build than production
-
-Found by the track audit added with the precedence gate. The live tracks are:
-
-```
-internal     (no releases)
-alpha        completed versionCode=110    ← this app publishes here
-beta         completed versionCode=98
-production   completed versionCode=106
-```
-
-`beta` (open testing) **outranks** production in Play's precedence, so anyone
-in the open-test group is served versionCode 98 — eight builds older than the
-106 the public gets. And because 98 is *lower* than 106, Play can neither
-update nor downgrade them: that group is stuck, and the Store shows them
-nothing to install. This is the same defect the alpha gate now prevents, one
-tier down.
-
-Nothing here is urgent for closed testing — alpha (110) outranks both, so
-testers are fine — but it should be resolved before the next public release.
-
-**Decide and act in Play Console → Testing → Open testing:**
-
-- [ ] Confirm whether the open-test track is still wanted at all.
-- [ ] If not: halt the versionCode 98 release so those users fall through to
-      production.
-- [ ] If yes: publish a current build to it so it stops shadowing production
-      with something older.
-- [ ] Re-run `bash scripts/upload-aab-to-play.sh --audit-tracks` afterwards.
-
-*(The script's gate deliberately does **not** fail on this — `beta` and
-`production` rank below closed and cannot shadow an alpha release. Widening the
-gate to lower tracks would fail every legitimate closed-testing publish.)*
-
-### P2.2 The shared JSON contract — a standing rule, not a task
+### P2.1 The shared JSON contract — a standing rule, not a task
 
 Cross-app transfer is the **JSON export/import path**, not Drive: `appdata` is
 per-application, so neither app can see the other's Drive file, and that is

@@ -552,11 +552,18 @@ Two things the work turned up:
   `11` does not match `110`, along with draft-vs-active and numeric-vs-string
   versionCodes. Thirteen cases, no network needed.
 
-The one-time audit found `internal` empty, so nothing had to be halted — but it
-also found **open testing serving versionCode 98 while production serves 106**.
-Open outranks production, so that group is pinned to a build eight versions old
-and, 98 being lower than 106, cannot move. Same defect, one tier down;
-registered as plan P2.1 because halting a public track is the owner's call.
+The one-time audit found `internal` empty, so nothing had to be halted. It also
+appeared to find open testing serving versionCode 98 against production's 106 —
+which would have been the same defect one tier down. It wasn't: **open testing
+is paused**, and the Android Publisher API has no field for that. A paused track
+still returns its last release with status `completed`, so an audit cannot tell
+a live track from a paused one.
+
+That blind spot is now stated in the script's header and printed after every
+audit, because it will otherwise be rediscovered as a false alarm every time.
+The gate itself is unaffected — it only ever fails on `internal` — and the audit
+now prints each release's Play name (`98 (2.2.6)`, `106 (2.2.13)`) so the state
+of a track reads at a glance instead of as a bare number.
 
 ### Proving the cross-app transfer, instead of assuming it
 

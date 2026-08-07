@@ -593,7 +593,10 @@ tooling now enforces, both learned the hard way:
   *uploaded* rather than what the store hands out. After committing, the script
   re-reads the tracks and fails if `internal` holds an active release; `draft`
   and `halted` releases serve nobody and are ignored. `--audit-tracks` runs the
-  same read-only, `--self-test` pins the query against fixtures.
+  same read-only, `--self-test` pins the query against fixtures. **The API does
+  not report a *paused* track** — a paused track still returns its last release
+  as `completed` — so an audit can only prove what is on a track, never that the
+  track is live. The gate fails on `internal` alone for exactly that reason.
 - **No store upload without proving the cross-app transfer.**
   `scripts/verify-cross-app-recovery.sh` must exit 0 first: it runs this app's
   import suites, builds a **live** payload from `SyncPayloadBuilder`, and feeds

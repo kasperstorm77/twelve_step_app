@@ -45,6 +45,11 @@
 # `internal` holds an active release. Draft releases are ignored: a draft serves
 # nobody, so an empty draft track must not trip the gate.
 #
+# Known blind spot: the API does NOT report whether a track is *paused* — a
+# paused track still returns its last release with status "completed". The gate
+# only ever fails on `internal`, so this cannot block a release, but do not read
+# the audit's `beta`/`production` lines as proof that those tracks are live.
+#
 # Prereqs:
 #   • A release AAB already built — run scripts/build-aab.sh first.
 #   • jq, curl, openssl on PATH.
@@ -96,6 +101,7 @@ dry_run=0
 assume_yes=0
 audit_only=0
 self_test=0
+raw_tracks=0
 
 while (( $# )); do
   case "$1" in
@@ -107,6 +113,7 @@ while (( $# )); do
     --package)  shift; package="${1:?--package needs a value}" ;;
     --dry-run)  dry_run=1 ;;
     --audit-tracks) audit_only=1 ;;
+    --raw)          raw_tracks=1 ;;
     --self-test)    self_test=1 ;;
     -y|--yes)   assume_yes=1 ;;
     -h|--help)  sed -n '2,62p' "$0" | sed 's/^# \{0,1\}//'; exit 0 ;;
@@ -152,7 +159,7 @@ print_track_report() { # $1=tracks json → every release, active or not
       printf '  %-12s %s\n' "$t" "$line"
     done < <(jq -r --arg t "$t" '
       .tracks[]? | select(.track == $t) | .releases[]?
-      | "\(.status // "?") versionCode=\((.versionCodes // []) | join(",") | if . == "" then "-" else . end)"
+      | "\(.status // "?")  versionCode=\((.versionCodes // []) | join(",") | if . == "" then "-" else . end)  \(.name // "")"
     ' <<<"$1")
     # A plain `[ … ] && printf` would leave the function's exit status at 1
     # whenever the last track *did* have a release, and `set -e` then kills the
@@ -373,6 +380,10 @@ http() { # http METHOD URL [extra curl args…] → body on stdout; aborts on no
 if [ "$audit_only" -eq 1 ]; then
   header "Track audit"
   tracks_json=$(read_tracks_json)
+  if [ "$raw_tracks" -eq 1 ]; then
+    jq . <<<"$tracks_json"
+    echo
+  fi
   print_track_report "$tracks_json"
   echo
 
@@ -389,6 +400,11 @@ if [ "$audit_only" -eq 1 ]; then
 
   if assert_no_outranking_release "$tracks_json"; then
     ok "No track outranking '$track' holds an active release."
+    echo
+    warn "The Android Publisher API does not expose whether a track is PAUSED:"
+    warn "a paused track still reports its last release as 'completed'. The"
+    warn "'beta' and 'production' lines above are informational only — confirm"
+    warn "their real state in Play Console before acting on them."
     exit 0
   fi
   exit 3
