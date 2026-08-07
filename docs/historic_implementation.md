@@ -517,6 +517,12 @@ confirm button exists. Two things worth remembering: a `.last` finder throws
 "is it there yet?", and a flake that only appears under full-suite concurrency
 will not reproduce when you run the file on its own.
 
+**Shipped as 2.3.3+110** to Google Play closed testing ("alpha", versionCode
+110, status `completed`, both locales' notes attached) and TestFlight on
+2026-08-07, where the App Store Connect API set the en-GB + da "What to Test"
+notes automatically. App Store Connect raised no warning this time — 2.3.2's
+iOS 15 deployment target settled warning 90068.
+
 **Coverage went 75 → 105 tests**: the boxes only this app has now round-trip
 through `SyncPayloadBuilder` → `BackupRestoreService`, the two legacy import
 aliases and the I-Am-before-entries ordering are pinned, `blockUploads()` and
