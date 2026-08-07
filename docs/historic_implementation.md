@@ -668,6 +668,16 @@ destroy nothing.
 
 Nothing was lost. The ritual was on the phone the whole time.
 
+**Shipped as 2.3.4+111** to Google Play closed testing ("alpha", versionCode
+111, read back as served) and TestFlight on 2026-08-07.
+
+**It does not reach the people already using the app.** Production still serves
+**versionCode 106 (2.2.13)** — the build Google flagged for edge-to-edge, and a
+build with the dead-token defect in it. Anyone on the public listing keeps
+failing to sync silently until a production rollout happens, which is a
+deliberate human decision and one this tooling cannot make: the publish script
+is hard-pinned to `alpha` and has no `--track` flag.
+
 ### Lesson
 
 Two plausible causes, and the evidence for the first one was entirely
