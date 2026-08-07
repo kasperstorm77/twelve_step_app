@@ -52,9 +52,15 @@ The three canonical docs (open the one that fits, then come back):
 7. Route every data mutation through its area service →
    `AllAppsDriveService.scheduleUploadFromBox(...)`. No widget writes a
    box and uploads on its own.
-8. **Never auto-overwrite local data.** `isRemoteNewer()` only
-   `blockUploads()`; the user explicitly *Fetches*. Keep
-   `checkAndSyncIfNeeded()` returning false.
+8. **Never auto-overwrite local data — but never strand it either.**
+   `isRemoteNewer()` only `blockUploads()`; the user explicitly *Fetches*, and
+   `checkAndSyncIfNeeded()` keeps returning false. The **opposite** direction
+   is automatic and must stay that way: `uploadIfLocalNewer()` runs at startup
+   and `flushPendingUpload()` on backgrounding, because a debounced upload is
+   a 1000 ms timer the OS can suspend away. Both directions read one verdict,
+   [`compareSyncClocks`](lib/shared/services/sync_clocks.dart) — don't add a
+   second timestamp comparison. Restoring needs consent (it overwrites);
+   uploading does not (it only ever writes a new timestamped file).
 
 ### Cross-app recovery
 9. **Never ship a store build without proving the Emotional Sobriety

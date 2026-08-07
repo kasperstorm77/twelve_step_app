@@ -382,7 +382,22 @@ void main() async {
             }
             AllAppsDriveService.instance.blockUploads();
           } else {
-            if (kDebugMode) print('startup: ✓ Local data is up to date');
+            // The other direction. A debounced upload is a 1000 ms timer, so
+            // backgrounding the app inside that second drops it — finishing a
+            // morning ritual and putting the phone down is exactly that. Push
+            // anything the local clock says never made it; an upload writes a
+            // new timestamped backup, so it cannot overwrite Drive.
+            final pushed = await timed(
+              'AllAppsDriveService.uploadIfLocalNewer',
+              () => AllAppsDriveService.instance.uploadIfLocalNewer(),
+            );
+            if (kDebugMode) {
+              print(
+                pushed
+                    ? 'startup: ↑ Local work had never uploaded - pushing it now'
+                    : 'startup: ✓ Local data is up to date',
+              );
+            }
           }
         }
       } else {

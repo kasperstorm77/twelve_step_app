@@ -358,6 +358,25 @@ non-dismissible **"Newer Data Available"** dialog after first frame:
 — `checkAndSyncIfNeeded()` is `@Deprecated` and always returns false;
 local data is mutated **only** by an explicit user fetch/restore.
 
+**The other direction is automatic, and must stay so.** Both clocks go
+through `compareSyncClocks` in
+[sync_clocks.dart](../lib/shared/services/sync_clocks.dart), which returns
+`remoteNewer` / `localNewer` / `inSync`. `remoteNewer` blocks uploads and
+prompts (above); **`localNewer` pushes**, via
+`uploadIfLocalNewer()` at startup. That asymmetry is the point: restoring
+overwrites local data, so it needs consent, while uploading only ever writes
+a *new timestamped backup* and can't destroy anything.
+
+Without the push, a lost upload stayed lost. `scheduleUploadFromBox` is a
+1000 ms debounce timer, and the OS suspends the process before it fires if
+the app is backgrounded inside that second — finishing a morning ritual and
+pocketing the phone is exactly that. Nothing retried, because startup only
+ever asked whether the *remote* was ahead, so the entry stayed on the device
+until an unrelated edit happened to schedule another upload.
+`AppWidget.didChangeAppLifecycleState` now also calls `flushPendingUpload()`
+when leaving the foreground to narrow the window; `uploadIfLocalNewer()` is
+the backstop that works even when the process is killed outright.
+
 ### 3.4 Encoding
 Backups are written **UTF-8** (`utf8.encode`); `decodeBackupBytes()`
 decodes strict UTF-8 with a **Latin-1 fallback** so legacy files stay

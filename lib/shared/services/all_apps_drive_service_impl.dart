@@ -7,6 +7,7 @@ import 'google_drive/drive_config.dart';
 import 'google_drive/mobile_drive_service.dart';
 import 'google_drive/windows_drive_service_wrapper.dart';
 import '../utils/platform_helper.dart';
+import 'sync_clocks.dart';
 import 'local_backup_service.dart';
 import 'sync_payload_builder.dart';
 
@@ -666,18 +667,95 @@ class AllAppsDriveService {
         return true;
       }
 
-      // Compare timestamps
-      final isNewer = remoteTimestamp.isAfter(localTimestamp);
+      // Compare timestamps through the shared verdict, so this and
+      // uploadIfLocalNewer() can never disagree about which side is ahead.
+      final verdict = compareSyncClocks(
+        local: localTimestamp,
+        remote: remoteTimestamp,
+      );
       if (kDebugMode) {
-        print(
-          'AllAppsDriveService: isRemoteNewer() - remote is ${isNewer ? "NEWER" : "not newer"} than local',
-        );
+        print('AllAppsDriveService: isRemoteNewer() - verdict $verdict');
       }
-      return isNewer;
+      return verdict.shouldBlockUploads;
     } catch (e) {
       if (kDebugMode) print('AllAppsDriveService: isRemoteNewer() - error: $e');
       return false;
     }
+  }
+
+  /// Push local work that never reached Drive.
+  ///
+  /// The counterpart to [isRemoteNewer]. A debounced upload is only a 1000 ms
+  /// timer, so backgrounding the app inside that second drops it — which is
+  /// exactly what happens when someone finishes a morning ritual and puts the
+  /// phone down. Nothing used to retry: startup asked only whether the remote
+  /// was ahead, so a lost upload stayed lost until an unrelated edit scheduled
+  /// another one.
+  ///
+  /// Safe by construction: an upload writes a **new timestamped backup**, never
+  /// an overwrite, so pushing can't destroy anything in Drive. It runs only
+  /// when the local clock is strictly ahead, and never while uploads are
+  /// blocked — that guard is what keeps hard rule 8 true.
+  ///
+  /// Returns true when an upload was scheduled.
+  Future<bool> uploadIfLocalNewer() async {
+    if (!syncEnabled || !isAuthenticated || _uploadsBlocked) return false;
+
+    try {
+      final localTimestamp = await _getLocalLastModified();
+      final DateTime? remoteTimestamp;
+      if (PlatformHelper.isDesktop) {
+        remoteTimestamp = await _windowsDriveService!
+            .getNewestBackupJsonLastModified(runCleanup: false);
+      } else {
+        remoteTimestamp = await _mobileDriveService!
+            .getNewestBackupJsonLastModified(runCleanup: false);
+      }
+
+      final verdict = compareSyncClocks(
+        local: localTimestamp,
+        remote: remoteTimestamp,
+      );
+      if (!verdict.shouldCatchUpUpload) {
+        if (kDebugMode) {
+          print(
+            'AllAppsDriveService: uploadIfLocalNewer() - $verdict, nothing to push',
+          );
+        }
+        return false;
+      }
+
+      if (kDebugMode) {
+        print(
+          'AllAppsDriveService: uploadIfLocalNewer() - local is ahead, pushing work that never uploaded',
+        );
+      }
+      scheduleUploadFromBox();
+      return true;
+    } catch (e) {
+      if (kDebugMode) {
+        print('AllAppsDriveService: uploadIfLocalNewer() - error: $e');
+      }
+      return false;
+    }
+  }
+
+  /// True while a debounced upload is still waiting to fire.
+  bool get hasPendingUpload => _uploadDebounceTimer?.isActive ?? false;
+
+  /// Run a pending debounced upload now instead of waiting out the timer.
+  ///
+  /// Called when the app is about to be backgrounded. The debounce exists to
+  /// coalesce rapid edits, but the OS can suspend the process before it
+  /// elapses, and a lost timer is lost data-in-transit.
+  Future<void> flushPendingUpload() async {
+    if (!hasPendingUpload) return;
+    _uploadDebounceTimer?.cancel();
+    _uploadDebounceTimer = null;
+    if (kDebugMode) {
+      print('AllAppsDriveService: flushing a pending upload before suspend');
+    }
+    await _performDebouncedUpload();
   }
 
   /// @deprecated This method always returns false. Auto-restore is disabled for data safety.

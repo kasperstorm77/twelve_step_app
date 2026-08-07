@@ -54,7 +54,15 @@ class _AppWidgetState extends State<AppWidget> with WidgetsBindingObserver {
     // When app resumes from background, check if we should switch to morning ritual
     if (state == AppLifecycleState.resumed) {
       _checkMorningRitualAutoLoad();
+      return;
     }
+
+    // Leaving the foreground. A debounced upload is only a 1000 ms timer, and
+    // the OS can suspend us before it fires — which is what happens when a
+    // morning ritual ends and the phone goes straight into a pocket. Flush it
+    // rather than lose the write. Best-effort: if the process dies first,
+    // startup's uploadIfLocalNewer() picks it up on the next launch.
+    AllAppsDriveService.instance.flushPendingUpload();
   }
 
   void _checkMorningRitualAutoLoad() async {

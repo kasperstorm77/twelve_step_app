@@ -604,6 +604,57 @@ the deprecated `checkAndSyncIfNeeded()` are guarded, `reorderRitualItems` is
 exercised against a real mixed active/inactive set, and both locales are
 checked for key parity.
 
+
+---
+
+## Phase 22 — A finished ritual that never left the phone
+
+Reported as "I completed the morning ritual on my phone, I fetched here, and it
+isn't in the history." The desktop was not at fault, and neither was the fetch.
+
+The evidence, in order. The desktop's boxes had all been rewritten at the time
+of the fetch, so the restore ran. Its newest Morning entry was **6 August** and
+the `settings` `lastModified` read `2026-08-06T10:32:22Z` — the payload it
+restored was a day old. The calendar agreed: dots on the 3rd through 6th, none
+on the 7th. `listAvailableBackups()` sorts newest-first by the filename date and
+the fetch takes `.first`, so it had picked the newest file that existed. The
+conclusion was forced: at that moment Drive held no backup containing the
+ritual.
+
+`saveEntry` does call `scheduleUploadFromBox`, so the path existed. But that
+call only starts a **1000 ms debounce timer**, and two things were missing
+around it:
+
+- `AppWidget.didChangeAppLifecycleState` handled `resumed` only. Nothing
+  flushed a pending upload when the app left the foreground, so the OS could
+  suspend the process before the timer fired. Finishing a morning ritual and
+  putting the phone straight in a pocket is precisely that second.
+- Nothing ever retried. A search for any local-newer catch-up came back empty:
+  startup asked only `isRemoteNewer()`, whose sole action is to *block*
+  uploads. A dropped upload therefore stayed dropped until some unrelated edit
+  happened to schedule another one.
+
+The asymmetry was the bug. Restoring overwrites local data and rightly needs
+consent (hard rule 8), but uploading only ever writes a new timestamped backup
+and can destroy nothing — so it should never have required a user action.
+
+Both directions now read one verdict.
+[`sync_clocks.dart`](../lib/shared/services/sync_clocks.dart) compares the two
+clocks as instants and returns `remoteNewer` / `localNewer` / `inSync`;
+`isRemoteNewer()` is `verdict.shouldBlockUploads` and the new
+`uploadIfLocalNewer()` is `verdict.shouldCatchUpUpload`, so the two can never
+disagree about which side is ahead. `flushPendingUpload()` runs on
+backgrounding to narrow the window, and the startup push is the backstop that
+works even when the process is killed outright. The missing-clock cases carry
+meaning and are pinned: no local clock with a backup present still means the
+remote wins (a fresh install must be offered the fetch), while local work with
+no backup at all means push — which is exactly the state a lost first upload
+leaves behind.
+
+Nothing was lost: the ritual was on the phone the whole time, and any edit
+there would have shipped it. What was missing was the guarantee that it would
+leave without one.
+
 ---
 
 ## Data-format migration notes

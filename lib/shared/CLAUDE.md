@@ -50,6 +50,11 @@ model is exactly what it exists to catch.
 - **Never auto-overwrite local data.** `isRemoteNewer()` →
   `blockUploads()`; the user explicitly Fetches. Keep
   `checkAndSyncIfNeeded()` returning false.
+- **But push local work automatically.** `uploadIfLocalNewer()` (startup) and
+  `flushPendingUpload()` (app backgrounding) exist because the 1000 ms upload
+  debounce is lost when the OS suspends the process — a finished morning
+  ritual that never left the phone. Both directions read one verdict from
+  `sync_clocks.dart`; never add a second timestamp comparison.
 - `AllAppsDriveService.scheduleUploadFromBox` debounces 1000ms and
   always schedules a `LocalBackupService` backup (runs even when signed
   out). Dated backup filenames + retention must match across mobile,
