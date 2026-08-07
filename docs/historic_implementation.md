@@ -523,6 +523,41 @@ will not reproduce when you run the file on its own.
 notes automatically. App Store Connect raised no warning this time — 2.3.2's
 iOS 15 deployment target settled warning 90068.
 
+### The Play track-precedence gate
+
+Publishing verified everything about the *upload* and nothing about what the
+store actually hands out. Play serves a tester the highest-priority track they
+belong to — internal → closed → open → production — so a release left active on
+`internal` shadows a fresh alpha publish, and when its versionCode is lower Play
+can neither update nor downgrade and the Store offers nothing at all. It looks
+like a broken package while every check stays green. The sibling app lost hours
+to it three times.
+
+`scripts/upload-aab-to-play.sh` now re-reads the tracks after committing (a
+committed edit can't be read, so it opens a throwaway edit) and fails with the
+offending track and versionCode. `draft` and `halted` releases serve nobody and
+are ignored, which is the false positive that matters — an empty draft track
+must not block a release. The track is also hard-pinned to closed `alpha`: the
+`--track` flag is gone and passing one is an error, so open testing and
+production are not reachable from this script at all.
+
+Two things the work turned up:
+
+- `print_track_report` ended on `[ "$found" -eq 0 ] && printf …`, which leaves
+  the function's status at 1 whenever the last track *did* have a release —
+  and `set -e` then killed the script before the gate ever ran. The audit
+  printed a full, reassuring report and exited 1 without checking anything.
+- The read-back first matched the version with `grep "versionCode=.*\b110\b"`.
+  A substring match on a list of numbers is a trap: `--self-test` now pins that
+  `11` does not match `110`, along with draft-vs-active and numeric-vs-string
+  versionCodes. Thirteen cases, no network needed.
+
+The one-time audit found `internal` empty, so nothing had to be halted — but it
+also found **open testing serving versionCode 98 while production serves 106**.
+Open outranks production, so that group is pinned to a build eight versions old
+and, 98 being lower than 106, cannot move. Same defect, one tier down;
+registered as plan P2.1 because halting a public track is the owner's call.
+
 **Coverage went 75 → 105 tests**: the boxes only this app has now round-trip
 through `SyncPayloadBuilder` → `BackupRestoreService`, the two legacy import
 aliases and the I-Am-before-entries ordering are pinned, `blockUploads()` and

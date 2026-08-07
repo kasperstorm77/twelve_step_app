@@ -53,38 +53,39 @@ permission lands; the commands are in
 
 ## P2 — Publishing safety
 
-### P2.1 Fail a Play publish that a higher-priority track outranks
+### P2.1 Open testing serves an older build than production
 
-Emotional Sobriety hit this and lost hours to it three times before the cause
-was found, and this app publishes to `alpha` through the same kind of script,
-so it has the same exposure.
+Found by the track audit added with the precedence gate. The live tracks are:
 
-Play serves a tester the **highest-priority track they belong to**: internal →
-closed → open → production. A release left active on a higher-priority track
-therefore pins those testers to it, and a newly published closed build never
-reaches them. When the stale build's versionCode is *lower* than the new one,
-Play can neither update nor downgrade, so the Store simply offers nothing — it
-looks exactly like a broken package, and the publish output stays green because
-every check verifies what was uploaded rather than what the store hands out.
+```
+internal     (no releases)
+alpha        completed versionCode=110    ← this app publishes here
+beta         completed versionCode=98
+production   completed versionCode=106
+```
 
-Emotional Sobriety's `scripts/upload-aab-to-play.sh` now reads every
-higher-priority track after committing and fails with the offending track and
-versionCode; draft releases are ignored so an empty draft track does not trip
-it. Port the same gate here, and audit this app's tracks once by hand — the
-defect there was a five-version-old release sitting on `internal` that nobody
-had looked at since it was published.
+`beta` (open testing) **outranks** production in Play's precedence, so anyone
+in the open-test group is served versionCode 98 — eight builds older than the
+106 the public gets. And because 98 is *lower* than 106, Play can neither
+update nor downgrade them: that group is stuck, and the Store shows them
+nothing to install. This is the same defect the alpha gate now prevents, one
+tier down.
 
-**Acceptance:**
+Nothing here is urgent for closed testing — alpha (110) outranks both, so
+testers are fine — but it should be resolved before the next public release.
 
-- [ ] Read this app's `internal`, `alpha`, `beta` and `production` tracks and
-      record which hold an active (non-draft) release.
-- [ ] Remove or halt any release on a track that outranks the one this app
-      publishes to.
-- [ ] Add the precedence check to `scripts/upload-aab-to-play.sh` after the
-      post-commit read-back, failing with the track name and versionCode.
-- [ ] Exercise the check's query against the live tracks before trusting it,
-      and confirm it ignores draft-only tracks.
-- [ ] Note the rule in `architecture.md` beside the release tooling.
+**Decide and act in Play Console → Testing → Open testing:**
+
+- [ ] Confirm whether the open-test track is still wanted at all.
+- [ ] If not: halt the versionCode 98 release so those users fall through to
+      production.
+- [ ] If yes: publish a current build to it so it stops shadowing production
+      with something older.
+- [ ] Re-run `bash scripts/upload-aab-to-play.sh --audit-tracks` afterwards.
+
+*(The script's gate deliberately does **not** fail on this — `beta` and
+`production` rank below closed and cannot shadow an alpha release. Widening the
+gate to lower tracks would fail every legitimate closed-testing publish.)*
 
 ### P2.2 The shared JSON contract — a standing rule, not a task
 
@@ -185,6 +186,10 @@ must strictly increase each upload (patch release: `2.2.13+106` →
   Play Developer API (`edits.insert → bundles.upload → tracks.update →
   edits.commit`) to the **alpha** (Closed testing) track, attaching the
   en-GB + da-DK notes from `release.md` (≤ 500 chars/locale enforced).
+  **The track is hard-pinned — there is no `--track` flag**, and after
+  committing it re-reads the tracks and fails if `internal` holds an active
+  release that would shadow the publish (architecture.md §7.1).
+  `--audit-tracks` runs that read-only; `--self-test` pins the query.
 - `scripts/upload-ipa-to-testflight.sh --build` — *macOS only*; builds the
   App Store IPA, verifies it's `Apple Distribution`-signed, uploads via
   `altool`, then sets the TestFlight "What to Test" notes automatically via

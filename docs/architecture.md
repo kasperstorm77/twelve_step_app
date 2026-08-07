@@ -575,6 +575,29 @@ The rationale for each is in
 - **No live multi-device merge.** Cross-device transfer is an explicit,
   user-initiated restore — never an automatic overwrite of local data.
 
+### 7.1 Release & distribution invariants
+
+Building is not shipping, and uploading is not distributing. Two rules the
+tooling now enforces, both learned the hard way:
+
+- **Android publishes to the closed `alpha` track and nowhere else.**
+  `scripts/upload-aab-to-play.sh` hard-pins it; there is deliberately no
+  `--track` flag, and passing one is an error. Open testing and production
+  are not destinations for this script.
+- **Play serves a tester the highest-priority track they belong to** —
+  `internal` → `closed` (alpha) → `open` (beta) → `production`. A release left
+  active on a *higher*-priority track therefore shadows the one just published,
+  and if its versionCode is lower Play can neither update nor downgrade, so the
+  Store offers nothing at all. It looks exactly like a broken package, and the
+  publish output stays green because every other check verifies what was
+  *uploaded* rather than what the store hands out. After committing, the script
+  re-reads the tracks and fails if `internal` holds an active release; `draft`
+  and `halted` releases serve nobody and are ignored. `--audit-tracks` runs the
+  same read-only, `--self-test` pins the query against fixtures.
+- **iOS: a build in App Store Connect reaches nobody without a beta group.**
+  An internal group with `hasAccessToAllBuilds` exists, so uploads distribute
+  automatically; adding an *external* tester would need a Beta App Review.
+
 ---
 
 ## 8. Stack & layout
