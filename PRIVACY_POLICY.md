@@ -5,7 +5,7 @@
 
 ## About This App
 
-The Twelve Steps App is a comprehensive recovery toolkit designed for the AA (Alcoholics Anonymous) program. This app provides six integrated tools: 4th Step Inventory, 8th Step Amends, Morning Ritual, Evening Ritual, Gratitude Journal, and Agnosticism Papers. All apps help users manage their recovery work locally on their device with optional Google Drive cloud backup.
+12 Steps App is an independent toolkit for twelve step recovery work. It provides six tools — 4th Step Inventory, 8th Step Amends, Morning Ritual, Evening Ritual, Gratitude and Agnosticism — plus reminders. Everything is kept locally on your device, with an optional Google Drive backup you turn on yourself. The app is not affiliated with, endorsed by, or approved by any twelve step fellowship or its service organisation.
 
 ## Information We Collect
 

@@ -115,6 +115,14 @@ void main() {
 
   /// Run [body] outside the fake-async zone, let its Hive writes land, then
   /// rebuild. See the note at the top of the file.
+  ///
+  /// The interaction MUST stay inside `runAsync`. Moving the tap into the fake
+  /// zone — to make gesture recognisers resolve on framework timers — instead
+  /// reproduces the deadlock this file was built to avoid: the Hive write goes
+  /// in flight, the fake zone never pumps the real event loop, and the suite
+  /// hangs rather than fails. Measured: a full ten minutes before it was
+  /// killed. Don't "fix" the ordering here without reading
+  /// lib/morning_ritual/CLAUDE.md first.
   Future<void> act(WidgetTester tester, Future<void> Function() body) async {
     await tester.runAsync(() async {
       await body();
@@ -148,16 +156,19 @@ void main() {
     required Finder trigger,
     required Finder confirm,
   }) async {
-    for (var attempt = 0; attempt < 20; attempt++) {
+    // Tap the trigger exactly once, then only wait. Re-tapping it each round
+    // looked harmless and was not: `showDialog` is `barrierDismissible` by
+    // default, so once the dialog is up that tap lands on the modal barrier and
+    // *closes* it. The retry was beating against the thing it was waiting for —
+    // which is why this failed about one full-suite run in five and never when
+    // the file ran on its own.
+    await act(tester, () => tester.tap(trigger.last));
+    for (var attempt = 0; attempt < 40; attempt++) {
       if (confirm.evaluate().isNotEmpty) {
         await act(tester, () => tester.tap(confirm.last));
         return;
       }
-      if (trigger.evaluate().isNotEmpty) {
-        await act(tester, () => tester.tap(trigger.last));
-      } else {
-        await act(tester, () async {});
-      }
+      await act(tester, () async {});
     }
     fail('Timed out waiting for $confirm');
   }

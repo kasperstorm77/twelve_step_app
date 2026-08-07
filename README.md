@@ -15,7 +15,7 @@ A free, comprehensive recovery companion for people working the 12 Steps. Seven 
 ## Features
 
 ### 📋 4th Step Inventory
-Work through resentments, fears, and harms following the Big Book method.
+Work through resentments, fears and harms in the familiar five-column form.
 
 - Track resentments with cause, effects, and your part
 - Use "I Am" perspectives to view situations from different roles

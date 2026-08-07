@@ -77,6 +77,14 @@ and every seed write through `tester.runAsync`; see the `act` helper in
 [morning_ritual_runner_test.dart](../../test/morning_ritual_runner_test.dart).
 Danish also needs the `GlobalMaterialLocalizations` delegates or the framework
 throws on an unsupported locale.
+
+**The tension has no free lunch, and one test still flakes because of it.** The
+interaction has to be inside `runAsync` (else the Hive write deadlocks teardown
+and the suite hangs), but gesture recognisers resolve on framework timers that
+`runAsync` does not advance — so a tap can land without `onPressed` firing.
+`morning_ritual_runner_test`'s start-over step fails about one full-suite run in
+six for exactly this reason. Three attempted fixes and the next move are written
+up in implementation_plan P2.0; read it before trying a fourth.
 - `flutter_ringtone_player` ships **android/ios only**. `_playAlarm` checks
   `PlatformHelper.isDesktop` and plays `SystemSound.alert` there rather than
   letting the plugin throw `MissingPluginException`, and the item editor shows

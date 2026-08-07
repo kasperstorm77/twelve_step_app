@@ -42,6 +42,37 @@ drives iOS simulators and needs an Android equivalent.
 
 ## P2 — Sync robustness
 
+### P2.0 `morning_ritual_runner_test` flakes ~1 run in 6 under full-suite load
+
+"start over keeps the day's reading" times out waiting for the confirmation
+dialog's button. It never fails when the file runs alone — only when the whole
+suite runs in parallel, and it got more frequent as test files were added.
+
+**The app is not implicated.** The failure is the harness, and it sits on a real
+tension this file was built around: every step writes to Hive, whose futures
+resolve on the real event loop, so interactions go inside `tester.runAsync` —
+but a tap resolves through gesture recognisers that wait on *framework* timers,
+which `runAsync` does not advance. So the tap can be delivered without
+`onPressed` ever firing, and the dialog never opens.
+
+Three fixes tried, none sufficient — recorded so the next attempt starts further
+along rather than repeating them:
+
+1. **Re-tap the trigger each round while waiting.** Wrong, and actively harmful:
+   `showDialog` is `barrierDismissible` by default, so once the dialog is up
+   that tap lands on the barrier and closes it.
+2. **Tap once, then poll for 40 rounds (~6 s).** Reduced nothing — still ~1 in 6,
+   which is what rules out "too slow" as the explanation.
+3. **Move the tap into the fake zone, keep only the wait in `runAsync`.**
+   Reproduces the original deadlock: the suite *hangs* instead of failing. Ran
+   ten minutes before being killed.
+
+Next step is architectural, not another patch: either drive start-over without
+the modal (assert the no-redraw invariant at the draft/service layer, where it
+actually lives, and keep a lighter UI assertion), or give this file a binding
+that lets Hive writes and gesture timers coexist. Worth deciding deliberately —
+the invariant under test is real and shouldn't be weakened to buy green.
+
 ### P2.1 Mobile read paths have no token recovery
 
 `MobileDriveService` recovers a stale credential in exactly one place — the

@@ -39,13 +39,13 @@ carries the same four actions: **app switcher** (grid icon), **help**
 page), and an **EN/DA language** popup.
 
 ### 1.1 4th Step Inventory (`lib/fourth_step/`)
-The original app, and the lowest Hive type IDs. Supports the AA 4th
+The original app, and the lowest Hive type IDs. Supports the 4th
 Step moral inventory: the user records **inventory entries** across
 four categories — resentment, fear, harms, sexual harms — using a
 five-field structure (who/what, cause/why, affects-my, my part,
 shortcomings). The category drives dynamic field labels and tooltips.
 Each entry can be tagged with one or more reusable **"I Am" identity
-definitions** (e.g. "Sober member of AA"). Three tabs: a Form,
+definitions** (e.g. "Sober member in recovery"). Three tabs: a Form,
 an Entries list (persistent text filter that matches the first field
 only at ≥2 chars; in-memory category-filter chips; drag-to-reorder;
 default vs compact card layout), and a Settings tab (manage I Am

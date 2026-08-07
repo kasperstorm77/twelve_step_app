@@ -1,6 +1,6 @@
 # 4th Step Inventory — area rules
 
-AA 4th-step moral inventory: `InventoryEntry` records (4 categories ×
+4th-step moral inventory: `InventoryEntry` records (4 categories ×
 5 fields) tagged with reusable "I Am" identity definitions. The
 original app, so it owns the lowest type IDs. See
 [architecture.md §1.1](../../docs/architecture.md).
@@ -28,7 +28,7 @@ original app, so it owns the lowest type IDs. See
   reference them) — enforced in `BackupRestoreService`, don't reorder.
 - **Can't delete an I Am that's in use** (usage scan over
   `effectiveIAmIds`). Keep the guard.
-- **Default seed** `'Sober member of AA'` is added only when the box is
+- **Default seed** `'Sober member in recovery'` is added only when the box is
   empty and **without** triggering a Drive upload.
 - **CSV export** uses `;` separators + a UTF-8 BOM; multiple I Am names
   are comma-joined in one cell. Don't switch to commas.

@@ -231,10 +231,17 @@ arbejde sker mellem dig, din højere magt og din sponsor.
 The primary locale is `da`. **Add an `en-GB` localization** so English copy
 stops being filed under Danish.
 
-### Name — 23
+### Name — 12
 ```
-12 Steps App - Recovery
+12 Steps App
 ```
+
+> Same rule as the Play title: **the store name is the app's name, and it is
+> not translated or extended.** It must equal `CFBundleDisplayName` /
+> `android:label` / `MaterialApp.title` exactly. "12 Steps App - Recovery" was
+> live on the App Store before 2026-08-07 and is a rename; correcting it needs
+> an App Store review cycle, so it is deliberately left for the owner to
+> action rather than pushed automatically.
 
 ### Subtitle (en-GB) — 27
 ```

@@ -10,8 +10,8 @@ The architectural invariants that resulted from this history live in
 ---
 
 ## Phase 1 — Single-app 4th Step Inventory (MVP)
-The project began as a standalone Flutter app for the AA 4th-step
-inventory ("Initial commit — AA 4Step Inventory Flutter app"). Data
+The project began as a standalone Flutter app for the 4th-step
+inventory. Data
 lived locally in Hive (`InventoryEntry`, typeId 0). Early work split
 data management from settings — moving CSV export and Google Drive
 behind a gear-icon menu — and stripped out an early platform-abstraction
@@ -685,6 +685,63 @@ circumstantial — "the upload didn't happen" is a symptom shared by both. The
 error text on the device settled it in one line, and it had been sitting on the
 user's screen the whole time. Ask for the device's own error before reasoning
 about which code path could have dropped a write.
+
+
+---
+
+## Phase 23 — Saying what the app actually does, and never naming the fellowship
+
+Two instructions, one pass: descriptions must be simple and true to the
+functionality, and the fellowship is never named — "not AA, not Alcoholics
+Anonymous, no flavours of it".
+
+**The obvious spellings were already gone; the citations were not.** Every
+`AA` / `Alcoholics Anonymous` had been scrubbed from user-visible strings in an
+earlier phase, which is exactly why the remaining breaches survived: they named
+the fellowship by quoting **its book**. Four help sections cited "The Big Book
+(p.86)" / "Den Store Bog (s.86-88)" with page numbers, and one told the user its
+categories "align with Big Book guidance". Naming the literature identifies the
+fellowship as surely as the initials do.
+
+Worse, and entirely public: **`PRIVACY_POLICY.md`** — the document both store
+pages link to — opened with "a comprehensive recovery toolkit designed for the
+AA (Alcoholics Anonymous) program". `README.md` cited "the Big Book method". The
+scrub had covered `lib/`, and stopped there.
+
+**The help content was also wrong about the app.** Rewriting it to remove the
+citations meant reading what each screen actually does, and the two did not
+match:
+
+- 4th Step help described only the *resentment* field labels and never mentioned
+  that there are four categories whose labels change.
+- Agnosticism help was written entirely as surrender to God — "Not given to
+  god", "God-given corrective attitude" — in a tool named *Agnosticism*, and it
+  never mentioned the **connected fear**, which is one of the three fields on
+  the paper.
+- Morning Ritual help listed timers and prayers but not the Just for Today
+  reading, the per-item sound, or that history records what you were given.
+- Evening Ritual's section was titled "The Ten Categories" and listed five.
+- Four help titles named tools differently from the app's own switcher
+  (`Gratitude Journal`, `Agnosticism Papers`, `8th Step Amends List`).
+
+All of it is rewritten in both languages: plain, specific, describing fields,
+limits and buttons that exist. The Danish 8th-Step purpose also had an
+unbalanced quotation mark that had been shipping.
+
+**Enforced, not just fixed.** `test/naming_rule_test.dart` scans every `en` and
+`da` string, the bundled assets, the store listing copy and the privacy policy
+for the initials, both full names, the sibling fellowship and the book in both
+languages — and includes a regression case asserting the guard would have caught
+each phrasing that actually shipped, plus a case asserting ordinary recovery
+language ("sponsor", "moral inventory", "higher power") still passes. The
+word-boundary anchoring matters: an earlier grep of mine matched "an" and "away"
+and produced three false positives before it was tightened.
+
+**Names, again.** The Play listing title was checked against the binary and
+corrected to "12 Steps App"; the App Store `Name` is still
+"12 Steps App - Recovery" and was left for the owner, because changing it needs
+a review cycle. The rule now sits in `CLAUDE.md` beside localization: the app's
+name is not a translatable string.
 
 ---
 

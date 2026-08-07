@@ -375,15 +375,15 @@ final Map<String, Map<String, String>> localizedValues = {
     'help_4th_step_title': '4th Step Inventory - Purpose & Guidance',
     'help_4th_step_purpose_title': 'Why This Inventory?',
     'help_4th_step_purpose':
-        'The 4th Step asks us to make "a searching and fearless moral inventory." This tool helps identify resentments - the root of our spiritual illness. By examining what hurt us and our part in it, we prepare for freedom from the bondage of self.',
-    'help_4th_step_fields_title': 'Understanding the Fields',
+        'A written inventory of what you resent, what you fear, and the harm you have done. Writing it out is what makes the pattern visible: what happened, what it threatened in you, and what your own part in it was.',
+    'help_4th_step_fields_title': 'Categories and Fields',
     'help_4th_step_fields':
-        '• "I\'m resentful at" - The person, institution, or principle\n• "The Cause" - What they did or said that hurt\n• "Affects my" - Which part of self was threatened (self-esteem, security, ambitions, relationships, sex)\n• "My take" - Where was I selfish, dishonest, self-seeking, or frightened?\n• "Shortcomings" - Character defects revealed (fear, pride, anger, etc.)',
+        'Pick a category and the field labels change to match it: Resentments, Fear, Harms (not sexual), Harms (sexual).\n\nEvery entry has the same five fields:\n• Who/What - the person, institution or principle\n• The Cause - what happened\n• Affects my - what it threatened (self-esteem, security, ambitions, relationships)\n• My part - where I was selfish, dishonest, self-seeking or afraid\n• Shortcomings - the character defects it revealed',
     'help_4th_step_i_am_title': 'The "I Am" Concept',
     'help_4th_step_i_am':
-        '"I Am" definitions represent core identities tied to resentments (e.g., "I am the son", "I am the employee"). These help track patterns where specific roles trigger recurring character defects. This reveals which identities need spiritual realignment.',
+        'An "I Am" is a role you can tag an entry with - "I am the son", "I am the employee". Tag several entries with the same one and you can filter by it, which is how a pattern in one role becomes visible. Create and manage them in the Settings tab.',
     // Help Content - 8th Step
-    'help_8th_step_title': '8th Step Amends List - Purpose & Guidance',
+    'help_8th_step_title': '8th Step Amends - Purpose & Guidance',
     'help_8th_step_purpose_title': 'Why Make This List?',
     'help_8th_step_purpose':
         'Step 8 asks us to make "a list of all persons we had harmed, and became willing to make amends to them all." This prepares us for Step 9. Willingness, not action yet - we\'re building readiness to clean up our side of the street.',
@@ -397,35 +397,35 @@ final Map<String, Map<String, String>> localizedValues = {
     'help_evening_ritual_title': 'Evening Ritual - Purpose & Guidance',
     'help_evening_ritual_purpose_title': 'Why Review Each Day?',
     'help_evening_ritual_purpose':
-        'The Big Book (p.86) instructs: "Review the day. Were we resentful, selfish, dishonest or afraid?" This daily practice keeps us spiritually fit, catching defects quickly before they compound. Regular inventory prevents the build-up that leads to relapse.',
-    'help_evening_ritual_reflection_types_title': 'The Ten Categories',
+        'A short review at the end of the day, while it is still fresh. Recording it daily is what turns single days into something you can look back over.',
+    'help_evening_ritual_reflection_types_title': 'The Categories',
     'help_evening_ritual_reflection_types':
-        'Track daily where you:\n• Were resentful, selfish, dishonest, or afraid\n• Owe apologies or kept secrets\n• Showed kindness or could improve\n• Seek God\'s forgiveness\n• Plan corrective actions for tomorrow\n\nThese categories align with Big Book guidance for daily review.',
+        'Add an entry for anything that applies to your day - being resentful, selfish, dishonest or afraid, an apology you owe, something you kept to yourself, where you were kind, where you could have done better, forgiveness, and what you will put right tomorrow.\n\nEach entry can carry a note, and you can add as many as you need. Today is editable; past days are read-only.',
     'help_evening_ritual_focus_title': 'Self vs. Others Focus',
     'help_evening_ritual_focus':
-        'The slider tracks: "Where was my attention today?" Recovery shifts us from self-centeredness to being useful to others. Daily tracking reveals patterns - am I growing in selflessness or slipping into self-absorption?',
+        'One slider per day, from self to others: where your attention actually went. It is saved with the day, so the trend shows up in the list over time.',
     // Help Content - Gratitude
-    'help_gratitude_title': 'Gratitude Journal - Purpose & Guidance',
+    'help_gratitude_title': 'Gratitude - Purpose & Guidance',
     'help_gratitude_purpose_title': 'Why Practice Gratitude?',
     'help_gratitude_purpose':
-        'Gratitude is the antidote to resentment and self-pity. The Big Book states we cannot be helpful when harboring resentment. Daily gratitude rewires our minds toward abundance rather than lack, shifting focus from what\'s wrong to what\'s right. This builds spiritual fitness.',
+        'A short daily note of what you are grateful for. Two fields instead of one keep it specific rather than general.',
     'help_gratitude_practice_title': 'The Daily Practice',
     'help_gratitude_practice':
-        'Each day, record what you\'re grateful for using two fields: "Gratitude towards" (person, place, or thing) and "Grateful for" (what specifically about them). For example: towards "My sponsor" grateful for "Their patience and wisdom during my struggle." This structure helps you be specific and see patterns of grace in your life.',
+        'Each day, fill in "Gratitude towards" (a person, place or thing) and "Grateful for" (what about it). For example: towards "My sponsor", grateful for "Picking up the phone".\n\nEntries can be edited or deleted on the day you write them; after that they stay as a record.',
     // Help Content - Agnosticism
-    'help_agnosticism_title': 'Agnosticism Papers - Purpose & Guidance',
+    'help_agnosticism_title': 'Agnosticism - Purpose & Guidance',
     'help_agnosticism_purpose_title': 'Why This Exercise?',
     'help_agnosticism_purpose':
-        'This tool helps identify what we\'re still holding onto instead of surrendering to God, and the God-given corrective attitudes that replace our defects. It\'s a practical application of Step 3 - turning our will and lives over to the care of God.',
-    'help_agnosticism_barriers_title': 'Not given to god',
+        'A pair of short statements: something that blocks you, and the truth that corrects it. Writing both down side by side is the whole exercise.',
+    'help_agnosticism_barriers_title': 'The barrier, and the fear under it',
     'help_agnosticism_barriers':
-        'List what you haven\'t surrendered: resentments, fears, self-will, control, outcomes, relationships, finances, pride, etc. These are the things you\'re still trying to manage yourself instead of trusting God.',
-    'help_agnosticism_powers_title': 'God-given corrective attitude',
+        'The barrier is what is in the way - a resentment, a need to control, an outcome you are holding on to. Underneath it, name the fear that keeps it there. Both sit on the front of the paper.',
+    'help_agnosticism_powers_title': 'The power that corrects it',
     'help_agnosticism_powers':
-        'For each thing not surrendered, identify the God-given attitude that corrects it: acceptance instead of control, trust instead of fear, humility instead of pride, gratitude instead of resentment, faith instead of worry.',
+        'On the back, write what corrects it: acceptance instead of control, trust instead of fear, humility instead of pride, gratitude instead of resentment. Where that comes from is yours to name - the tool does not assume.',
     'help_agnosticism_process_title': 'The Process',
     'help_agnosticism_process':
-        'Create up to 5 pairs. Each pair connects something you\'re holding onto with the corrective attitude God provides. Flip the paper to see both sides. When surrender happens and the attitude is adopted, archive the pair and add new ones as you grow.',
+        'Keep up to 5 pairs active at once. Flip the paper with the button or by swiping to move between the barriers and the powers. When a pair is worked through, archive it - archived pairs are kept, never deleted, and can be restored later.',
     // Morning Ritual
     'morning_ritual_title': 'Morning Ritual',
     'morning_ritual_today_tab': 'Today',
@@ -498,13 +498,13 @@ final Map<String, Map<String, String>> localizedValues = {
     'help_morning_ritual_title': 'Morning Ritual - Purpose & Guidance',
     'help_morning_ritual_purpose_title': 'Why a Morning Ritual?',
     'help_morning_ritual_purpose':
-        'The Big Book (p.86-88) describes the morning routine: "On awakening let us think about the twenty-four hours ahead... Before we begin, we ask God to direct our thinking." This tool helps establish a consistent morning practice of prayer and meditation.',
-    'help_morning_ritual_items_title': 'Timers & Prayers',
+        'A morning practice you build yourself and then run step by step, so it happens the same way each day without having to remember the order.',
+    'help_morning_ritual_items_title': 'Timers and Readings',
     'help_morning_ritual_items':
-        'Create your ritual with two types of items:\n• Timers - For meditation or silent prayer (with alarm when complete)\n• Prayers - Display text for prayers like the 3rd Step, 7th Step, or St. Francis Prayer\n\nArrange items in the order you want to perform them.',
+        'Build your ritual from two kinds of item:\n• Timer - counts down for meditation or silent prayer and rings at the end. You choose the sound and whether it vibrates.\n• Prayer - text you read. Paste in whatever you use.\n\nA prayer item can instead draw a "Just for Today" reading, which picks one of ten each morning. Drag items into the order you want them.',
     'help_morning_ritual_practice_title': 'Daily Practice',
     'help_morning_ritual_practice':
-        'Each morning, start your ritual from the Today tab. Complete or skip each item as you go. Your history is tracked on the calendar - green checkmarks for completed items, red X for skipped or missed. Consistency builds spiritual discipline.',
+        'Start from the Today tab and work through the items, completing or skipping each one; you can also step back. The calendar marks the days you finished, and History shows what you did and any reading you were given.',
 
     // General Settings - Morning Ritual Auto-Load
     'morning_ritual_settings': 'Morning Ritual Auto-Load',
@@ -984,21 +984,21 @@ final Map<String, Map<String, String>> localizedValues = {
     'agnosticism_pair_deleted': 'Par slettet',
     'agnosticism_archived_on': 'Arkiveret den',
     // Help Content - 4th Step (Danish)
-    'help_4th_step_title': '4. Trins opgørelse - Formål & Vejledning',
+    'help_4th_step_title': '4. trins liste - Formål & Vejledning',
     'help_4th_step_purpose_title': 'Hvorfor denne opgørelse',
     'help_4th_step_purpose':
-        '4. Trin beder os om at lave "en grundig og frygtløs moralsk status." Dette værktøj hjælper med at identificere vrede - roden til vores åndelige sygdom. Ved at undersøge hvad der sårede os og vores egen andel i det, forbereder vi os på frihed fra selvets lænker.',
-    'help_4th_step_fields_title': 'Forståelse af Felterne',
+        'En skriftlig opgørelse over det du er vred over, det du frygter, og den skade du har forvoldt. At skrive det ned er det, der gør mønsteret synligt: hvad der skete, hvad det truede i dig, og hvad din egen del var.',
+    'help_4th_step_fields_title': 'Kategorier og felter',
     'help_4th_step_fields':
-        '• "Jeg er vred på" - Personen, institutionen eller princippet\n• "Årsagen" - Hvad de gjorde eller sagde der sårede\n• "Påvirker min" - Hvilken del af selvet blev truet (selvværd, sikkerhed, ambitioner, personlige og seksuelle relationer)\n• "Min del" - Hvor var jeg selvisk, uærlig, selvoptaget eller bange?\n• "Karakterdefekt(er)" - Afslørede karakterdefekter (frygt, stolthed, vrede osv.)',
+        'Vælg en kategori, så retter feltnavnene sig efter den: Vrede, Frygt, Skader (ikke seksuelle), Skader (seksuelle).\n\nHver indtastning har de samme fem felter:\n• Hvem/Hvad - personen, institutionen eller princippet\n• Årsagen - hvad der skete\n• Påvirker min - hvad det truede (selvværd, sikkerhed, ambitioner, relationer)\n• Min del - hvor jeg var selvisk, uærlig, selvoptaget eller bange\n• Karakterdefekt(er) - de defekter det afslørede',
     'help_4th_step_i_am_title': '"Jeg Er" Konceptet',
     'help_4th_step_i_am':
-        '"Jeg er" definitioner repræsenterer kerneidentiteter knyttet til årsagen (f.eks. "Jeg er sønnen", "Jeg er medarbejderen"). Disse hjælper med at spore mønstre, hvor specifikke roller udløser tilbagevendende karakterdefekter. Dette afslører hvilke identiteter der har brug for åndelig tilpasning.',
+        'En "Jeg Er" er en rolle, du kan mærke en indtastning med - "Jeg er sønnen", "Jeg er medarbejderen". Mærk flere indtastninger med den samme, og du kan filtrere efter den; sådan bliver et mønster i én rolle synligt. Opret og ret dem i fanen Indstillinger.',
     // Help Content - 8th Step (Danish)
     'help_8th_step_title': '8. Trins liste - Formål & Vejledning',
     'help_8th_step_purpose_title': 'Hvorfor lave denne liste?',
     'help_8th_step_purpose':
-        'Trin 8 beder os om at lave "en liste over alle personer vi har gjort fortræd, og blive villige til at gøre det godt igen. Med listen, forbereder os til trin 9. - vi bygger parathed og villighed til at rydde op og tage ansvar for vores del.',
+        'Trin 8 beder os om at lave en liste over alle, vi har gjort fortræd, og blive villige til at gøre det godt igen. Listen forbereder trin 9 - vi bygger parathed og villighed til at tage ansvar for vores del.',
     'help_8th_step_fields_title': 'Forståelse af Kolonnerne',
     'help_8th_step_fields':
         'De tre kolonner viser din villighed, ikke hvilken slags skade det var:\n• Ja - Jeg er villig til at tage ansvar her\n• Måske - Jeg er ikke klar endnu, men jeg siger ikke nej\n• Nej - Jeg er ikke villig i dag\n\nHvert kort indeholder også:\n• Navn - Den person vi har gjort fortræd\n• Hvordan tager jeg ansvar? - Hvilken skade forvoldte jeg? Hvordan tager jeg ansvar for det?\n• Ansvar taget - Sæt flueben når du har taget ansvar i trin 9',
@@ -1009,35 +1009,35 @@ final Map<String, Map<String, String>> localizedValues = {
     'help_evening_ritual_title': 'Aftenritual - Formål & Vejledning',
     'help_evening_ritual_purpose_title': 'Hvorfor Gennemgå Hver Dag?',
     'help_evening_ritual_purpose':
-        'Den Store Bog foreslår: "Gennemgå dagen. Var vi vrede, selviske, uærlige eller bange?" Denne daglige praksis holder os åndeligt i form, fanger fejl hurtigt før de forværres. Regelmæssig status forhindrer opbygning der fører til tilbagefald.',
-    'help_evening_ritual_reflection_types_title': 'De Ti Kategorier',
+        'En kort gennemgang sidst på dagen, mens den stadig er frisk. At notere den dagligt er det, der gør enkelte dage til noget, du kan se tilbage over.',
+    'help_evening_ritual_reflection_types_title': 'Kategorierne',
     'help_evening_ritual_reflection_types':
-        'Spor dagligt hvor du:\n• Var vred, selvisk, uærlig eller bange\n• Skylder undskyldninger eller holdt noget for dig selv\n• Viste venlighed eller kunne have gjort det bedre\n• Søger Guds tilgivelse\n• Planlæg korrigerende handlinger for i morgen\n\nDisse kategorier stemmer overens med Den Store Bogs vejledning for daglig status.',
+        'Tilføj en indtastning for det, der passer på din dag - at være vred, selvisk, uærlig eller bange, en undskyldning du skylder, noget du holdt for dig selv, hvor du var venlig, hvor du kunne have gjort det bedre, tilgivelse, og hvad du vil rette op på i morgen.\n\nHver indtastning kan have en note, og du kan tilføje så mange du har brug for. I dag kan redigeres; tidligere dage er skrivebeskyttede.',
     'help_evening_ritual_focus_title': 'Selv vs. Andre Fokus',
     'help_evening_ritual_focus':
-        'Skyderen sporer: "Hvor var min opmærksomhed i dag?" Bedring flytter os fra selvcentrering til at være nyttige for andre. Daglig sporing afslører mønstre - vokser jeg i uselviskhed eller glider jeg ind i selvoptagethed?',
+        'Én skyder om dagen, fra dig selv til andre: hvor din opmærksomhed faktisk gik hen. Den gemmes sammen med dagen, så udviklingen kan ses i listen over tid.',
     // Help Content - Gratitude (Danish)
-    'help_gratitude_title': 'Taknemmeligheds Dagbog - Formål & Vejledning',
+    'help_gratitude_title': 'Taknemmelighed - Formål & Vejledning',
     'help_gratitude_purpose_title': 'Hvorfor Øve Taknemmelighed?',
     'help_gratitude_purpose':
-        'Taknemmelighed er modgiften mod vrede og selvmedlidenhed. Den Store Bog siger vi ikke kan være til nytte når vi nærer vrede. Daglig taknemmelighed omkobler vores sind mod overflod frem for mangel, flytter fokus fra hvad der er galt til hvad der er rigtigt. Dette bygger åndelig styrke.',
+        'En kort daglig note om det, du er taknemmelig for. To felter frem for ét holder den konkret i stedet for almen.',
     'help_gratitude_practice_title': 'Den Daglige Praksis',
     'help_gratitude_practice':
-        'Hver dag, noter hvad du er taknemmelig for ved hjælp af to felter: "Taknemmelighed over for" (person, sted eller ting) og "Taknemmelig for" (hvad specifikt ved dem). For eksempel: over for "Min sponsor" taknemmelig for "Deres tålmodighed og visdom under min kamp." Denne struktur hjælper dig med at være specifik og se mønstre af nåde i dit liv.',
+        'Udfyld hver dag "Taknemmelighed over for" (en person, et sted eller en ting) og "Taknemmelig for" (hvad ved det). For eksempel: over for "Min sponsor", taknemmelig for "At tage telefonen".\n\nIndtastninger kan rettes eller slettes den dag, du skriver dem; derefter står de som en optegnelse.',
     // Help Content - Agnosticism (Danish)
-    'help_agnosticism_title': 'Agnosticisme papirer - formål & vejledning',
+    'help_agnosticism_title': 'Agnosticisme - Formål & Vejledning',
     'help_agnosticism_purpose_title': 'Hvorfor denne øvelse?',
     'help_agnosticism_purpose':
-        'Dette værktøj hjælper med at identificere hvad vi stadig holder fast i i stedet for at overgive det til Gud, og de Gudsgivne korrigerende holdninger der erstatter vores fejl. Det er en praktisk anvendelse af trin 3 - at overlade vores vilje og liv til Guds omsorg.',
-    'help_agnosticism_barriers_title': 'Ikke overgivet til Gud',
+        'Et par korte udsagn: noget der spærrer for dig, og den sandhed der retter det op. At skrive begge dele ned side om side er hele øvelsen.',
+    'help_agnosticism_barriers_title': 'Barrieren og frygten under den',
     'help_agnosticism_barriers':
-        'Lave en liste over det du ikke har overgivet: vrede, frygt, egenvilje, kontrol, udfald, relationer, økonomi, stolthed osv. Dette er de ting du stadig prøver at styre selv i stedet for at stole på Gud.',
-    'help_agnosticism_powers_title': 'Gudsgivet korrigerende handling',
+        'Barrieren er det, der står i vejen - en vrede, et behov for at kontrollere, et udfald du holder fast i. Under den navngiver du den frygt, der holder den på plads. Begge dele står på forsiden af papiret.',
+    'help_agnosticism_powers_title': 'Kraften der retter det op',
     'help_agnosticism_powers':
-        'For hver ting der ikke er overgivet til gud, identificer den Gudsgivne holdning der korrigerer den: accept i stedet for kontrol, tillid i stedet for frygt, ydmyghed i stedet for stolthed, taknemmelighed i stedet for vrede, tro i stedet for bekymring.',
+        'På bagsiden skriver du det, der retter den op: accept i stedet for kontrol, tillid i stedet for frygt, ydmyghed i stedet for stolthed, taknemmelighed i stedet for vrede. Hvor det kommer fra, er dit at navngive - værktøjet forudsætter intet.',
     'help_agnosticism_process_title': 'Processen',
     'help_agnosticism_process':
-        'Opret op til 5 par. Hvert par forbinder noget du holder fast i med den korrigerende holdning Gud giver. Vend papiret for at se begge sider. Når overgivelsen finder sted og holdningen er adopteret, arkivér parret og tilføj nye efterhånden som du vokser.',
+        'Hav op til 5 aktive par ad gangen. Vend papiret med knappen eller ved at swipe for at skifte mellem barriererne og kræfterne. Når et par er arbejdet igennem, så arkivér det - arkiverede par bevares, slettes aldrig, og kan hentes frem igen.',
     // Morning Ritual (Danish)
     'morning_ritual_title': 'Morgenritual',
     'morning_ritual_today_tab': 'I dag',
@@ -1113,13 +1113,13 @@ final Map<String, Map<String, String>> localizedValues = {
     'help_morning_ritual_title': 'Morgenritual - Formål & Vejledning',
     'help_morning_ritual_purpose_title': 'Hvorfor et Morgenritual?',
     'help_morning_ritual_purpose':
-        'Den Store Bog (s.86-88) beskriver morgenmeditationen: "Ved opvågning lad os tænke på de fireogtyve timer forude... Før vi begynder, beder vi Gud om at lede vores tankegang." Dette værktøj hjælper med at etablere en konsistent morgenpraksis med bøn og meditation.',
-    'help_morning_ritual_items_title': 'Timere & Bønner',
+        'En morgenpraksis, du selv bygger og derefter kører trin for trin, så den sker på samme måde hver dag uden at du skal huske rækkefølgen.',
+    'help_morning_ritual_items_title': 'Tidtagere og læsninger',
     'help_morning_ritual_items':
-        'Opret dit ritual med to typer elementer:\n• Timere - Til meditation eller stille bøn (med alarm når færdig)\n• Bønner - Vis tekst til bønner som 3. trins, 7. trins eller St. Frans bønnen\n\nArranger elementer i den rækkefølge du vil udføre dem.',
+        'Byg dit ritual af to slags elementer:\n• Tidtager - tæller ned til meditation eller stille bøn og ringer til sidst. Du vælger lyden, og om den skal vibrere.\n• Bøn - tekst du læser. Indsæt det, du bruger.\n\nEt bøn-element kan i stedet trække en "Kun for i dag"-læsning, som vælger én ud af ti hver morgen. Træk elementerne i den rækkefølge, du vil have dem.',
     'help_morning_ritual_practice_title': 'Daglig Praksis',
     'help_morning_ritual_practice':
-        'Hver morgen, start dit ritual fra I dag fanen. Fuldfør eller spring over hvert element. Din historik spores på kalenderen - grønne flueben for fuldførte elementer, rødt X for sprunget over eller misset. Konsistens bygger åndelig disciplin.',
+        'Start fra fanen I dag og gå elementerne igennem, og fuldfør eller spring hvert enkelt over; du kan også gå tilbage. Kalenderen markerer de dage, du gennemførte, og Historik viser hvad du gjorde og den læsning, du fik.',
 
     // General Settings - Morning Ritual Auto-Load (Danish)
     'morning_ritual_settings': 'Morgenritual auto-indlæsning',

@@ -86,13 +86,25 @@ The three canonical docs (open the one that fits, then come back):
     `t(context, 'key')` in
     [localizations.dart](lib/shared/localizations.dart). No hardcoded
     user text. Danish runs longer — check both lay out.
-12. Every screen's AppBar keeps the four actions: app switcher, help,
+    **The app's NAME is not one of these.** `android:label`,
+    `CFBundleDisplayName`, `MaterialApp.title` and every store listing title
+    read exactly "12 Steps App" — untranslated, no marketing suffix.
+    Descriptions are translated; the name is not.
+12. **Never name the fellowship** — not its initials, not its full name in any
+    language, not its literature by title ("Big Book" / "Den Store Bog"). Not
+    in app strings, bundled assets, the store listings, the privacy policy or
+    the README. A public page that names it implies an affiliation and an
+    endorsement this app does not have. The concepts carry the meaning on
+    their own: step work, sponsor, moral inventory, amends, sobriety, higher
+    power. [`test/naming_rule_test.dart`](test/naming_rule_test.dart) enforces
+    this across all of the above — keep it green.
+13. Every screen's AppBar keeps the four actions: app switcher, help,
     settings (Data Management), EN/DA language popup. Every routed tool
     has an `AppHelpService` case — keep it that way when adding one.
-13. **Dates are localized separately from `t()`.** Use
+14. **Dates are localized separately from `t()`.** Use
     [`shared/utils/date_formats.dart`](lib/shared/utils/date_formats.dart);
     a bare `DateFormat.yMMMMd()` renders English inside the Danish UI.
-14. **Never give the system bars a colour.**
+15. **Never give the system bars a colour.**
     `ThemeData.appBarTheme.systemOverlayStyle` stays
     [`appSystemOverlayStyle`](lib/shared/utils/system_ui.dart) with all three
     colours null — each non-null one calls an API Android 15 deprecated and
