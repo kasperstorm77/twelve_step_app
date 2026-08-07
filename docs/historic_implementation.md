@@ -757,6 +757,11 @@ the tool rather than silently ignored.
 than guesses when a live appInfo blocks the write. The rule now sits in
 `CLAUDE.md` beside localization: the app's name is not a translatable string.
 
+**Shipped as 2.3.5+112** to Google Play closed testing ("alpha", versionCode 112,
+read back as served) and TestFlight on 2026-08-07, so the pending App Store
+submission now carries both the corrected name and the rewritten help.
+
+
 ---
 
 ## Data-format migration notes
