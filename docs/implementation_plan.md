@@ -199,6 +199,13 @@ is deliberately no way to clear a release having proven one direction.
 
 **The scripts:**
 - `scripts/verify-cross-app-recovery.sh` — the cross-app gate above. Run first.
+- `scripts/appstore-status.sh` — read-only: which App Store version is pending,
+  **which build is attached to it**, and each locale's screenshots/keywords. The
+  attached build can be several builds behind what TestFlight has; check before
+  submitting.
+- `scripts/fix-appstore-name.sh` — verify (and correct) the App Store app name.
+- `scripts/publish-play-listing.sh` — the Play listing text, read from
+  `docs/play_store-retain/PLAY_STORE_DESCRIPTIONS.md`.
 - `scripts/build-aab.sh` — `flutter build appbundle --release`; verifies
   the signer is the release key (not the debug fallback).
 - `scripts/upload-aab-to-play.sh [--dry-run|--yes]` — drives the Google
