@@ -6,6 +6,16 @@ its `<en-GB>` and `<da-DK>` bodies verbatim into Google Play / TestFlight. Keep
 each locale ≤ 500 characters (Play's limit). The version on the `X.Y.Z - DATE:`
 line must match `pubspec.yaml`.
 
+2.3.2 - 2026-08-07:
+<en-GB>
+- Now requires iOS 15 or later, matching Apple's current minimum.
+- No other changes.
+</en-GB>
+<da-DK>
+- Kræver nu iOS 15 eller nyere, i tråd med Apples nuværende minimum.
+- Ingen andre ændringer.
+</da-DK>
+
 2.3.1 - 2026-08-06:
 <en-GB>
 - New "Just for Today" reading: turn it on for a prayer item and the app draws
