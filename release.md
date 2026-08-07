@@ -6,6 +6,26 @@ its `<en-GB>` and `<da-DK>` bodies verbatim into Google Play / TestFlight. Keep
 each locale ≤ 500 characters (Play's limit). The version on the `X.Y.Z - DATE:`
 line must match `pubspec.yaml`.
 
+2.3.5 - 2026-08-07:
+<en-GB>
+- The in-app help now describes what each tool actually does: the four inventory
+  categories and how the field labels follow them, the fear behind a barrier and
+  how the paper flips, the Just for Today reading, the per-item alarm sound, and
+  which entries stay editable.
+- Reminders have a help page for the first time, and the 8th Step help now
+  explains the Yes / No / Maybe columns correctly.
+- Clearer, plainer wording throughout, in both languages.
+</en-GB>
+<da-DK>
+- Hjælpen i appen beskriver nu, hvad hvert værktøj faktisk gør: de fire
+  kategorier og hvordan feltnavnene følger dem, frygten bag en barriere og
+  hvordan papiret vendes, "Kun for i dag"-læsningen, alarmlyden per element, og
+  hvilke indtastninger der kan rettes.
+- Påmindelser har for første gang en hjælpeside, og hjælpen til 8. trin
+  forklarer nu Ja / Nej / Måske-kolonnerne korrekt.
+- Klarere og enklere formuleringer overalt, på begge sprog.
+</da-DK>
+
 2.3.4 - 2026-08-07:
 <en-GB>
 - Fixed: syncing could stop with a sign-in error and never recover on its own,
