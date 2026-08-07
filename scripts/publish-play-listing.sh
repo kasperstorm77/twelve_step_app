@@ -46,12 +46,14 @@ package="dk.stormstyrken.twelvestepsapp"
 dry_run=0
 assume_yes=0
 verbatim=0
+titles_only=0
 
 while (( $# )); do
   case "$1" in
     --key)      shift; key="${1:?--key needs a path}" ;;
     --package)  shift; package="${1:?--package needs a value}" ;;
     --dry-run)  dry_run=1 ;;
+    --titles-only) titles_only=1 ;;
     --verbatim) verbatim=1 ;;
     -y|--yes)   assume_yes=1 ;;
     -h|--help)  sed -n '2,30p' "$0" | sed 's/^# \{0,1\}//'; exit 0 ;;
@@ -151,9 +153,19 @@ ok "Edit $edit_id"
 
 header "Write the listings"
 while IFS= read -r lang; do
-  payload=$(jq -c --arg l "$lang" \
-    '{language:$l, title:.[$l].title, shortDescription:.[$l].short, fullDescription:.[$l].full}' \
-    <<<"$listings")
+  # --titles-only rewrites the name and nothing else. Play's listings.update
+  # replaces the whole resource, so the live short/full descriptions are read
+  # back and sent verbatim rather than dropped.
+  if [ "$titles_only" -eq 1 ]; then
+    live=$(http GET "$api/edits/$edit_id/listings/$lang")
+    payload=$(jq -c --arg l "$lang" --arg t "$(jq -r --arg l "$lang" '.[$l].title' <<<"$listings")" \
+      '{language:$l, title:$t, shortDescription:(.shortDescription // ""), fullDescription:(.fullDescription // "")}' \
+      <<<"$live")
+  else
+    payload=$(jq -c --arg l "$lang" \
+      '{language:$l, title:.[$l].title, shortDescription:.[$l].short, fullDescription:.[$l].full}' \
+      <<<"$listings")
+  fi
   http PUT "$api/edits/$edit_id/listings/$lang" \
     -H "Content-Type: application/json" -d "$payload" >/dev/null
   ok "$lang written"
@@ -195,7 +207,9 @@ verify_id=$(http POST "$api/edits" | jq -r .id)
 mismatch=0
 while IFS= read -r lang; do
   live=$(http GET "$api/edits/$verify_id/listings/$lang")
-  for field in title:title short:shortDescription full:fullDescription; do
+  fields="title:title short:shortDescription full:fullDescription"
+  [ "$titles_only" -eq 1 ] && fields="title:title"
+  for field in $fields; do
     ours=$(jq -r --arg l "$lang" --arg f "${field%%:*}" '.[$l][$f]' <<<"$listings")
     theirs=$(jq -r --arg f "${field##*:}" '.[$f] // ""' <<<"$live")
     if [ "$ours" != "$theirs" ]; then

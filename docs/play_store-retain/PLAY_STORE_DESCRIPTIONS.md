@@ -102,9 +102,9 @@ plus a reminders module**, offline-first, free, EN + DA.
 
 ## Google Play
 
-### Title (en-GB) — 29
+### Title (en-GB) — 13
 ```
-12 Steps App - Recovery Tools
+12 Steps App
 ```
 
 ### Short description (en-GB) — 73
@@ -160,10 +160,17 @@ Your sponsor is your best guide. This is just a notebook. The real work
 happens between you, your higher power and your sponsor.
 ```
 
-### Title (da-DK) — 24
+### Title (da-DK) — 13
 ```
-12 Trins App - Værktøjer
+12 Steps App
 ```
+
+> **The store title is the app's name, and the app's name is not translated.**
+> It must match `android:label` / `CFBundleDisplayName` / `MaterialApp.title`
+> exactly — "12 Steps App" — in every listing language. A Danish store page
+> showing "12 Trins App - Værktøjer" is a different app to anyone who installed
+> it, and a marketing suffix in the title is still a rename. Descriptions are
+> translated; the name is not.
 
 ### Short description (da-DK) — 75
 ```
