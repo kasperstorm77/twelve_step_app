@@ -786,6 +786,23 @@ that block does not match `pubspec.yaml`, and reads every locale back to verify.
 **build attached to the pending version**, which is not visible anywhere else:
 that version was sitting on build 108 while TestFlight had 112.
 
+### Uploading a build is not attaching it
+
+Three separate things had to be true for the App Store submission to be right,
+and only one of them was: TestFlight had the build, the *version* still pointed
+at an older one, and the version's public release notes had never been written
+at all. Each is a different API relationship, and none of them is visible in the
+upload output — which is how the pending version sat on build 108 while
+TestFlight served 112. `attach-appstore-build.sh` closes it, defaulting to
+whatever `pubspec.yaml` says so "attach what I just built" is the no-argument
+case, and refusing to attach a build Apple has not finished processing.
+
+**Shipped 2.3.5+113** to Play alpha and TestFlight, and attached to the pending
+App Store version: 112 had been compiled before the naming fix, so its Danish UI
+still read "Kun for i dag" while the notes attached to it promised "Just for
+Today". Same version name deliberately — 2.3.5 had reached nobody publicly, and
+the notes only became true with this binary.
+
 ### "Just for Today" is the name, in both languages
 
 It was being translated to "Kun for i dag" in the Danish UI, help, release notes

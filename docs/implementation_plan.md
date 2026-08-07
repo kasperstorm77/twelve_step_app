@@ -204,6 +204,12 @@ is deliberately no way to clear a release having proven one direction.
   attached build can be several builds behind what TestFlight has; check before
   submitting.
 - `scripts/fix-appstore-name.sh` — verify (and correct) the App Store app name.
+- `scripts/attach-appstore-build.sh` — point the pending App Store version at the
+  build you just uploaded. **TestFlight upload does not do this**; it is a
+  separate relationship and the one reviewers actually get. Defaults to
+  pubspec.yaml's version+build.
+- `scripts/set-appstore-release-notes.sh` — the version's public "What's New"
+  per locale, from `release.md` (distinct from TestFlight's "What to Test").
 - `scripts/publish-play-listing.sh` — the Play listing text, read from
   `docs/play_store-retain/PLAY_STORE_DESCRIPTIONS.md`.
 - `scripts/build-aab.sh` — `flutter build appbundle --release`; verifies
