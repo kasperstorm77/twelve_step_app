@@ -612,48 +612,69 @@ checked for key parity.
 Reported as "I completed the morning ritual on my phone, I fetched here, and it
 isn't in the history." The desktop was not at fault, and neither was the fetch.
 
-The evidence, in order. The desktop's boxes had all been rewritten at the time
-of the fetch, so the restore ran. Its newest Morning entry was **6 August** and
-the `settings` `lastModified` read `2026-08-06T10:32:22Z` — the payload it
-restored was a day old. The calendar agreed: dots on the 3rd through 6th, none
-on the 7th. `listAvailableBackups()` sorts newest-first by the filename date and
-the fetch takes `.first`, so it had picked the newest file that existed. The
-conclusion was forced: at that moment Drive held no backup containing the
-ritual.
+The desktop's boxes had all been rewritten at the time of the fetch, so the
+restore ran. Its newest Morning entry was **6 August** and the `settings`
+`lastModified` read `2026-08-06T10:32:22Z` — the payload it restored was a day
+old. The calendar agreed: dots on the 3rd through 6th, none on the 7th.
+`listAvailableBackups()` sorts newest-first by filename date and the fetch takes
+`.first`, so it had picked the newest file that existed. At that moment Drive
+held no backup containing the ritual.
 
-`saveEntry` does call `scheduleUploadFromBox`, so the path existed. But that
-call only starts a **1000 ms debounce timer**, and two things were missing
-around it:
+**The first conclusion was wrong.** The obvious candidate was the upload
+debounce: `scheduleUploadFromBox` starts a 1000 ms timer, nothing flushed it
+when the app was backgrounded, and no path anywhere pushed when the *local*
+clock was ahead — so a dropped upload stayed dropped. All of that was true and
+worth fixing, but it was not what happened here. The phone itself said so:
 
-- `AppWidget.didChangeAppLifecycleState` handled `resumed` only. Nothing
-  flushed a pending upload when the app left the foreground, so the OS could
-  suspend the process before the timer fired. Finishing a morning ritual and
-  putting the phone straight in a pocket is precisely that second.
-- Nothing ever retried. A search for any local-newer catch-up came back empty:
-  startup asked only `isRemoteNewer()`, whose sole action is to *block*
-  uploads. A dropped upload therefore stayed dropped until some unrelated edit
-  happened to schedule another one.
+    Synkronisering fejlede: Access was denied (www-authenticate header was:
+    Bearer realm="https://accounts.google.com/", error="invalid_token").
 
-The asymmetry was the bug. Restoring overwrites local data and rightly needs
-consent (hard rule 8), but uploading only ever writes a new timestamped backup
-and can destroy nothing — so it should never have required a user action.
+Signed in, sync on, and **every** upload failing on a dead token. Its restore
+dropdown showed the same newest backup, 2026-08-06.
 
-Both directions now read one verdict.
-[`sync_clocks.dart`](../lib/shared/services/sync_clocks.dart) compares the two
-clocks as instants and returns `remoteNewer` / `localNewer` / `inSync`;
-`isRemoteNewer()` is `verdict.shouldBlockUploads` and the new
-`uploadIfLocalNewer()` is `verdict.shouldCatchUpUpload`, so the two can never
-disagree about which side is ahead. `flushPendingUpload()` runs on
-backgrounding to narrow the window, and the startup push is the backstop that
-works even when the process is killed outright. The missing-clock cases carry
-meaning and are pinned: no local clock with a backup present still means the
-remote wins (a fresh install must be offered the fetch), while local work with
-no backup at all means push — which is exactly the state a lost first upload
-leaves behind.
+The upload path does auto-heal an expired token — clear the auth cache, re-mint
+via `signInSilently()`, retry once — but only for errors it recognised, and
+recognition was an inline substring list built from `DetailedApiRequestError`
+messages: `401`, `Invalid Credentials`, `PERMISSION_DENIED` and friends. This
+message is `AccessDeniedException` from `googleapis_auth`, a different type
+whose `toString()` is the raw www-authenticate text. It contains **none** of
+those markers. So the recovery never ran, the raw error was shown instead, and
+the credential stayed dead until someone signed out and in by hand.
 
-Nothing was lost: the ritual was on the phone the whole time, and any edit
-there would have shipped it. What was missing was the guarantee that it would
-leave without one.
+The classification now lives in
+[`drive_auth_errors.dart`](../lib/shared/services/google_drive/drive_auth_errors.dart)
+with the real message pinned in a test, alongside `invalid_grant`, revoked and
+expired tokens, and the scope variants. It stays deliberately narrow — treating
+a 500 or a lost host lookup as an auth problem would burn a refresh on every
+transient failure and hide the real fault behind it.
+
+**The two fixes compose into a recovery path.** A dead token also makes the
+read side return null, so the remote clock reads as absent; `uploadIfLocalNewer()`
+then sees local work with no backup, attempts an upload, and *that* is what now
+recognises the dead token and re-mints it. A phone in this state heals itself on
+the next launch instead of needing a manual sign-out.
+
+### The debounce gap, fixed on the way past
+
+Still real, still worth having. Both sync directions now read one verdict from
+[`sync_clocks.dart`](../lib/shared/services/sync_clocks.dart) —
+`isRemoteNewer()` is `verdict.shouldBlockUploads`, `uploadIfLocalNewer()` is
+`verdict.shouldCatchUpUpload` — so they cannot disagree about which side is
+ahead. `flushPendingUpload()` runs when the app leaves the foreground, and the
+startup push is the backstop that survives the process being killed outright.
+The asymmetry is deliberate: restoring overwrites local data and needs consent
+(hard rule 8), while uploading only ever writes a new timestamped backup and can
+destroy nothing.
+
+Nothing was lost. The ritual was on the phone the whole time.
+
+### Lesson
+
+Two plausible causes, and the evidence for the first one was entirely
+circumstantial — "the upload didn't happen" is a symptom shared by both. The
+error text on the device settled it in one line, and it had been sitting on the
+user's screen the whole time. Ask for the device's own error before reasoning
+about which code path could have dropped a write.
 
 ---
 

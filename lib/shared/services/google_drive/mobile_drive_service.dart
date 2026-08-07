@@ -1,5 +1,6 @@
 import 'dart:async';
 import 'package:flutter/foundation.dart';
+import 'drive_auth_errors.dart';
 import 'drive_config.dart';
 import 'drive_crud_client.dart';
 import 'mobile_google_auth_service.dart';
@@ -146,22 +147,14 @@ class MobileDriveService {
       // The cached _driveClient is constructed with a 59-minute hardcoded
       // expiry and no refresh token, so it goes stale even though the user
       // is still signed in. Refresh once via google_sign_in and retry.
-      final msg = e.toString();
-      // 401: expired/invalid token. 403 scope variants: a cached token minted
-      // before the scope-align fix can lack the drive.appdata scope; clearing
-      // the auth cache and re-minting (in refreshTokenIfNeeded) recovers a fresh
-      // token with the correct scopes. Both are auto-healed with one retry so no
-      // user action is ever required.
-      final looksLikeAuthError =
-          msg.contains('401') ||
-          msg.contains('UNAUTHENTICATED') ||
-          msg.contains('Invalid Credentials') ||
-          msg.contains('Login Required') ||
-          msg.contains('insufficientPermissions') ||
-          msg.contains('insufficient authentication scopes') ||
-          msg.contains('ACCESS_TOKEN_SCOPE_INSUFFICIENT') ||
-          msg.contains('PERMISSION_DENIED');
-      if (looksLikeAuthError) {
+      // Expired, revoked or wrongly-scoped credentials are all healed the same
+      // way: clear the auth cache, re-mint, retry once — no user action needed.
+      // The classification lives in drive_auth_errors.dart; it used to be an
+      // inline substring list here that did not recognise
+      // AccessDeniedException ("...error=\"invalid_token\""), so a dead token
+      // was surfaced to the user instead of refreshed and syncing stayed broken
+      // until they signed out and in by hand.
+      if (isRecoverableAuthError(e)) {
         if (kDebugMode) {
           print(
             'MobileDriveService.uploadContent() - auth error, refreshing token and retrying',

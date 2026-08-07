@@ -40,9 +40,30 @@ drives iOS simulators and needs an Android equivalent.
       `publish-play-listing.sh` does for text.
 - [ ] Record the Android recipe next to the iOS one.
 
-## P2 — Publishing safety
+## P2 — Sync robustness
 
-### P2.1 The shared JSON contract — a standing rule, not a task
+### P2.1 Mobile read paths have no token recovery
+
+`MobileDriveService` recovers a stale credential in exactly one place — the
+`uploadContent` catch block. The read paths (`listAvailableBackups`,
+`downloadBackupContent`, `getNewestBackupJsonLastModified`) call none of it, so
+a dead token makes them fail or return null rather than re-mint and retry.
+
+Not urgent, and no longer silent: a failed read makes the remote clock read as
+absent, `uploadIfLocalNewer()` then attempts an upload, and *that* path now
+recognises the dead token and heals it (historic Phase 22). So a phone in this
+state recovers on the next launch. But the fetch itself can still fail on the
+first attempt against an expired token, which reads to the user as "restore is
+broken".
+
+- [ ] Route the mobile read paths through the same
+      `isRecoverableAuthError` → `refreshTokenIfNeeded` → retry-once shape as
+      `uploadContent`.
+- [ ] Cover it with the fixture already in `test/drive_auth_error_test.dart`.
+
+*(Found while fixing the dead-token bug in Phase 22.)*
+
+### P2.2 The shared JSON contract — a standing rule, not a task
 
 Cross-app transfer is the **JSON export/import path**, not Drive: `appdata` is
 per-application, so neither app can see the other's Drive file, and that is
