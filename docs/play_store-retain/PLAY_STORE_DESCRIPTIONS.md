@@ -238,10 +238,18 @@ stops being filed under Danish.
 
 > Same rule as the Play title: **the store name is the app's name, and it is
 > not translated or extended.** It must equal `CFBundleDisplayName` /
-> `android:label` / `MaterialApp.title` exactly. "12 Steps App - Recovery" was
-> live on the App Store before 2026-08-07 and is a rename; correcting it needs
-> an App Store review cycle, so it is deliberately left for the owner to
-> action rather than pushed automatically.
+> `android:label` / `MaterialApp.title` exactly.
+>
+> Corrected on the App Store 2026-08-07 with
+> `bash scripts/fix-appstore-name.sh --yes`, which reads back every
+> localization to verify. "12 Steps App - Recovery" had been **staged** on the
+> unsubmitted version in both `da` and `en-GB` — it was never live, and it is
+> gone before it could ship.
+>
+> **The live App Store name is still "Twelve step app"** (the `READY_FOR_SALE`
+> appInfo, `da` only — there is no `en-GB` localization on the live record).
+> Apple freezes the name of a live version, so it changes only when the next
+> version is submitted, at which point it becomes "12 Steps App".
 
 ### Subtitle (en-GB) — 27
 ```

@@ -737,11 +737,25 @@ language ("sponsor", "moral inventory", "higher power") still passes. The
 word-boundary anchoring matters: an earlier grep of mine matched "an" and "away"
 and produced three false positives before it was tightened.
 
-**Names, again.** The Play listing title was checked against the binary and
-corrected to "12 Steps App"; the App Store `Name` is still
-"12 Steps App - Recovery" and was left for the owner, because changing it needs
-a review cycle. The rule now sits in `CLAUDE.md` beside localization: the app's
-name is not a translatable string.
+**Names, again — and the App Store was worse than it looked.** The Play title
+was corrected to "12 Steps App". On the App Store, reading the record rather
+than assuming turned up three names for one app:
+
+| appInfo | state | name |
+|---|---|---|
+| live | `READY_FOR_SALE` (`da` only) | `Twelve step app` |
+| staged | `PREPARE_FOR_SUBMISSION` (`da`, `en-GB`) | `12 Steps App - Recovery` |
+| binary | — | `12 Steps App` |
+
+"- Recovery" was **staged, never live**: it would have shipped with the next
+submission. Both staged localizations are now "12 Steps App", read back to
+verify. Apple freezes a live version's name, so the public record still says
+"Twelve step app" until the next submission carries the correction — reported by
+the tool rather than silently ignored.
+
+`scripts/fix-appstore-name.sh` does the check and the fix, and reports rather
+than guesses when a live appInfo blocks the write. The rule now sits in
+`CLAUDE.md` beside localization: the app's name is not a translatable string.
 
 ---
 
